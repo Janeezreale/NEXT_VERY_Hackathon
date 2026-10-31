@@ -11,6 +11,7 @@ vi.mock("@/src/components/common/logout-button", () => ({
   LogoutButton: ({ label }: { label: string }) => <button>{label}</button>,
   useSessionRole: () => session.role,
 }));
+vi.mock("@/src/components/common/notifications", () => ({ useNotify: () => ({ issue: vi.fn(), status: vi.fn() }) }));
 
 const product: ProductView = {
   id: "p", name: "사과", store: "마켓", address: "주소", latitude: null, longitude: null, price: 8800, base: 10000, discount: 12, stock: 5, unit: "봉지",

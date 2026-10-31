@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { LoadFeedback } from "./preview-feedback";
 import { reservationMatches } from "./preview-state";
 import { CheckCircle2, Clock, MapPin, Ticket, XCircle } from "lucide-react";
+import { useNotify } from "@/src/components/common/notifications";
 import { apiFetch, ApiClientError } from "@/src/lib/client/api";
 import { money } from "./product-view";
 import { PreviewShell, ProductPhoto } from "./preview-ui";
@@ -17,19 +18,19 @@ export default function ReservationsPreview({ reservations, state = "ready" }: {
   const router = useRouter();
   const [filter, setFilter] = useState("전체");
   const [cancelling, setCancelling] = useState<string | null>(null);
-  const [cancelError, setCancelError] = useState("");
+  const notify = useNotify();
   const rows = reservations.filter(row => reservationMatches(row.status, filter));
 
   async function cancel(id: string) {
     if (cancelling || !window.confirm("이 예약을 취소할까요?")) return;
     setCancelling(id);
-    setCancelError("");
     try {
       await apiFetch(`/api/reservations/${id}/cancel`, { method: "POST" });
+      notify.status("예약을 취소했어요.");
       router.refresh();
     } catch (error) {
       if (!(error instanceof ApiClientError)) throw error;
-      setCancelError(error.message);
+      notify.issue(error.message);
       router.refresh();
     } finally {
       setCancelling(null);
@@ -39,7 +40,6 @@ export default function ReservationsPreview({ reservations, state = "ready" }: {
   return <PreviewShell><header className={styles.sectionHeading}><p className={styles.eyebrow}><Ticket size={16} aria-hidden="true" />MY PICK UP</p><h1>예약 내역</h1><p className={styles.description}>예약부터 픽업까지, 예약 상태를 한눈에 확인하세요.</p></header>
 
     <div className={styles.chips} role="group" aria-label="예약 내역 필터">{["전체", "진행 중", "진행 완료"].map(status => <button key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>{status}</button>)}</div>
-    {cancelError && <p className={styles.error} role="alert">{cancelError}</p>}
 
     <section className={styles.reservationList} aria-label="예약 목록">{state !== "ready" ? <LoadFeedback state={state} subject="예약 내역을" onRetry={() => router.refresh()} /> : rows.length === 0 ? <div className={styles.empty}><Ticket size={36} aria-hidden="true" /><h2>{reservations.length === 0 ? "아직 예약 내역이 없어요" : "해당하는 예약이 없어요"}</h2><p>{reservations.length === 0 ? "마음에 드는 동네 상품을 둘러보세요." : "다른 필터에서 예약을 확인해 주세요."}</p>{reservations.length === 0 ? <Link className={styles.primary} href="/shop">상품 탐색하기</Link> : <button className={styles.primary} onClick={() => setFilter("전체")}>전체 예약 보기</button>}</div> : rows.map(row => <article className={styles.panel} key={row.id}>
       <div className={styles.reservationTop}><span className={styles.badge} data-status={row.status}>{CLOSED_STATUSES.includes(row.status) ? <XCircle size={15} aria-hidden="true" /> : <CheckCircle2 size={15} aria-hidden="true" />}{row.status}</span></div>

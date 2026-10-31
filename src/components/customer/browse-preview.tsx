@@ -3,18 +3,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Leaf, MapPin, ShoppingBasket, Store } from "lucide-react";
-import { previewProducts } from "./preview-data";
 import { CurrentPrice, PickupFacts, PreviewShell, ProductPhoto } from "./preview-ui";
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
 import StoreMap from "./store-map";
-import { browseUrl, contextQuery, filtersFrom, regions, type LoadState } from "./preview-state";
+import { browseUrl, contextQuery, filtersFrom, regions } from "./preview-state";
+import type { ProductView } from "./product-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
 type Filters = ReturnType<typeof filtersFrom>;
-export default function BrowsePreview({ filters, state = "ready", forceEmpty = false }: { filters: Filters; state?: LoadState; forceEmpty?: boolean }) {
+export default function BrowsePreview({ filters, products, state = "ready" }: { filters: Filters; products: ProductView[]; state?: "ready" | "error" }) {
   const router = useRouter();
   const [view, setView] = useState<"list" | "map">("list");
-  const filtered = forceEmpty ? [] : previewProducts.filter(item => item.region === filters.region);
   const change = (patch: Partial<Filters>) => router.push(browseUrl({ ...filters, ...patch }), { scroll: false });
   const context = contextQuery(filters);
   return <PreviewShell>
@@ -24,8 +23,8 @@ export default function BrowsePreview({ filters, state = "ready", forceEmpty = f
     <section className={styles.filters} aria-label="상품 탐색 조건">
       <label className={styles.region}><span><MapPin size={18} aria-hidden="true" />둘러볼 지역</span><select value={filters.region} onChange={event => change({ region: event.target.value })}><option value="">지역을 선택해 주세요</option>{regions.map(region => <option key={region}>{region}</option>)}</select></label>
     </section>
-    <div className={styles.resultsHeading}><div><h2>{filters.region ? `${filters.region}의 상품` : "우리 동네 상품"}</h2>{filters.region && state === "ready" && <p role="status">상품 {filtered.length}개</p>}</div></div>
-    {!filters.region ? <EmptyFeedback title="둘러볼 지역을 선택해 주세요" description="지역을 선택하면 해당 동네의 상품을 볼 수 있어요." /> : state !== "ready" ? <LoadFeedback state={state} subject="상품을" onRetry={() => router.replace(browseUrl(filters), { scroll: false })} /> : filtered.length === 0 ? <EmptyFeedback title="이 지역에 등록된 상품이 없어요" description="다른 지역을 선택해 보세요." /> : <section className={styles.browseList} aria-label="상품 목록">{filtered.map(product => <article className={styles.card} key={product.id}><ProductPhoto product={product} /><div className={styles.cardBody}><p className={styles.store}><Store size={14} aria-hidden="true" />{product.store}</p><h3>{product.name}</h3><CurrentPrice product={product} /><PickupFacts product={product} /><Link href={`/shop/products/${product.id}${context ? `?${context}` : ""}`} className={styles.detailButton}>상품 상세 보기<ArrowRight size={18} aria-hidden="true" /></Link></div></article>)}</section>}
+    <div className={styles.resultsHeading}><div><h2>{filters.region ? `${filters.region}의 상품` : "우리 동네 상품"}</h2>{filters.region && state === "ready" && <p role="status">상품 {products.length}개</p>}</div></div>
+    {!filters.region ? <EmptyFeedback title="둘러볼 지역을 선택해 주세요" description="지역을 선택하면 해당 동네의 상품을 볼 수 있어요." /> : state !== "ready" ? <LoadFeedback state={state} subject="상품을" onRetry={() => router.refresh()} /> : products.length === 0 ? <EmptyFeedback title="이 지역에 등록된 상품이 없어요" description="다른 지역을 선택해 보세요." /> : <section className={styles.browseList} aria-label="상품 목록">{products.map(product => <article className={styles.card} key={product.id}><ProductPhoto product={product} /><div className={styles.cardBody}><p className={styles.store}><Store size={14} aria-hidden="true" />{product.store}</p><h3>{product.name}</h3><CurrentPrice product={product} /><PickupFacts product={product} /><Link href={`/shop/products/${product.id}${context ? `?${context}` : ""}`} className={styles.detailButton}>상품 상세 보기<ArrowRight size={18} aria-hidden="true" /></Link></div></article>)}</section>}
     </>}
   </PreviewShell>;
 }

@@ -17,7 +17,7 @@ export default function ReservationsPreview({ reservations, state = "ready" }: {
   const router = useRouter();
   const [filter, setFilter] = useState("전체");
   const rows = reservations.filter(row => reservationMatches(row.status, filter));
-  return <PreviewShell><header className={styles.sectionHeading}><p className={styles.eyebrow}><Ticket size={16} aria-hidden="true" />MY PICK UP</p><h1>예약 내역</h1><p className={styles.description}>요청부터 픽업까지, 예약 상태를 한눈에 확인하세요.</p></header>
+  return <PreviewShell demo><header className={styles.sectionHeading}><p className={styles.eyebrow}><Ticket size={16} aria-hidden="true" />MY PICK UP</p><h1>예약 내역</h1><p className={styles.description}>요청부터 픽업까지, 예약 상태를 한눈에 확인하세요.</p></header>
     
     <div className={styles.chips} role="group" aria-label="예약 내역 필터">{["전체", "진행 중", "진행 완료"].map(status => <button key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>{status}</button>)}</div>
     

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { availability, browseUrl, contextQuery, filtersFrom, loadState, regions, reservationMatches } from "./preview-state";
+import { browseUrl, contextQuery, filtersFrom, loadState, regions, reservationMatches } from "./preview-state";
 
 describe("consumer browse URL", () => {
   it("does not invent an initial region", () => {
@@ -25,9 +25,6 @@ describe("consumer browse URL", () => {
   });
 });
 describe("UI states", () => {
-  it.each([["soldout", "품절"], ["ended", "판매 종료"], ["unavailable", "재고 확인 불가"], ["", "판매 중"]])("maps external scenario %s without stock/time calculations", (input, expected) => {
-    expect(availability(input)).toBe(expected);
-  });
   it.each(["loading", "error"])("keeps %s distinct from a successful empty result", state => {
     expect(loadState(state)).toBe(state);
     expect(loadState("empty")).toBe("ready");

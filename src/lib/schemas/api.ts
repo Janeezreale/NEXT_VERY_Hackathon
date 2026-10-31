@@ -28,6 +28,8 @@ const storeFields = z.object({
   longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
+export const productListQuerySchema = listQuerySchema.extend({ region: text });
+
 export const storeCreateSchema = storeFields.refine(hasBothOrNeitherCoordinate, coordinateError);
 
 export const storeUpdateSchema = storeFields

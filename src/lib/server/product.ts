@@ -17,6 +17,9 @@ export const PRODUCT_COLUMNS =
 
 const PUBLIC_PRODUCT_COLUMNS = `${PRODUCT_COLUMNS}, stores!inner(${STORE_COLUMNS}), product_images(storage_path)`;
 const IMAGE_BUCKET = "product-images";
+/** 게시 전 사진을 지우지 않도록 올린 지 하루가 지난 파일만 정리한다. */
+const UNUSED_IMAGE_KEEP_MS = 24 * 60 * 60 * 1000;
+const UNUSED_IMAGE_SCAN_LIMIT = 200;
 
 const cursorSchema = z.tuple([z.iso.datetime({ offset: true }), z.uuid()]);
 
@@ -125,9 +128,75 @@ export async function updateProduct(supabase: Supabase, id: string, input: Produ
   return toSellerProduct(data as ProductRow);
 }
 
+/** 상품의 현재 사진 주소. 없으면 null이다. */
+export async function findProductImageUrl(supabase: Supabase, id: string): Promise<string | null> {
+  const { data, error } = await supabase.from("product_images").select("storage_path").eq("product_id", id).limit(1);
+  if (error) throw error;
+  return data[0] ? imagePublicUrl(data[0].storage_path) : null;
+}
+
+/**
+ * 상품 사진을 바꾸거나(path) 지운다(null). 중간에 실패해도 사진이 사라지지 않도록 새 사진을 먼저 연결한다.
+ * 파일 삭제는 연결을 끊은 뒤라 실패해도 저장을 되돌리지 않는다.
+ */
+export async function replaceProductImage(supabase: Supabase, id: string, path: string | null) {
+  const current = await linkedImagePaths(supabase, id);
+  const stale = current.filter((storagePath) => storagePath !== path);
+
+  if (path && !current.includes(path)) {
+    const { error: insertError } = await supabase.from("product_images").insert({ product_id: id, storage_path: path });
+    if (insertError) throw insertError;
+  }
+  if (stale.length === 0) return;
+
+  const { error: deleteError } = await supabase.from("product_images").delete().eq("product_id", id).in("storage_path", stale);
+  if (deleteError) throw deleteError;
+  await removeImageFiles(supabase, stale);
+}
+
+async function linkedImagePaths(supabase: Supabase, id: string) {
+  const { data, error } = await supabase.from("product_images").select("storage_path").eq("product_id", id);
+  if (error) throw error;
+  return data.map((image) => image.storage_path);
+}
+
+/** 남은 파일은 removeUnusedImages가 다시 지우므로 실패해도 요청을 실패시키지 않는다. */
+async function removeImageFiles(supabase: Supabase, paths: string[]) {
+  const { error } = await supabase.storage.from(IMAGE_BUCKET).remove(paths);
+  if (error) console.error("Failed to remove product images", error);
+}
+
+/**
+ * 어느 상품에도 연결되지 않은 파일을 지운다. 저장하지 않고 떠난 사진이 여기서 정리된다.
+ * 스케줄러가 없어 상품을 저장할 때 호출한다. 정리에 실패해도 저장은 성공해야 한다.
+ */
+export async function removeUnusedImages(supabase: Supabase, storeId: string, now = new Date()) {
+  try {
+    const { data: files, error } = await supabase.storage
+      .from(IMAGE_BUCKET)
+      .list(storeId, { limit: UNUSED_IMAGE_SCAN_LIMIT, sortBy: { column: "created_at", order: "desc" } });
+    if (error) throw error;
+
+    const cutoff = now.getTime() - UNUSED_IMAGE_KEEP_MS;
+    const old = files.filter((file) => file.created_at && new Date(file.created_at).getTime() < cutoff).map((file) => `${storeId}/${file.name}`);
+    if (old.length === 0) return;
+
+    const { data: linked, error: linkedError } = await supabase.from("product_images").select("storage_path").in("storage_path", old);
+    if (linkedError) throw linkedError;
+
+    const used = new Set(linked.map((image) => image.storage_path));
+    const unused = old.filter((path) => !used.has(path));
+    if (unused.length > 0) await removeImageFiles(supabase, unused);
+  } catch (error) {
+    console.error("Failed to clean up unused product images", error);
+  }
+}
+
 export async function deleteProduct(supabase: Supabase, id: string) {
+  const paths = await linkedImagePaths(supabase, id);
   const { error } = await supabase.rpc("delete_product", { p_product_id: id });
   if (error) throw toProductError(error);
+  if (paths.length > 0) await removeImageFiles(supabase, paths);
 }
 
 type PublicProductRow = ProductRow & { stores: StoreRow; product_images?: { storage_path: string }[] };

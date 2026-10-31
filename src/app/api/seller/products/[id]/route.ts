@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { productUpdateSchema } from "../../../../../lib/schemas/api";
 import { ApiError, ok, parseJson, route } from "../../../../../lib/server/api";
-import { assertSaleEnd, deleteProduct, updateProduct } from "../../../../../lib/server/product";
+import { assertOwnImage, assertSaleEnd, deleteProduct, removeUnusedImages, replaceProductImage, updateProduct } from "../../../../../lib/server/product";
 import { requireSellerStore } from "../../../../../lib/server/store";
 
 type Context = { params: Promise<{ id: string }> };
@@ -18,7 +18,11 @@ export const PATCH = route<Context>(async (request, context) => {
   const id = await productId(context);
   const input = await parseJson(request, productUpdateSchema);
   assertSaleEnd(input.saleEndsAt, store.closingTime);
-  return ok(await updateProduct(supabase, id, input));
+  if (input.imagePath) assertOwnImage(input.imagePath, store.id);
+  const product = await updateProduct(supabase, id, input);
+  if (input.imagePath !== undefined) await replaceProductImage(supabase, id, input.imagePath);
+  await removeUnusedImages(supabase, store.id);
+  return ok(product);
 });
 
 export const DELETE = route<Context>(async (_request, context) => {

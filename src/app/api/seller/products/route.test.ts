@@ -20,6 +20,7 @@ const db = vi.hoisted(() => ({
 vi.mock("../../../../lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: db.user ? { claims: { sub: db.user.id } } : null }) },
+    storage: { from: () => ({ list: async () => ({ data: [], error: null }) }) },
     from: (table: string) => {
       if (table === "profiles") {
         return { select: () => ({ eq: () => ({ single: async () => ({ data: { role: db.role, region_code: null }, error: null }) }) }) };

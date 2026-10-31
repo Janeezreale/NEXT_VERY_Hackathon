@@ -418,6 +418,29 @@ create policy product_images_upload_owner on storage.objects
     )
   );
 
+-- 판매자는 본인 매장 폴더의 파일을 지울 수 있다. Storage 삭제는 대상 조회 권한도 필요하다.
+create policy product_images_read_owner on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'product-images'
+    and exists (
+      select 1 from public.stores
+      where stores.owner_id = (select auth.uid())
+        and stores.id::text = (storage.foldername(objects.name))[1]
+    )
+  );
+
+create policy product_images_remove_owner on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'product-images'
+    and exists (
+      select 1 from public.stores
+      where stores.owner_id = (select auth.uid())
+        and stores.id::text = (storage.foldername(objects.name))[1]
+    )
+  );
+
 -- 권한: Supabase 기본 권한을 제거하고 필요한 컬럼만 허용한다.
 -- reservations·sales 쓰기와 products 수정은 허용하지 않는다(L05 함수, D08).
 

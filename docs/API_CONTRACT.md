@@ -40,7 +40,7 @@
 | 이미지 분석 | POST `/api/seller/analyses` | imagePath | Analysis | 이미지 소유 판매자 |
 | 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, imagePath?, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능. 판매 종료가 가게 마감 30분 전을 넘으면 400 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
-| 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED |
+| 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt, imagePath? | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED. imagePath가 없으면 사진 유지, 경로면 교체, null이면 삭제. 다른 매장 경로는 403 |
 | 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 409 PRODUCT_HAS_RESERVATIONS |
 | 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있는 현재 영업일의 Product 목록, 항목마다 store(id, name, address, openingTime, closingTime) 포함. 오픈 전·마감 후 상품도 포함하며 `saleStatus`(on_sale, sold_out, before_open, store_closed, sale_ended)로 구분 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | `{ product, store }`. 품절·판매 종료도 saleOpen false로 반환. 없는 상품·잘못된 ID는 404 | 비로그인 허용 |

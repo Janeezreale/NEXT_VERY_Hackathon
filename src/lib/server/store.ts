@@ -35,6 +35,13 @@ export async function findStore(supabase: Supabase, ownerId: string): Promise<St
   return data ? toStore(data as StoreRow) : null;
 }
 
+export async function requireSellerStore() {
+  const seller = await requireSeller();
+  const store = await findStore(seller.supabase, seller.id);
+  if (!store) throw new ApiError("NOT_FOUND", "등록한 매장이 없어요.");
+  return { supabase: seller.supabase, store };
+}
+
 /** 판매자 화면용. 판매자가 아니면 화면을 벗어나게 하고, 매장이 없으면 null을 반환한다. */
 export async function loadSellerStore(): Promise<Store | null> {
   try {

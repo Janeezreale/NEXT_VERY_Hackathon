@@ -3,8 +3,8 @@ import { z } from "zod";
 import { FRESHNESS_LEVELS, RESERVATION_STATUSES, USER_ROLES } from "../../types/api";
 
 const text = z.string("입력해 주세요.").trim().min(1, "입력해 주세요.");
-const won = z.number().int().positive();
-const timestamp = z.iso.datetime({ offset: true });
+const won = z.number("금액을 입력해 주세요.").int("원 단위로 입력해 주세요.").positive("1원 이상 입력해 주세요.");
+const timestamp = z.iso.datetime({ offset: true, error: "시각을 입력해 주세요." });
 
 export const userRoleSchema = z.enum(USER_ROLES);
 export const freshnessSchema = z.enum(FRESHNESS_LEVELS);
@@ -30,14 +30,17 @@ export const productCreateSchema = z
   .object({
     name: text,
     category: text,
-    quantity: z.number().int().positive(),
+    quantity: z.number("수량을 입력해 주세요.").int("정수로 입력해 주세요.").positive("1 이상 입력해 주세요."),
     unit: text,
     basePrice: won,
     minPrice: won,
     freshness: freshnessSchema,
     saleEndsAt: timestamp,
-    imagePaths: z.array(text),
-    sellerConfirmed: z.literal(true),
+    sellerConfirmed: z.literal(true, "내용을 확인했다고 표시해 주세요."),
+  })
+  .refine((value) => new Date(value.saleEndsAt) > new Date(), {
+    path: ["saleEndsAt"],
+    message: "판매 종료 시각은 지금 이후여야 해요.",
   })
   .refine((value) => value.minPrice <= value.basePrice, {
     path: ["minPrice"],

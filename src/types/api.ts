@@ -8,6 +8,11 @@ export type UserRole = (typeof USER_ROLES)[number];
 
 export const FRESHNESS_LEVELS = ["fresh", "sell_today", "discard_tomorrow"] as const;
 export type Freshness = (typeof FRESHNESS_LEVELS)[number];
+export const FRESHNESS_LABELS: Record<Freshness, string> = {
+  fresh: "싱싱",
+  sell_today: "오늘 안에 판매 권장",
+  discard_tomorrow: "내일 폐기 예정",
+};
 
 export const RESERVATION_STATUSES = ["pending", "approved", "rejected", "cancelled", "completed"] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
@@ -68,6 +73,12 @@ export type Product = {
   imageUrls: string[];
   pricedAt: string;
 };
+
+/** 판매자가 게시한 상품. 현재가는 가격 엔진이 계산하므로 여기에 넣지 않는다. */
+export type SellerProduct = Pick<
+  Product,
+  "id" | "storeId" | "name" | "category" | "unit" | "availableQuantity" | "basePrice" | "minPrice" | "freshness" | "saleEndsAt"
+> & { createdAt: string };
 
 /** AI 제안. 불확실한 값은 null로 두고 판매자가 게시 전에 확인한다. */
 export type Analysis = {

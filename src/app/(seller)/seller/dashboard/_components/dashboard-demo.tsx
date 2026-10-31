@@ -18,7 +18,7 @@ export default function DashboardDemo() {
     <main className={styles.page}>
       <div className={styles.container}>
         <aside className={styles.demoBanner}><strong>UI 미리보기 · 개발용 데모</strong><p>상품·예약·건수는 모두 예시입니다. 실제 API 조회나 데이터 저장은 하지 않습니다.</p></aside>
-        <nav className={styles.nav} aria-label="판매자 화면"><a href="/seller/dashboard" aria-current="page"><LayoutDashboard size={18} aria-hidden="true" />대시보드</a><a href="/seller/products"><Package size={18} aria-hidden="true" />상품·재고 관리</a><a href="/seller/reservations">예약 관리</a><a href="/seller/reports">판매 리포트</a><a href="/store">매장 정보</a></nav>
+        <nav className={styles.nav} aria-label="판매자 화면"><a href="/seller/dashboard" aria-current="page"><LayoutDashboard size={18} aria-hidden="true" />대시보드</a><a href="/seller/products"><Package size={18} aria-hidden="true" />상품·재고 관리</a><a href="/seller/reservations">예약 관리</a><a href="/seller/reports">판매 리포트</a><a href="/seller/publish">상품 게시</a><a href="/store">매장 정보</a></nav>
 
         <header className={styles.header}>
           <div><p className={styles.eyebrow}><Store size={16} aria-hidden="true" />{demoStore.nameLabel} · 판매자</p><h1>오늘 가게 한눈에</h1><p className={styles.meta}>예약 요청과 남은 상품부터 확인해 보세요.</p></div>

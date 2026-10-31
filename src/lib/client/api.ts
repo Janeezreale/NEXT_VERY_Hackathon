@@ -12,6 +12,13 @@ export class ApiClientError extends Error {
   }
 }
 
+/** 필드별 첫 오류 문구만 남긴다. */
+export function firstFieldErrors<Field extends string>(fieldErrors: Partial<Record<string, string[]>>) {
+  return Object.fromEntries(
+    Object.entries(fieldErrors).map(([key, messages]) => [key, messages?.[0]]),
+  ) as Partial<Record<Field, string>>;
+}
+
 /** UI용 API 호출. 성공하면 data를 반환하고 실패하면 ApiClientError를 던진다. */
 export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;

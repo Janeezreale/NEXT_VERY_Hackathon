@@ -32,6 +32,7 @@
 | [DATA_MODEL.md](docs/DATA_MODEL.md) | 테이블, 재고 처리, 접근 권한 |
 | [PRICING.md](docs/PRICING.md) | 가격 공식, 경계값, 검증 사례 |
 | [TEAM_TASKS.md](docs/TEAM_TASKS.md) | 담당자, 순서, 작업 경로, 완료 조건 |
+| [REMAINING_TASKS.md](docs/REMAINING_TASKS.md) | 남은 작업, 결정 사항, 진행 순서 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 작업 시작부터 PR까지 |
 | [DEMO_CHECKLIST.md](docs/DEMO_CHECKLIST.md) | 통합 검증·시연 체크리스트 |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 기술 스택, 데이터 흐름, 폴더 지도 |

@@ -38,7 +38,7 @@ export default function ProductsDemo() {
 
         <header className={styles.header}>
           <div><p className={styles.eyebrow}>판매자 · 상품 관리</p><h1>내 상품과 재고</h1><p className={styles.subtle}>남은 수량을 확인하고 상품 정보를 살펴보세요.</p></div>
-          <span className={styles.demoTag}>데모 화면</span>
+          <a className={styles.primary} href="/seller/publish">상품 게시</a>
         </header>
 
         <StoreOverview store={store} onEdit={() => { setStoreEditing({ ...store }); storeDialog.current?.showModal(); }} />

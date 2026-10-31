@@ -2,7 +2,7 @@
 
 [시작 안내](../README.md) · 근거: [기획 원문](../plan.md) §4–5, §7–8
 
-**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
+**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
 
 ## 공통 형식 제안
 
@@ -21,6 +21,7 @@
 | Product | id, storeId, name, category, unit, availableQuantity, basePrice, minPrice, currentPrice, discountRate, freshness, saleEndsAt, imageUrls, pricedAt | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공 |
 | Store | id, name, regionCode, address, closingTime | 매장 정보. closingTime은 `HH:mm`. 업종 필드 없음(D10) |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
+| SellerProduct | id, storeId, name, category, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
 | Reservation | id, productId, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
 | Report | period, registeredProducts, requestedReservations, approvedReservations, completedSales, soldQuantity, revenue, remainingQuantity, series | 집계 기준·기간·단위는 D07에서 확정 |
 
@@ -34,8 +35,8 @@
 | 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, closingTime. PATCH: 변경 필드 | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS |
 | 이미지 업로드 | POST `/api/seller/images` | 이미지 파일 | 서버가 검증한 imagePath | 판매자, 형식·크기·소유권은 D05 |
 | 이미지 분석 | POST `/api/seller/analyses` | imagePath, closingAt | Analysis | 이미지 소유 판매자 |
-| 상품 게시 | POST `/api/seller/products` | name, category, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, imagePaths, sellerConfirmed | Product | 본인 매장 판매자 |
-| 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | Product 목록 | 본인 매장 |
+| 상품 게시 | POST `/api/seller/products` | name, category, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
+| 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | 변경 필드, 동시 수정 검증 정보 | Product | 본인 매장, D08 확정 후 |
 | 지역 상품 탐색 | GET `/api/products` | region, category?, cursor?, limit? | 판매 중 Product 목록 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | Product, Store | 비로그인 허용 |

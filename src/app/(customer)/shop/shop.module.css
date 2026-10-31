@@ -5,8 +5,6 @@
 .page button, .page select { font: inherit; cursor: pointer; }
 .page button:focus-visible, .page select:focus-visible { outline: 2px solid #176b49; outline-offset: 3px; }
 .page h1, .page h2, .page h3, .page p { margin: 0; }
-.preview { @apply flex flex-wrap items-center gap-2 rounded-lg border px-4 py-3 text-sm leading-5; background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
-.previewLabel { @apply font-semibold; }
 .heading { @apply flex items-center justify-between gap-6 py-10 sm:py-12; }
 .eyebrow { @apply mb-3 flex items-center gap-2 text-sm font-semibold; color: #176b49; }
 .heading h1 { @apply text-2xl leading-8 font-bold sm:text-[32px] sm:leading-10; letter-spacing: -.02em; }
@@ -15,8 +13,7 @@
 .filters { @apply grid gap-6 rounded-xl border bg-white p-4 sm:p-6 md:grid-cols-2; border-color: #e2e8e3; }
 .region { @apply flex flex-col gap-2 md:col-span-2; }
 .region > span { @apply flex items-center gap-2 text-sm font-semibold; }
-.region small { color: #626b77; }
-.region select, .stateControl select { @apply min-h-12 w-full rounded-lg border bg-white px-3 text-base sm:max-w-80; border-color: #64748b; color: #1f2937; }
+.region select { @apply min-h-12 w-full rounded-lg border bg-white px-3 text-base sm:max-w-80; border-color: #64748b; color: #1f2937; }
 .label { @apply mb-2 block text-sm font-semibold; }
 .chips { @apply flex flex-wrap gap-2; }
 .chips button { @apply min-h-11 rounded-full border bg-white px-4 text-sm; border-color: #e2e8e3; color: #626b77; }
@@ -26,18 +23,10 @@
 .resultsHeading h2 { @apply text-xl leading-7 font-bold sm:text-2xl; }
 .resultsHeading p { @apply mt-1 text-sm leading-5; color: #626b77; }
 .reset { @apply flex min-h-11 items-center gap-2 border-0 bg-transparent px-2 text-sm; color: #176b49; }
-.stateControl { @apply mb-5 flex flex-wrap items-center gap-3 text-sm; color: #626b77; }
-.stateControl select { @apply w-auto min-w-32; }
-.grid { @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6; }
 .card { @apply overflow-hidden rounded-xl border bg-white; border-color: #e2e8e3; box-shadow: 0 2px 8px rgb(31 41 55 / .04); }
-.art { @apply relative flex aspect-[4/3] items-center justify-center; background: #edf3e8; color: #56734f; }
-.art[data-kind="fruit"] { background: #faf1e6; color: #a76b40; }
-.art[data-kind="flower"] { background: #f3edf1; color: #936c87; }
-.sample { @apply absolute top-3 left-3 rounded-md bg-white px-2 py-1 text-xs font-semibold; color: #626b77; }
-.imageNote { @apply absolute bottom-3 text-xs; color: #626b77; }
 .cardBody { @apply p-4 sm:p-6; }
 .store { @apply mb-2 flex items-center gap-1 text-sm; color: #626b77; }
-.card h3 { @apply min-h-12 text-base leading-6 font-semibold; overflow-wrap: anywhere; }
+.card h3 { @apply text-base leading-6 font-semibold; overflow-wrap: anywhere; }
 .price { @apply mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1; font-variant-numeric: tabular-nums; }
 .discount { @apply text-sm font-semibold; color: #176b49; }
 .price strong { @apply text-xl leading-7 font-bold; }
@@ -52,7 +41,7 @@
 .empty { @apply flex flex-col items-center gap-4 rounded-xl border bg-white px-4 py-12 text-center; border-color: #e2e8e3; }
 .empty h3 { @apply text-xl font-semibold; }
 .empty p { @apply text-sm leading-6; color: #626b77; }
-.primary { @apply min-h-12 rounded-lg border-0 px-4 text-sm font-semibold; background: #1f7a54; color: white; }
+
 .primary:hover { background: #196545; }
 .skeleton { @apply min-h-96 rounded-xl; background: #f1f5f2; }
 .notice { @apply mt-4 text-sm leading-6; color: #176b49; }
@@ -71,14 +60,13 @@
 .back { @apply my-4; }
 .photo { @apply relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl; background: #f1f5f2; color: #626b77; }
 .photo img { @apply block h-full w-full object-cover; }
-.photo .sample { z-index: 1; }
 .detailGrid { @apply my-6 grid items-start gap-6 md:grid-cols-2; }
 .panel { @apply my-4 min-w-0 rounded-xl border bg-white p-4 sm:p-6; border-color: #e2e8e3; }
 .detailGrid > .panel { @apply m-0; }
 .panel h2, .miniProduct h2 { @apply text-xl leading-7 font-semibold; }
 .productTitle { @apply text-2xl leading-8 font-bold sm:text-[32px] sm:leading-10; }
 .detailGrid .price strong { @apply text-[28px] leading-9; }
-.primary { @apply inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-center; box-sizing: border-box; }
+.primary { @apply min-h-12 rounded-lg border-0 text-sm font-semibold inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-center; background: #1f7a54; color: white; box-sizing: border-box; }
 .page button:disabled { cursor: not-allowed; background: #f1f5f2; color: #626b77; }
 .info { @apply my-4 rounded-lg p-4 text-sm leading-6; background: #eff6ff; color: #1d4ed8; }
 .address { @apply mt-4 flex items-start gap-2 text-base; }
@@ -87,15 +75,10 @@
 .badge[data-status="승인 대기"] { background: #fffbeb; color: #b45309; }
 .badge[data-status="예약 거절"] { background: #fef2f2; color: #b91c1c; }
 .badge[data-status="예약 취소"] { background: #f1f5f2; color: #626b77; }
-.demoTools { @apply my-5 rounded-lg border px-4 text-sm; border-color: #e2e8e3; color: #626b77; }
-.demoTools summary { @apply flex min-h-11 cursor-pointer items-center; }
-.demoTools summary::before { content: "+ "; margin-right: 8px; }
-.demoTools[open] summary::before { content: "− "; }
-.demoTools .chips, .demoTools .stateControl { @apply my-3; }
 .sectionHeading { @apply py-8; }
 .sectionHeading h1 { @apply text-2xl leading-8 font-bold sm:text-[32px]; }
 .formWidth { @apply mx-auto w-full max-w-[640px]; }
-.steps { @apply m-0 mb-6 grid list-none grid-cols-3 gap-2 p-0; }
+.steps { @apply m-0 mb-6 grid list-none grid-cols-2 gap-2 p-0; }
 .steps li { @apply flex flex-col items-center gap-2 text-sm; color: #626b77; }
 .steps span { @apply flex h-8 w-8 items-center justify-center rounded-full; background: #f1f5f2; }
 .steps [aria-current="step"] { color: #176b49; font-weight: 600; }
@@ -103,7 +86,6 @@
 .miniProduct { @apply my-4 grid min-w-0 grid-cols-[80px_1fr] items-start gap-4 sm:grid-cols-[120px_1fr]; }
 .miniProduct > div { min-width: 0; }
 .miniProduct .photo { aspect-ratio: 1; }
-.miniProduct .sample { @apply top-0 left-0 text-[10px]; font-size: 12px; }
 .miniProduct .price strong { @apply text-xl; }
 .miniProduct h2 { @apply text-base leading-6; overflow-wrap: anywhere; }
 .quantity { @apply mt-6 flex items-center justify-between rounded-lg border p-2; border-color: #e2e8e3; }
@@ -114,21 +96,13 @@
 .slotGrid { @apply my-4 grid grid-cols-2 gap-3 sm:grid-cols-3; }
 .slot { @apply flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border px-3; border-color: #64748b; }
 .slot:has(input:checked) { background: #eaf6ef; color: #176b49; border-color: #176b49; font-weight: 600; }
-.slot input, .checkLabel input { accent-color: #176b49; width: 20px; height: 20px; }
+.slot input { accent-color: #176b49; width: 20px; height: 20px; }
 .error { @apply mt-3 text-sm; color: #b91c1c; }
 .total { @apply my-4 flex flex-wrap items-center justify-between gap-2 border-t pt-4; border-color: #e2e8e3; }
 .total span { @apply text-sm; }
 .total strong { @apply text-2xl; }
 .actions { @apply grid gap-3 sm:grid-cols-2; }
-.successPanel { @apply my-6 flex flex-col items-center gap-4 rounded-xl p-6 text-center; background: #eaf6ef; color: #176b49; }
-.successPanel p { @apply text-sm leading-6; }
-.statusSummary { @apply my-6 grid grid-cols-3 rounded-xl border bg-white py-5; border-color: #e2e8e3; }
-.statusSummary > div { @apply flex flex-col items-center gap-2 px-2 text-center; }
-.statusSummary strong { @apply text-2xl font-bold; color: #176b49; }
-.statusSummary span { @apply text-xs; color: #626b77; }
-.checkLabel { @apply flex min-h-12 items-center gap-2; }
-.reservationList { @apply grid gap-4; }
-.reservationList { margin-top: 24px; }
+.reservationList { @apply grid gap-4; margin-top: 24px; }
 .reservationList .panel { margin: 0; padding: 16px; }
 .reservationList .reservationTop { border-bottom: 0; padding-bottom: 0; }
 .reservationList .badge { margin: 0; }
@@ -158,29 +132,6 @@
 .reservationDisclosure[open] .closedLabel { display: none; }
 .reservationDisclosure[open] .disclosureChevron { transform: rotate(180deg); }
 
-/* Browse cards: compact hierarchy, separated from detail and reservation views. */
-.card > .photo { max-height: 220px; border-radius: 0; }
-.card .sample { @apply top-3 left-3 px-2 py-1 text-xs font-medium; }
-.card .cardBody { padding: 16px; }
-.card .store { @apply text-xs leading-[18px]; margin-bottom: 6px; }
-.card h3 { min-height: 0; font-size: 18px; line-height: 26px; }
-.card .price { margin-top: 12px; gap: 6px 8px; }
-.card .price strong { font-size: 24px; line-height: 32px; letter-spacing: -.02em; }
-.card .discount { font-weight: 700; }
-.card .price del { font-size: 12px; }
-.card .unit { margin-top: 2px; }
-.card .details { @apply grid grid-cols-2 gap-x-4 gap-y-3 rounded-lg p-3; margin: 16px 0; background: #f8faf8; }
-.card .details > div { @apply flex-col items-start gap-1; }
-.card .details > div:last-child { @apply col-span-2 flex-row flex-wrap items-center justify-between border-t pt-3; border-color: #e2e8e3; }
-.card .details dt { font-size: 12px; line-height: 18px; }
-.card .details dd { text-align: left; font-size: 14px; line-height: 20px; font-weight: 600; }
-.card .details > div:first-child dd { color: #176b49; }
-.card .detailButton { @apply justify-center; gap: 8px; }
-.card .detailButton svg { width: 16px; height: 16px; }
-@media (min-width: 640px) {
-  .card .cardBody { padding: 20px; }
-}
-
 /* Reference-inspired horizontal browse list; other screens keep their layout. */
 .browseList { @apply grid grid-cols-1 gap-3; }
 .browseList .card { @apply grid items-start gap-3 p-3; grid-template-columns: 96px minmax(0, 1fr); box-shadow: none; }
@@ -204,3 +155,16 @@
   .browseList .card > .photo { width: 144px; height: 192px; }
   .browseList .card h3 { font-size: 18px; line-height: 26px; }
 }
+
+/* State feedback shares the existing consumer tokens. */
+.feedback { margin-top: 24px; }
+.feedback > p { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #626b77; }
+.loadingRows { display: grid; gap: 12px; margin-top: 16px; }
+.loadingRows > div { min-height: 160px; background: #f1f5f2; border-radius: 12px; }
+.empty h2 { font-size: 20px; line-height: 28px; }
+.empty .primary { max-width: 320px; }
+.page button { transition: background-color 150ms, color 150ms; }
+.page .info p { margin: 0; }
+.page h1, .page h2, .page h3, .page dd { overflow-wrap: anywhere; }
+.page svg { flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) { .page button { transition: none; } }

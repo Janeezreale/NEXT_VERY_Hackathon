@@ -4,10 +4,16 @@ export const previewProducts = [
   { id: "preview-2", name: "달콤한 사과 한 봉지", store: "계절 과일상점", category: "과일", business: "과일·채소", price: 6000, base: 8000, discount: 25, stock: 3, unit: "봉지", pickup: "17:00–19:00", end: "18:00", photo: "photo-1560806887-1e4cd0b6cbd6", description: "간식으로 나누기 좋은 사과 한 봉지예요. 사진은 참고용이며 실제 상품의 크기와 구성은 다를 수 있어요.", address: "샘플 동네 A · 예시로 24, 1층", slots: ["17:00", "17:30", "18:00"], region: "샘플 동네 A" },
   { id: "preview-3", name: "작은 꽃다발로 전하는 마음", store: "골목 꽃집", category: "꽃", business: "꽃집", price: 9000, base: 15000, discount: 40, stock: 2, unit: "다발", pickup: "17:30–20:00", end: "19:00", photo: "photo-1563241527-3004b7be0ffd", description: "일상에 작은 색을 더하는 꽃다발이에요. 꽃의 종류와 포장 구성은 판매자 확인이 필요해요.", address: "샘플 동네 A · 예시길 8, 1층", slots: ["17:30", "18:00", "18:30"], region: "샘플 동네 A" },
 ] as const;
-export type PreviewProduct = (typeof previewProducts)[number];
+export type PreviewProduct = Omit<(typeof previewProducts)[number], "name" | "photo"> & { name: string; photo: string };
 export const money = (value: number) => new Intl.NumberFormat("ko-KR").format(value) + "원";
 export const previewStatuses = ["승인 대기", "예약 승인", "예약 거절", "예약 취소", "판매 완료"] as const;
 export type PreviewStatus = (typeof previewStatuses)[number];
+export type PreviewReservation = (typeof previewReservations)[number];
+// Isolated transport simulation; never called as an API failure fallback.
+export async function previewRequest(outcome: import("./preview-state").RequestOutcome) {
+  await new Promise<void>(resolve => setTimeout(resolve, 650));
+  return outcome;
+}
 // Pre-authored snapshots, deliberately independent from the current-price display.
 export const previewReservations = previewStatuses.map((status, index) => ({
   id: `DEMO-00${index + 1}`, product: previewProducts[index % 3], status,

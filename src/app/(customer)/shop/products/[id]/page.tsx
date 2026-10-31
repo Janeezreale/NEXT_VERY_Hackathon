@@ -1,10 +1,8 @@
 import ProductPreview from "../../../../../components/customer/product-preview";
 import { previewProducts } from "../../../../../components/customer/preview-data";
-import { PreviewUnavailable } from "../../../../../components/customer/preview-ui";
 import { filtersFrom, browseUrl, contextQuery, firstValue, loadState, availability, type SearchValues } from "../../../../../components/customer/preview-state";
 
 export default async function ProductPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchValues> }) {
-  if (process.env.NODE_ENV !== "development") return <PreviewUnavailable />;
   const { id } = await params;
   const values = await searchParams;
   const filters = filtersFrom(values);

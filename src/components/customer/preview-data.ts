@@ -1,4 +1,4 @@
-// Development-only UI scenarios. These are not API types or real inventory.
+// Demo UI scenarios, labelled on screen by PreviewShell. These are not API types or real inventory.
 export const previewProducts = [
   { id: "preview-1", name: "오늘의 제철 채소 꾸러미", store: "초록채소 가게", category: "채소", business: "과일·채소", price: 5900, base: 10000, discount: 41, stock: 4, unit: "꾸러미", pickup: "18:00–20:00", end: "18:30", photo: "photo-1540420773420-3366772f4999", description: "다양한 채소를 한 번에 만나는 꾸러미예요. 구성과 상태는 방문 전 판매자에게 확인해 주세요.", address: "샘플 동네 A · 예시로 12, 1층", slots: ["18:00", "18:30", "19:00"], region: "샘플 동네 A" },
   { id: "preview-2", name: "달콤한 사과 한 봉지", store: "계절 과일상점", category: "과일", business: "과일·채소", price: 6000, base: 8000, discount: 25, stock: 3, unit: "봉지", pickup: "17:00–19:00", end: "18:00", photo: "photo-1560806887-1e4cd0b6cbd6", description: "간식으로 나누기 좋은 사과 한 봉지예요. 사진은 참고용이며 실제 상품의 크기와 구성은 다를 수 있어요.", address: "샘플 동네 A · 예시로 24, 1층", slots: ["17:00", "17:30", "18:00"], region: "샘플 동네 A" },

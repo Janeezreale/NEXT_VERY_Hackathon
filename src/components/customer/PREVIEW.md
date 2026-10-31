@@ -4,7 +4,7 @@
 
 이번 변경은 `src/app/(customer)/shop/`와 `src/components/customer/` 내부에 한정합니다.
 API·DB·인증·가격 정책·재고 확보·실제 예약·취소는 구현하지 않았습니다.
-`preview-data.ts`는 격리된 개발용 Mock입니다. NODE_ENV=development일 때만 페이지를 표시하며 API 오류 대체 데이터로 사용하지 않습니다.
+`preview-data.ts`는 개발용 Mock입니다. 사용자 요청으로 배포 화면에도 표시하며(2026-10-31), 모든 화면 상단에 데모 데이터 안내를 표시합니다. API 오류 대체 데이터로 사용하지 않습니다.
 일반 화면에는 개발용 선택 도구를 노출하지 않습니다.
 
 ## 확인 URL

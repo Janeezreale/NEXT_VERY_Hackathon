@@ -8,7 +8,7 @@ import styles from "../../app/(customer)/shop/shop.module.css";
 
 export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
   return <main className={styles.page}>
-    
+    <p className={styles.panel} role="note">개발용 데모 데이터입니다. 실제 상품이 아니며 예약되지 않습니다.</p>
     <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div></nav>
     {back && <Link href={back} className={styles.back}><ArrowLeft size={18} aria-hidden="true" />뒤로</Link>}
     {children}
@@ -37,8 +37,4 @@ export function PickupFacts({ product }: { product: PreviewProduct }) {
 
 export function StoreInfo({ product }: { product: PreviewProduct }) {
   return <section className={styles.panel}><p className={styles.eyebrow}>픽업 장소</p><h2>{product.store}</h2><p className={styles.address}><MapPin size={18} aria-hidden="true" />{product.address}</p><p className={styles.description}>선택한 시간에 방문해 상품을 확인한 후 현장에서 결제해 주세요.</p></section>;
-}
-
-export function PreviewUnavailable() {
-  return <main className={styles.page}><h1>소비자 UI 미리보기</h1><p>개발 환경에서만 시연 화면을 제공해요. 실제 서비스는 아직 연결되지 않았어요.</p></main>;
 }

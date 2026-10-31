@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { browseUrl, contextQuery, filtersFrom, regions, reservationMatches } from "./preview-state";
+import { browseUrl, contextQuery, filtersFrom, filtersWithSavedRegion, regionCookie, regions, reservationMatches } from "./preview-state";
 
 describe("consumer browse URL", () => {
   it("does not invent an initial region", () => {
@@ -19,6 +19,22 @@ describe("consumer browse URL", () => {
   });
   it("rejects unknown and duplicate query values without external navigation", () => {
     expect(browseUrl(filtersFrom({ region: "https://example.com", category: "채소" }))).toBe("/shop");
+  });
+});
+describe("saved region", () => {
+  it("restores the saved region when the URL has none", () => {
+    expect(filtersWithSavedRegion({}, "성북구")).toEqual({ region: "성북구" });
+  });
+  it("prefers the URL", () => {
+    expect(filtersWithSavedRegion({ region: "마포구" }, "성북구")).toEqual({ region: "마포구" });
+  });
+  it("ignores a missing or tampered cookie", () => {
+    expect(filtersWithSavedRegion({}, undefined)).toEqual({ region: "" });
+    expect(filtersWithSavedRegion({}, "샘플 동네")).toEqual({ region: "" });
+  });
+  it("encodes the region and clears the cookie when none is selected", () => {
+    expect(regionCookie("성북구")).toContain(`shop-region=${encodeURIComponent("성북구")}; path=/;`);
+    expect(regionCookie("")).toContain("max-age=0");
   });
 });
 describe("UI states", () => {

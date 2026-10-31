@@ -167,3 +167,11 @@
 .page h1, .page h2, .page h3, .page dd { overflow-wrap: anywhere; }
 .page svg { flex-shrink: 0; }
 @media (prefers-reduced-motion: reduce) { .page button { transition: none; } }
+/* 휴대폰 첫 화면에서 상품 카드가 보이도록 머리말을 줄인다. */
+@media (max-width: 639px) {
+  .page { padding-top: 0; }
+  .localNav { @apply min-h-0 gap-x-3 gap-y-0 py-2; }
+  .heading { @apply py-4; }
+  .heading .eyebrow, .heading .description { display: none; }
+  .resultsHeading { @apply mt-4 mb-3; }
+}

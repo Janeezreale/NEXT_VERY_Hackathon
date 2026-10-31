@@ -6,7 +6,7 @@ import { ArrowRight, Leaf, MapPin, ShoppingBasket, Store } from "lucide-react";
 import { CurrentPrice, PickupFacts, PreviewShell, ProductPhoto } from "./preview-ui";
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
 import StoreMap from "./store-map";
-import { browseUrl, contextQuery, filtersFrom, regions } from "./preview-state";
+import { browseUrl, contextQuery, filtersFrom, regionCookie, regions } from "./preview-state";
 import { SALE_STATUS_LABELS, type ProductView } from "./product-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
@@ -14,7 +14,11 @@ type Filters = ReturnType<typeof filtersFrom>;
 export default function BrowsePreview({ filters, products, state = "ready" }: { filters: Filters; products: ProductView[]; state?: "ready" | "error" }) {
   const router = useRouter();
   const [view, setView] = useState<"list" | "map">("list");
-  const change = (patch: Partial<Filters>) => router.push(browseUrl({ ...filters, ...patch }), { scroll: false });
+  const change = (patch: Partial<Filters>) => {
+    const next = { ...filters, ...patch };
+    document.cookie = regionCookie(next.region);
+    router.push(browseUrl(next), { scroll: false });
+  };
   const context = contextQuery(filters);
   return <PreviewShell>
     <header className={styles.heading}><div><p className={styles.eyebrow}><Leaf size={16} aria-hidden="true" />우리 동네의 신선한 발견</p><h1>가까운 동네에서,<br />가볍게 만나는 신선함</h1><p className={styles.description}>필요한 만큼 골라 담고, 매장에서 직접 픽업하세요.</p></div><div className={styles.headingIcon} aria-hidden="true"><ShoppingBasket size={64} strokeWidth={1.3} /></div></header>

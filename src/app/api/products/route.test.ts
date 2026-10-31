@@ -96,7 +96,7 @@ describe("GET /api/products", () => {
   });
 
   it("excludes products after today's store closing", async () => {
-    db.rows = [row({ sale_ends_at: hours(10), stores: { ...row().stores, closing_time: "00:00:00" } })];
+    db.rows = [row({ sale_ends_at: hours(10), stores: { ...row().stores, closing_time: "10:00:00" } })];
     expect((await (await list()).json()).data.items).toEqual([]);
   });
 

@@ -6,12 +6,16 @@ import { ProductForm } from "./product-form";
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 describe("ProductForm", () => {
-  const html = renderToStaticMarkup(<ProductForm />);
+  const html = renderToStaticMarkup(<ProductForm closingTime="23:00" />);
 
   it("asks for everything needed to publish", () => {
     for (const name of ["name", "quantity", "unit", "basePrice", "minPrice", "freshness", "saleEndsAt", "sellerConfirmed"]) {
       expect(html).toContain(`name="${name}"`);
     }
+  });
+
+  it("tells the seller the latest sale end", () => {
+    expect(html).toContain("가게 마감(23:00) 30분 전까지");
   });
 
   it("does not require an image", () => {

@@ -38,13 +38,13 @@
 | 지도 매장 조회 | GET `/api/stores` | 없음 | 좌표 있는 Store 목록(`items`), 최대 200개 | 비로그인 허용 |
 | 이미지 업로드 | Supabase Storage `product-images` 직접 업로드 | `{storeId}/{uuid}.{jpg,png,webp}` | 업로드 경로 | 판매자, 본인 매장 폴더만. API 경로 없음 |
 | 이미지 분석 | POST `/api/seller/analyses` | imagePath | Analysis | 이미지 소유 판매자 |
-| 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, imagePath?, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능 |
+| 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, imagePath?, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능. 판매 종료가 가게 마감 30분 전을 넘으면 400 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED |
 | 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 409 PRODUCT_HAS_RESERVATIONS |
 | 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있고 마감 전인 Product 목록, 항목마다 store(id, name, address) 포함. 매장 마감으로 제외된 상품 때문에 한 페이지가 limit보다 적어도 nextCursor가 있을 수 있음 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | `{ product, store }`. 품절·판매 종료도 saleOpen false로 반환. 없는 상품·잘못된 ID는 404 | 비로그인 허용 |
-| 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice, contactName, contactPhone | Reservation | 소비자 본인 |
+| 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice, contactName, contactPhone | Reservation | 소비자 본인. 픽업은 판매 종료와 가게 마감 30분 전 중 이른 시각까지 |
 | 내 예약 | GET `/api/me/reservations` | status?, cursor?, limit? | Reservation 목록 | 소비자 본인 |
 | 내 예약 취소 | POST `/api/reservations/:id/cancel` | 경로 ID | Reservation | 소비자 본인, pending·approved만 |
 | 판매자 예약 조회 | GET `/api/seller/reservations` | status?, cursor?, limit? | Reservation 목록 | 본인 매장 |

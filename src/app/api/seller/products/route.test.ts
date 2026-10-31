@@ -115,6 +115,7 @@ describe("POST /api/seller/products", () => {
     ["a minimum price above the base price", { minPrice: 10001 }, "minPrice"],
     ["a past end time", { saleEndsAt: "2000-11-01T18:00:00+09:00" }, "saleEndsAt"],
     ["a missing price", { basePrice: undefined }, "basePrice"],
+    ["a sale end after the reservation cutoff", { saleEndsAt: "2099-11-01T20:31:00+09:00" }, "saleEndsAt"],
   ])("rejects %s", async (_, change, field) => {
     const response = await post({ ...input, ...change });
     const { error } = await response.json();

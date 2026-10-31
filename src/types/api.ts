@@ -84,7 +84,7 @@ export type Product = {
   discountRate: number;
   freshness: Freshness;
   saleEndsAt: string;
-  /** 판매 종료와 오늘 매장 마감 중 이른 시각. 이 시각부터 예약을 막는다. */
+  /** 판매 종료와 오늘 가게 마감 30분 전 중 이른 시각. 이 시각부터 예약을 막는다. */
   saleDeadline: string;
   imageUrls: string[];
   pricedAt: string;

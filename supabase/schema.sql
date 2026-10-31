@@ -142,6 +142,8 @@ grant execute on function public.recent_approved_quantities(uuid[]) to anon, aut
 -- 예약 함수. 잠금 순서는 언제나 products → reservations다.
 -- 오류는 메시지에 API 오류 코드를 담아 서버가 변환한다.
 
+-- 예약은 가게 마감 30분 전까지 받는다. 영업일은 오전 6시에 바뀌고, 06:00 이전 마감은 다음 날 새벽이다.
+-- 값은 src/lib/pricing/config.ts와 같아야 한다.
 create function public.reservation_deadline(sale_ends_at timestamptz, closing_time time)
 returns timestamptz
 language sql
@@ -150,7 +152,11 @@ set search_path = ''
 as $$
   select least(
     sale_ends_at,
-    ((now() at time zone 'Asia/Seoul')::date + closing_time) at time zone 'Asia/Seoul'
+    (
+      ((now() at time zone 'Asia/Seoul' - interval '6 hours')::date + closing_time
+        + case when closing_time < time '06:00' then interval '1 day' else interval '0' end)
+      at time zone 'Asia/Seoul'
+    ) - interval '30 minutes'
   );
 $$;
 

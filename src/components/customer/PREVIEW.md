@@ -12,11 +12,11 @@ API·DB·인증·가격 정책·재고 확보·실제 예약·취소는 구현�
 기존 개발 서버 기준 `http://localhost:3100` 뒤에 다음 경로를 붙입니다.
 
 - `/shop`: 지역 미선택 안내.
-- `/shop?region=성북구&category=채소`: 선택한 조건으로 목록 조회.
-- 위 목록의 상세 링크 → 상세의 뒤로: URL에 저장된 지역·품목 복원.
+- `/shop?region=성북구`: 선택한 조건으로 목록 조회.
+- 위 목록의 상세 링크 → 상세의 뒤로: URL에 저장된 지역 복원.
 - `/shop?region=성북구&_preview=loading`: 목록 로딩.
 - `/shop?region=성북구&_preview=error`: 목록 오류. 다시 시도하면 같은 조건의 개발용 목록으로 복귀.
-- `/shop?region=마포구`: 빈 목록. 초기화해도 선택 지역은 유지.
+- `/shop?region=마포구`: 빈 목록.
 - `/shop/products/preview-1?_preview=soldout`: 품절.
 - `/shop/products/preview-1?_preview=ended`: 판매 종료.
 - `/shop/products/preview-1?_preview=unavailable`: 재고 확인 불가.

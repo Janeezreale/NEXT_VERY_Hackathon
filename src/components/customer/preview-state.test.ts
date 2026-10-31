@@ -3,11 +3,11 @@ import { availability, browseUrl, contextQuery, filtersFrom, loadState, regions,
 
 describe("consumer browse URL", () => {
   it("does not invent an initial region", () => {
-    expect(filtersFrom({})).toEqual({ region: "", category: "전체" });
+    expect(filtersFrom({})).toEqual({ region: "" });
     expect(browseUrl(filtersFrom({}))).toBe("/shop");
   });
-  it("round-trips region and both filters through a detail URL", () => {
-    const filters = filtersFrom({ region: "성북구", category: "채소" });
+  it("round-trips the region through a detail URL", () => {
+    const filters = filtersFrom({ region: "성북구" });
     const query = contextQuery(filters);
     expect(filtersFrom(Object.fromEntries(new URLSearchParams(query)))).toEqual(filters);
     expect(browseUrl(filters)).toBe(`/shop?${query}`);
@@ -18,7 +18,7 @@ describe("consumer browse URL", () => {
     expect(filtersFrom({ region: "샘플 동네 A" }).region).toBe("");
   });
   it("rejects unknown and duplicate query values without external navigation", () => {
-    expect(browseUrl(filtersFrom({ region: "https://example.com", category: ["꽃", "전체"] }))).toBe("/shop");
+    expect(browseUrl(filtersFrom({ region: "https://example.com", category: "채소" }))).toBe("/shop");
   });
   it("does not propagate developer scenarios in consumer navigation", () => {
     expect(contextQuery(filtersFrom({ region: "성북구", _preview: "error" }))).not.toContain("_preview");

@@ -22,7 +22,6 @@
 .resultsHeading { @apply mt-8 mb-4 flex flex-wrap items-center justify-between gap-3 sm:mt-12; }
 .resultsHeading h2 { @apply text-xl leading-7 font-bold sm:text-2xl; }
 .resultsHeading p { @apply mt-1 text-sm leading-5; color: #626b77; }
-.reset { @apply flex min-h-11 items-center gap-2 border-0 bg-transparent px-2 text-sm; color: #176b49; }
 .card { @apply overflow-hidden rounded-xl border bg-white; border-color: #e2e8e3; box-shadow: 0 2px 8px rgb(31 41 55 / .04); }
 .cardBody { @apply p-4 sm:p-6; }
 .store { @apply mb-2 flex items-center gap-1 text-sm; color: #626b77; }
@@ -60,7 +59,7 @@
 .back { @apply my-4; }
 .photo { @apply relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl; background: #f1f5f2; color: #626b77; }
 .photo img { @apply block h-full w-full object-cover; }
-.detailGrid { @apply my-6 grid items-start gap-6 md:grid-cols-2; }
+.detailGrid { @apply my-6 grid items-start gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:grid-cols-2; }
 .panel { @apply my-4 min-w-0 rounded-xl border bg-white p-4 sm:p-6; border-color: #e2e8e3; }
 .detailGrid > .panel { @apply m-0; }
 .panel h2, .miniProduct h2 { @apply text-xl leading-7 font-semibold; }
@@ -133,8 +132,8 @@
 .reservationDisclosure[open] .disclosureChevron { transform: rotate(180deg); }
 
 /* Reference-inspired horizontal browse list; other screens keep their layout. */
-.browseList { @apply grid grid-cols-1 gap-3; }
-.browseList .card { @apply grid items-start gap-3 p-3; grid-template-columns: 96px minmax(0, 1fr); box-shadow: none; }
+.browseList { @apply grid grid-cols-1 gap-3 lg:gap-6; }
+.browseList .card { @apply grid items-start gap-3 p-4; grid-template-columns: 96px minmax(0, 1fr); box-shadow: none; }
 .browseList .card > .photo { width: 96px; height: 144px; max-height: none; aspect-ratio: 2 / 3; border-radius: 8px; }
 .browseList .card .cardBody { min-width: 0; padding: 0; }
 .browseList .card h3 { font-size: 16px; line-height: 24px; }
@@ -151,7 +150,7 @@
 .browseList .card .detailButton:hover { text-decoration: underline; }
 .browseList .skeleton { min-height: 220px; }
 @media (min-width: 640px) {
-  .browseList .card { grid-template-columns: 144px minmax(0, 1fr); gap: 20px; padding: 16px; }
+  .browseList .card { grid-template-columns: 144px minmax(0, 1fr); gap: 20px; padding: 24px; }
   .browseList .card > .photo { width: 144px; height: 192px; }
   .browseList .card h3 { font-size: 18px; line-height: 26px; }
 }

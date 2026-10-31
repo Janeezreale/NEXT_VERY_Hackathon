@@ -111,6 +111,13 @@
     color: var(--foreground);
     font-family: var(--font-family-sans);
     -webkit-font-smoothing: antialiased;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+
+  button,
+  th {
+    white-space: nowrap;
   }
 }
 

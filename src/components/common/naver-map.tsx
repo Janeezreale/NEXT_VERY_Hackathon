@@ -84,13 +84,20 @@ export function NaverMap({ markers, onSelect, label, className }: NaverMapProps)
         onReady={() => setStatus("ready")}
         onError={() => setStatus("failed")}
       />
-      <div
-        ref={container}
-        role="application"
-        aria-label={label}
-        aria-busy={status === "loading"}
-        className={cn("h-64 w-full overflow-hidden rounded-md border border-border bg-muted", className)}
-      />
+      <div className="relative">
+        <div
+          ref={container}
+          role="application"
+          aria-label={label}
+          aria-busy={status === "loading"}
+          className={cn("h-64 w-full overflow-hidden rounded-md border border-border bg-muted", className)}
+        />
+        {status === "loading" ? (
+          <p role="status" className="absolute inset-0 flex items-center justify-center text-sm leading-5 text-muted-foreground">
+            지도를 불러오는 중이에요
+          </p>
+        ) : null}
+      </div>
     </>
   );
 }

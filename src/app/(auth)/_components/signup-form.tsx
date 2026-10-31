@@ -32,13 +32,13 @@ const ROLE_OPTIONS: {
   {
     value: "consumer",
     title: "소비자",
-    description: "우리 동네 마감 할인 상품을 찾고 픽업을 예약해요.",
+    description: "할인 상품을 찾고 예약해요.",
     Icon: ShoppingBasket,
   },
   {
     value: "seller",
     title: "판매자",
-    description: "남은 상품을 사진으로 등록하고 예약을 관리해요.",
+    description: "남은 상품을 올리고 관리해요.",
     Icon: Store,
   },
 ];

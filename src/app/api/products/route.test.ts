@@ -22,6 +22,7 @@ vi.mock("../../../lib/supabase/server", () => ({
     const query = {
       select: () => query,
       eq: (...args: unknown[]) => (db.filters.push(["eq", ...args]), query),
+      is: (...args: unknown[]) => (db.filters.push(["is", ...args]), query),
       gt: (...args: unknown[]) => (db.filters.push(["gt", args[0]]), query),
       gte: (...args: unknown[]) => (db.filters.push(["gte", ...args]), query),
       order: () => query,
@@ -87,6 +88,7 @@ describe("GET /api/products", () => {
     await list();
     expect(db.filters).toEqual([
       ["eq", "stores.region_code", "성북구"],
+      ["is", "deleted_at", null],
       ["gt", "available_quantity"],
       ["gte", "sale_ends_at", "2026-10-31T21:00:00.000Z"],
     ]);

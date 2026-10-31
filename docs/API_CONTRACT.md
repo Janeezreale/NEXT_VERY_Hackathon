@@ -41,7 +41,7 @@
 | 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, imagePath?, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능. 판매 종료가 가게 마감 30분 전을 넘으면 400 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt, imagePath? | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED. unit은 `PRODUCT_UNITS` 중 하나. imagePath가 없으면 사진 유지, 경로면 교체, null이면 삭제. 다른 매장 경로는 403 |
-| 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 409 PRODUCT_HAS_RESERVATIONS |
+| 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 숨김 처리하고 재고를 0으로 둔다(D08). 이후 목록·상세·수정·예약은 404 |
 | 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있는 현재 영업일의 Product 목록, 항목마다 store(id, name, address, openingTime, closingTime) 포함. 오픈 전·마감 후 상품도 포함하며 `saleStatus`(on_sale, sold_out, before_open, store_closed, sale_ended)로 구분 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | `{ product, store }`. 품절·판매 종료도 saleOpen false로 반환. 없는 상품·잘못된 ID는 404 | 비로그인 허용 |
 | 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice, contactName, contactPhone | Reservation | 소비자 본인. 즉시 확정. 픽업은 판매 종료와 가게 마감 30분 전 중 이른 시각까지. 오픈 전·예약 마감 후는 409 STORE_CLOSED |
@@ -64,7 +64,7 @@
 | 404 | NOT_FOUND | 상품·예약을 찾을 수 없음 |
 | 409 | OUT_OF_STOCK | 남은 수량을 다시 조회하고 선택 수정 |
 | 409 | STORE_EXISTS | 이미 등록한 매장 안내 |
-| 409 | STOCK_CHANGED / PRODUCT_HAS_RESERVATIONS | 최신 재고 확인, 삭제 불가 안내 |
+| 409 | STOCK_CHANGED | 최신 재고 확인 |
 | 409 | SALE_ENDED / INVALID_TRANSITION | 종료 또는 상태 변경 안내·새로 조회 |
 | 409 | PRICE_CHANGED | 최신 가격을 보여주고 재확인 후 재요청 |
 | 413 / 415 | IMAGE_TOO_LARGE / UNSUPPORTED_IMAGE | 다른 이미지 선택 |

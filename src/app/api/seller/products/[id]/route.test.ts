@@ -9,6 +9,7 @@ const db = vi.hoisted(() => ({
   user: "seller-1" as string | null,
   role: "seller",
   rpcError: null as unknown,
+  rpcData: null as unknown,
   calls: [] as [string, Record<string, unknown>][],
   images: [] as string[],
   removeError: null as unknown,
@@ -45,7 +46,7 @@ vi.mock("../../../../../lib/supabase/server", () => ({
     }),
     rpc: async (name: string, args: Record<string, unknown>) => {
       db.calls.push([name, args]);
-      return { data: row, error: db.rpcError };
+      return { data: db.rpcData ?? row, error: db.rpcError };
     },
   }),
 }));
@@ -60,6 +61,7 @@ beforeEach(() => {
   db.user = "seller-1";
   db.role = "seller";
   db.rpcError = null;
+  db.rpcData = null;
   db.calls = [];
   db.images = [];
   db.removeError = null;
@@ -170,6 +172,7 @@ describe("DELETE /api/seller/products/:id", () => {
 
   it("removes the photo file after deleting the product", async () => {
     db.images = [OLD];
+    db.rpcData = true;
     expect((await remove()).status).toBe(200);
     expect(db.steps).toEqual([["remove", [OLD]]]);
   });
@@ -177,16 +180,15 @@ describe("DELETE /api/seller/products/:id", () => {
   it("still succeeds when the file cannot be removed", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     db.images = [OLD];
+    db.rpcData = true;
     db.removeError = new Error("storage down");
     expect((await remove()).status).toBe(200);
   });
 
-  it("refuses a product with reservations", async () => {
+  it("keeps the photo of a product kept for its reservations", async () => {
     db.images = [OLD];
-    db.rpcError = { message: "PRODUCT_HAS_RESERVATIONS" };
-    const response = await remove();
-    expect(response.status).toBe(409);
-    expect((await response.json()).error.code).toBe("PRODUCT_HAS_RESERVATIONS");
+    db.rpcData = false;
+    expect((await remove()).status).toBe(200);
     expect(db.steps).toEqual([]);
   });
 

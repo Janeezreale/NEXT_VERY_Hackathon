@@ -12,6 +12,7 @@ const db = vi.hoisted(() => ({
   rows: [] as unknown[],
   written: null as unknown,
   storeFilter: null as unknown,
+  deletedFilter: null as unknown,
   limit: 0,
   or: null as string | null,
   writeError: null as unknown,
@@ -32,6 +33,7 @@ vi.mock("../../../../lib/supabase/server", () => ({
         select: () => query,
         insert: (row: unknown) => ((db.written = row), query),
         eq: (_: string, value: unknown) => ((db.storeFilter = value), query),
+        is: (...args: unknown[]) => ((db.deletedFilter = args), query),
         order: () => query,
         limit: (value: number) => ((db.limit = value), query),
         or: (value: string) => ((db.or = value), query),
@@ -151,6 +153,11 @@ describe("GET /api/seller/products", () => {
     db.rows = [row(1)];
     await list(`?limit=2&cursor=${first.nextCursor}`);
     expect(db.or).toContain(`id.lt.${row(2).id}`);
+  });
+
+  it("hides deleted products", async () => {
+    await list();
+    expect(db.deletedFilter).toEqual(["deleted_at", null]);
   });
 
   it("rejects a tampered cursor", async () => {

@@ -8,17 +8,13 @@ import { FormAlert } from "@/src/components/common/form-alert";
 import { FormField } from "@/src/components/common/form-field";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
-import { apiFetch, ApiClientError } from "@/src/lib/client/api";
+import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
 import { storeCreateSchema, type StoreCreateInput } from "@/src/lib/schemas/api";
 import type { Store } from "@/src/types/api";
 
 import { AddressField } from "./address-field";
 
 type StoreErrors = Partial<Record<keyof StoreCreateInput, string>>;
-
-function firstErrors(fieldErrors: Record<string, string[] | undefined>): StoreErrors {
-  return Object.fromEntries(Object.entries(fieldErrors).map(([key, messages]) => [key, messages?.[0]]));
-}
 
 export function StoreForm({ store }: { store: Store | null }) {
   const router = useRouter();
@@ -44,7 +40,7 @@ export function StoreForm({ store }: { store: Store | null }) {
 
     const parsed = storeCreateSchema.safeParse(values);
     if (!parsed.success) {
-      setErrors(firstErrors(z.flattenError(parsed.error).fieldErrors));
+      setErrors(firstFieldErrors(z.flattenError(parsed.error).fieldErrors));
       return;
     }
 
@@ -60,7 +56,7 @@ export function StoreForm({ store }: { store: Store | null }) {
     } catch (error) {
       if (!(error instanceof ApiClientError)) throw error;
       setFormError(error.message);
-      if (error.fieldErrors) setErrors(firstErrors(error.fieldErrors));
+      if (error.fieldErrors) setErrors(firstFieldErrors(error.fieldErrors));
     } finally {
       setSubmitting(false);
     }

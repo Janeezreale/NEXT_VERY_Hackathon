@@ -10,8 +10,7 @@ const product = {
   basePrice: 10000,
   minPrice: 7000,
   freshness: "fresh",
-  saleEndsAt: "2026-11-01T18:00:00+09:00",
-  imagePaths: [],
+  saleEndsAt: "2099-11-01T18:00:00+09:00",
   sellerConfirmed: true,
 };
 
@@ -37,7 +36,8 @@ describe("productCreateSchema", () => {
     ["fractional quantity", { quantity: 1.5 }],
     ["zero quantity", { quantity: 0 }],
     ["unconfirmed publish", { sellerConfirmed: false }],
-    ["time without offset", { saleEndsAt: "2026-11-01T18:00:00" }],
+    ["time without offset", { saleEndsAt: "2099-11-01T18:00:00" }],
+    ["past end time", { saleEndsAt: "2000-11-01T18:00:00+09:00" }],
   ])("rejects %s", (_, change) => {
     expect(productCreateSchema.safeParse({ ...product, ...change }).success).toBe(false);
   });

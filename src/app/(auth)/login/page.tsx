@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { LoginForm } from "../_components/login-form";
+import { redirectIfSignedIn } from "../_lib/signed-in";
 
 export const metadata: Metadata = { title: "로그인" };
 
@@ -13,6 +14,7 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string | string[] }>;
 }) {
+  await redirectIfSignedIn();
   const { error } = await searchParams;
   const initialError = typeof error === "string" ? (ERROR_MESSAGES[error] ?? null) : null;
 

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 
 import { SignupForm } from "../_components/signup-form";
+import { redirectIfSignedIn } from "../_lib/signed-in";
 
 export const metadata: Metadata = { title: "회원가입" };
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  await redirectIfSignedIn();
+
   return (
     <section
       aria-labelledby="signup-title"

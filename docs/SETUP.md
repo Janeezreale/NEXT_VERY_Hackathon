@@ -4,7 +4,7 @@
 
 ## 준비 범위
 
-**패키지 설치 완료(2026-10-31).** 사용자의 패키지 설치 요청에 따라 개발 의존성과 설정을 준비했습니다. 설치 결과는 [설치 기록](#설치-기록)을 확인합니다. 화면·API·DB·인증 연결·테스트 코드는 아직 없습니다. 따라서 패키지 설치 완료와 L02 전체 완료를 구분합니다.
+개발 의존성과 설정을 준비했습니다. 설치 결과는 [설치 기록](#설치-기록)을 확인합니다. 인증, 소비자 화면 개발용 미리보기, DB 스키마·RLS가 구현됐고 판매자 화면·서버 API·Storage는 아직 없습니다. 작업별 상태는 [팀 작업표](TEAM_TASKS.md)를 확인합니다.
 
 ## 팀원 설치 방법
 
@@ -21,12 +21,12 @@ npm ci
 | 명령 | 용도 | 현재 조건 |
 | --- | --- | --- |
 | `npm ci` | 잠금 파일대로 설치 | 사용 가능 |
-| `npm run lint` | ESLint 검사 | 현재 설정 파일 검사. 앱 검증을 의미하지 않음 |
-| `npm run typecheck` | 엄격한 TypeScript 검사 | 현재 타입 환경 검사. 기능 코드는 아직 없음 |
+| `npm run lint` | ESLint 검사 | 사용 가능 |
+| `npm run typecheck` | 엄격한 TypeScript 검사 | 사용 가능 |
 | `npm run test:run` | Vitest 일회 실행 | 테스트 없음은 실패로 보고. passWithNoTests 사용 안 함 |
-| `npm test` | Vitest 감시 실행 | 테스트 작성 후 사용 |
-| `npm run dev` | 로컬 Next.js 서버 | app/layout.tsx·app/page.tsx 작성 후 사용 |
-| `npm run build` | 프로덕션 빌드 | 앱 진입 파일 작성 후 사용 |
+| `npm test` | Vitest 감시 실행 | 사용 가능 |
+| `npm run dev` | 로컬 Next.js 서버 | 사용 가능. 루트 페이지 `src/app/page.tsx`는 아직 없음 |
+| `npm run build` | 프로덕션 빌드 | 사용 가능 |
 | `npm start` | 빌드 결과 실행 | 성공한 빌드 필요 |
 | `npm run ui -- --help` | 설치된 shadcn CLI 도움말 | 사용 가능 |
 
@@ -40,7 +40,7 @@ npm ci
 
 ## Tailwind·shadcn 사용 준비
 
-Tailwind 4, PostCSS 플러그인, shadcn CLI, Radix UI, 아이콘·클래스 유틸리티·애니메이션 의존성을 설치합니다. **shadcn 테마나 UI 컴포넌트 생성까지 완료된 것은 아닙니다.**
+Tailwind 4, PostCSS 플러그인, shadcn CLI, Radix UI, 아이콘·클래스 유틸리티·애니메이션 의존성을 설치합니다. 현재 `components/ui/`에는 button·input·label만 있고 `components.json`은 없습니다.
 
 C와 총괄이 앱 초기화 시 `app/globals.css`의 Tailwind import·디자인 토큰, `components.json`, `lib/utils.ts`의 클래스 결합 유틸리티를 구성합니다. 이어 필요한 컴포넌트만 생성합니다. CLI 초기화가 기존 파일·의존성을 바꾸는지 확인하고, 전체 컴포넌트를 미리 생성하지 않습니다.
 
@@ -83,7 +83,9 @@ Vercel CLI·Supabase CLI는 현재 로컬 앱 패키지에 추가하지 않습�
 | `npm run build` | **실패(종료 코드 1): `app`·`pages` 디렉터리 없음** |
 | `npm run dev`, `npm start` | 미실행. 앱 진입 파일이 없음 |
 
-테스트와 빌드 실패는 설치 문제가 아니라 코드가 아직 없어서 발생합니다.
+위 표는 설치 당시 기록입니다. 당시 테스트와 빌드 실패는 설치 문제가 아니라 코드가 없어서 발생했습니다.
+
+현재 결과(2026-10-31, `main` 629c1cb): `npm run lint` 오류 0·경고 1, `npm run typecheck` 통과, `npm run test:run` 1개 파일 15개 테스트 통과, `npm run build` 성공. 소비자 미리보기 테스트만 있으며 가격·예약 테스트는 없습니다. `npm run dev`, `npm start`는 미실행입니다.
 
 알려진 사항:
 

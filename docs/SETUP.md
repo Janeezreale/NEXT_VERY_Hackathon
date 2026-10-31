@@ -25,7 +25,7 @@ npm ci
 | `npm run typecheck` | 엄격한 TypeScript 검사 | 사용 가능 |
 | `npm run test:run` | Vitest 일회 실행 | 테스트 없음은 실패로 보고. passWithNoTests 사용 안 함 |
 | `npm test` | Vitest 감시 실행 | 사용 가능 |
-| `npm run dev` | 로컬 Next.js 서버 | 사용 가능. 루트 페이지 `src/app/page.tsx`는 아직 없음 |
+| `npm run dev` | 로컬 Next.js 서버 | 사용 가능 |
 | `npm run build` | 프로덕션 빌드 | 사용 가능 |
 | `npm start` | 빌드 결과 실행 | 성공한 빌드 필요 |
 | `npm run ui -- --help` | 설치된 shadcn CLI 도움말 | 사용 가능 |

@@ -8,7 +8,7 @@
 | `/shop` 매장 지도 | 실제 매장 |
 | `/shop/products/[id]` | 실제 상품과 매장. 품절·판매 종료 표시 |
 | `/shop/products/[id]/reserve` | 실제 예약 요청. 방문 시각은 30분 간격, 최대 6개 |
-| `/shop/reservations` | 로그인 사용자의 실제 예약. 대기·승인 상태에서 취소 가능 |
+| `/shop/reservations` | 로그인 사용자의 실제 예약. 예약 확정 상태에서 취소 가능 |
 
 ## 규칙
 

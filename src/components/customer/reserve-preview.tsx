@@ -48,7 +48,7 @@ export default function ReservePreview({ product, back }: { product: ProductView
       if (!outcomeUnknown) requestKey.current = null;
       setLoginRequired(failure.code === "UNAUTHENTICATED");
       setRequestError(outcomeUnknown ? "결과를 확인하지 못했어요. 다시 눌러도 예약이 중복되지 않아요." : failure.message);
-      if (failure.code === "PRICE_CHANGED" || failure.code === "OUT_OF_STOCK") router.refresh();
+      if (failure.code === "PRICE_CHANGED" || failure.code === "OUT_OF_STOCK" || failure.code === "STORE_CLOSED" || failure.code === "SALE_ENDED") router.refresh();
       setSubmitting(false);
       requestLock.current = false;
     }
@@ -65,11 +65,11 @@ export default function ReservePreview({ product, back }: { product: ProductView
       <button className={styles.primary} type="submit">예약 내용 확인하기</button>
     </form> : <div ref={resultRef} tabIndex={-1}>
 
-      <section className={styles.panel}><h2>예약 내용을 확인해 주세요</h2><dl className={styles.details}><div><dt>상품 수량</dt><dd>{quantity}{product.unit}</dd></div><div><dt>픽업 일시</dt><dd>{product.dateLabel} {slot?.label}</dd></div><div><dt>예약자</dt><dd>{contactName} · {contactPhone}</dd></div><div><dt>픽업 장소</dt><dd>{product.store}</dd></div><div><dt>주소</dt><dd>{product.address}</dd></div><div><dt>현재가</dt><dd>{money(product.price)} / {product.unit}</dd></div></dl><div className={styles.total}><span>예상 총액</span><strong>{money(product.price * quantity)}</strong></div><p className={styles.description}>예약 요청 전 예상 금액이에요.</p></section>
-      <p className={styles.info}>판매자 승인 후 예약이 확정돼요. 결제와 수령은 매장에서 진행해요.</p>
-      <div className={styles.actions}><button className={styles.detailButton} disabled={submitting} onClick={() => { setStep("input"); setRequestError(""); requestKey.current = null; }}>선택 수정</button><button className={styles.primary} disabled={submitting} onClick={submit}>{submitting ? "요청 중…" : "예약 요청하기"}</button></div>
+      <section className={styles.panel}><h2>예약 내용을 확인해 주세요</h2><dl className={styles.details}><div><dt>상품 수량</dt><dd>{quantity}{product.unit}</dd></div><div><dt>픽업 일시</dt><dd>{product.dateLabel} {slot?.label}</dd></div><div><dt>예약자</dt><dd>{contactName} · {contactPhone}</dd></div><div><dt>픽업 장소</dt><dd>{product.store}</dd></div><div><dt>주소</dt><dd>{product.address}</dd></div><div><dt>현재가</dt><dd>{money(product.price)} / {product.unit}</dd></div></dl><div className={styles.total}><span>예상 총액</span><strong>{money(product.price * quantity)}</strong></div><p className={styles.description}>현재가 기준 예상 금액이에요.</p></section>
+      <p className={styles.info}>예약하면 바로 확정돼요. 결제와 수령은 매장에서 진행해요.</p>
+      <div className={styles.actions}><button className={styles.detailButton} disabled={submitting} onClick={() => { setStep("input"); setRequestError(""); requestKey.current = null; }}>선택 수정</button><button className={styles.primary} disabled={submitting} onClick={submit}>{submitting ? "예약 중…" : "예약하기"}</button></div>
       <div aria-live="polite" aria-atomic="true">
-        {submitting && <p className={styles.info} role="status">요청 처리 중이에요. 잠시 기다려 주세요.</p>}
+        {submitting && <p className={styles.info} role="status">예약을 처리 중이에요. 잠시 기다려 주세요.</p>}
         {requestError && <div className={styles.info} role="alert"><p>{requestError}</p>{loginRequired && <Link className={styles.back} href="/login">로그인하기</Link>}</div>}
       </div>
       <Link className={styles.back} href="/shop/reservations">예약 내역 보기</Link>

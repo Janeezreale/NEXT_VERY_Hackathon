@@ -13,7 +13,7 @@ const kstDate = new Intl.DateTimeFormat("en-CA", { timeZone: PRICING_CONFIG.time
 
 export type ReportRows = {
   products: { id: string; name: string; unit: string; available_quantity: number; created_at: string }[];
-  reservations: { product_id: string; status: string; approved_at: string | null; created_at: string }[];
+  reservations: { product_id: string; status: string; created_at: string }[];
   sales: { final_amount: number; completed_at: string; reservations: { product_id: string; quantity: number } }[];
 };
 
@@ -36,7 +36,6 @@ export function summarizeReport({ products, reservations, sales }: ReportRows, d
     to: dates[dates.length - 1],
     registeredProducts: products.filter((product) => within(product.created_at)).length,
     requestedReservations: reservations.filter((reservation) => within(reservation.created_at)).length,
-    approvedReservations: reservations.filter((reservation) => reservation.approved_at && within(reservation.approved_at)).length,
     currentApproved: reservations.filter((reservation) => reservation.status === "approved").length,
     completedSales: periodSales.length,
     revenue: periodSales.reduce((total, sale) => total + sale.final_amount, 0),
@@ -57,7 +56,7 @@ export function summarizeReport({ products, reservations, sales }: ReportRows, d
 export async function loadReport(supabase: Supabase, storeId: string, days: number): Promise<Report> {
   const [products, reservations, sales] = await Promise.all([
     supabase.from("products").select("id, name, unit, available_quantity, created_at").eq("store_id", storeId).order("created_at", { ascending: false }).limit(ROW_LIMIT),
-    supabase.from("reservations").select("product_id, status, approved_at, created_at, products!inner(store_id)").eq("products.store_id", storeId).order("created_at", { ascending: false }).limit(ROW_LIMIT),
+    supabase.from("reservations").select("product_id, status, created_at, products!inner(store_id)").eq("products.store_id", storeId).order("created_at", { ascending: false }).limit(ROW_LIMIT),
     supabase.from("sales").select("final_amount, completed_at, reservations!inner(product_id, quantity, products!inner(store_id))").eq("reservations.products.store_id", storeId).order("completed_at", { ascending: false }).limit(ROW_LIMIT),
   ]);
   const failed = products.error ?? reservations.error ?? sales.error;

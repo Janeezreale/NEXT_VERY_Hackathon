@@ -9,7 +9,7 @@ import styles from "../../app/(customer)/shop/shop.module.css";
 
 export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
   return <main className={styles.page}>
-    <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div className={styles.navLinks}><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div><SessionAuthAction /></nav>
+    <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />라스트픽</Link><div className={styles.navLinks}><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div><SessionAuthAction /></nav>
     {back && <Link href={back} className={styles.back}><ArrowLeft size={18} aria-hidden="true" />뒤로</Link>}
     {children}
     <footer className={styles.footer}>동네에서 발견하고, 매장에서 만나요.</footer>
@@ -35,5 +35,5 @@ export function PickupFacts({ product }: { product: ProductView }) {
 }
 
 export function StoreInfo({ product }: { product: ProductView }) {
-  return <section className={styles.panel}><p className={styles.eyebrow}>픽업 장소</p><h2>{product.store}</h2><p className={styles.address}><MapPin size={18} aria-hidden="true" />{product.address}</p><p className={styles.description}>선택한 시간에 방문해 상품을 확인한 후 현장에서 결제해 주세요.</p></section>;
+  return <section className={styles.panel}><p className={styles.eyebrow}>픽업 장소</p><h2>{product.store}</h2><p className={styles.address}><MapPin size={18} aria-hidden="true" />{product.address}</p><p className={styles.description}>영업시간 {product.hours}</p><p className={styles.description}>선택한 시간에 방문해 상품을 확인한 후 현장에서 결제해 주세요.</p></section>;
 }

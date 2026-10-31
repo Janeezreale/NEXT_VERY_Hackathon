@@ -7,13 +7,10 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   const filters = filtersFrom(await searchParams);
   const query = contextQuery(filters);
   const loaded = await loadProduct(id);
-  const ready = loaded.status === "ready";
-  const availability = !ready || loaded.saleOpen ? "판매 중" : loaded.soldOut ? "품절" : "판매 종료";
   return (
     <ProductPreview
-      product={ready ? loaded.view : undefined}
+      product={loaded.status === "ready" ? loaded.view : undefined}
       state={loaded.status === "error" ? "error" : "ready"}
-      availability={availability}
       back={browseUrl(filters)}
       detailUrl={`/shop/products/${encodeURIComponent(id)}${query ? `?${query}` : ""}`}
     />

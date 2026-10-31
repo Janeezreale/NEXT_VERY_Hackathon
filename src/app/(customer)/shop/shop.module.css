@@ -73,7 +73,6 @@
 .address { @apply mt-4 flex items-start gap-2 text-base; }
 .address svg { flex-shrink: 0; }
 .badge { @apply my-3 inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold; background: #eaf6ef; color: #176b49; }
-.badge[data-status="승인 대기"] { background: #fffbeb; color: #b45309; }
 .badge[data-status="예약 거절"] { background: #fef2f2; color: #b91c1c; }
 .badge[data-status="예약 취소"], .badge[data-status="기한 만료"], .badge[data-status="미방문"] { background: #f1f5f2; color: #626b77; }
 .sectionHeading { @apply py-8; }

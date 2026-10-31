@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { PRICING_CONFIG } from "../pricing/config";
 import { FRESHNESS_LEVELS, RESERVATION_STATUSES, USER_ROLES } from "../../types/api";
 
 const text = z.string("입력해 주세요.").trim().min(1, "입력해 주세요.");
@@ -20,11 +21,25 @@ const hasBothOrNeitherCoordinate = ({ latitude, longitude }: { latitude?: number
   (latitude === undefined) === (longitude === undefined) && (latitude === null) === (longitude === null);
 const coordinateError = { path: ["latitude"], message: "위치를 다시 선택해 주세요." };
 
+const clock = (message: string) => z.string(message).regex(/^([01]\d|2[0-3]):[0-5]\d$/, message);
+
+const BUSINESS_DAY_START = `0${PRICING_CONFIG.businessDayStartHour}:00`;
+/** 영업일 안에서 오픈이 마감보다 앞서야 한다. 06:00 이전 마감은 다음 날 새벽이다. DB 제약 stores_business_hours와 같다. */
+function refineBusinessHours({ openingTime, closingTime }: { openingTime?: string; closingTime?: string }, context: z.RefinementCtx) {
+  if (openingTime === undefined || closingTime === undefined) return;
+  if (openingTime < BUSINESS_DAY_START) {
+    context.addIssue({ code: "custom", path: ["openingTime"], message: `오픈 시각은 ${BUSINESS_DAY_START}부터 입력할 수 있어요.` });
+  } else if (closingTime >= BUSINESS_DAY_START && closingTime <= openingTime) {
+    context.addIssue({ code: "custom", path: ["closingTime"], message: "마감 시각은 오픈 시각보다 늦어야 해요." });
+  }
+}
+
 const storeFields = z.object({
   name: text,
   regionCode: text,
   address: text,
-  closingTime: z.string("마감 시각을 입력해 주세요.").regex(/^([01]\d|2[0-3]):[0-5]\d$/, "마감 시각을 입력해 주세요."),
+  openingTime: clock("오픈 시각을 입력해 주세요."),
+  closingTime: clock("마감 시각을 입력해 주세요."),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
 });
@@ -35,12 +50,17 @@ export const productListQuerySchema = listQuerySchema.extend({ region: text });
 
 export const reservationListQuerySchema = listQuerySchema.extend({ status: reservationStatusSchema.optional() });
 
-export const storeCreateSchema = storeFields.refine(hasBothOrNeitherCoordinate, coordinateError);
+export const storeCreateSchema = storeFields.refine(hasBothOrNeitherCoordinate, coordinateError).superRefine(refineBusinessHours);
 
 export const storeUpdateSchema = storeFields
   .partial()
   .refine((value) => Object.values(value).some((field) => field !== undefined), "변경할 내용을 입력해 주세요.")
-  .refine(hasBothOrNeitherCoordinate, coordinateError);
+  .refine(hasBothOrNeitherCoordinate, coordinateError)
+  .refine((value) => (value.openingTime === undefined) === (value.closingTime === undefined), {
+    path: ["openingTime"],
+    message: "오픈 시각과 마감 시각을 함께 입력해 주세요.",
+  })
+  .superRefine(refineBusinessHours);
 
 export const geocodeQuerySchema = z.object({ query: text.max(100, "100자 이내로 입력해 주세요.") });
 

@@ -29,7 +29,7 @@ export default async function SellerReservationsPage() {
 
   return <main className={styles.page}><div className={styles.container}>
     <SellerNav current="/seller/reservations" />
-    <header className={styles.header}><p className={styles.eyebrow}>{store.name} · 예약 관리</p><h1>예약 요청을 확인해요</h1><p className={styles.subtle}>승인 대기부터 픽업과 판매 완료까지 한눈에 살펴보세요.</p></header>
+    <header className={styles.header}><p className={styles.eyebrow}>{store.name} · 예약 관리</p><h1>들어온 예약을 확인해요</h1><p className={styles.subtle}>예약은 바로 확정돼요. 픽업과 판매 완료를 한눈에 살펴보세요.</p></header>
     <ReservationBoard reservations={reservations ?? []} state={reservations ? "ready" : "error"} />
   </div></main>;
 }

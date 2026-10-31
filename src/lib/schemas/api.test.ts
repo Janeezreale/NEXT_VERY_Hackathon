@@ -54,13 +54,27 @@ describe("reservationCreateSchema", () => {
 });
 
 describe("storeCreateSchema", () => {
-  const store = { name: "초록가게", regionCode: "seoul", address: "주소", closingTime: "21:00" };
+  const store = { name: "초록가게", regionCode: "seoul", address: "주소", openingTime: "09:00", closingTime: "21:00" };
 
   it("accepts HH:mm closing times", () => {
     expect(storeCreateSchema.safeParse(store).success).toBe(true);
   });
   it.each(["24:00", "9:00", "21:60"])("rejects closing time %s", (closingTime) => {
     expect(storeCreateSchema.safeParse({ ...store, closingTime }).success).toBe(false);
+  });
+
+  it("requires an opening time", () => {
+    expect(storeCreateSchema.safeParse({ ...store, openingTime: undefined }).success).toBe(false);
+  });
+
+  it.each([
+    ["before the business day", { openingTime: "05:59" }, false],
+    ["at the business day start", { openingTime: "06:00" }, true],
+    ["closing at opening", { closingTime: "09:00" }, false],
+    ["closing before opening", { closingTime: "08:00" }, false],
+    ["closing after midnight", { closingTime: "00:30" }, true],
+  ])("checks business hours: %s", (_, change, valid) => {
+    expect(storeCreateSchema.safeParse({ ...store, ...change }).success).toBe(valid);
   });
   it("accepts a store with or without a coordinate pair", () => {
     expect(storeCreateSchema.safeParse({ ...store, latitude: 37.5, longitude: 127 }).success).toBe(true);

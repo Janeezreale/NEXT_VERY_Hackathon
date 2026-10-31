@@ -2,8 +2,7 @@ import { PRICING_CONFIG } from "@/src/lib/pricing/config";
 import type { Reservation, ReservationStatus } from "@/src/types/api";
 
 const STATUS_LABELS: Record<ReservationStatus, string> = {
-  pending: "승인 대기",
-  approved: "예약 승인",
+  approved: "예약 확정",
   rejected: "예약 거절",
   cancelled: "예약 취소",
   completed: "판매 완료",
@@ -12,7 +11,6 @@ const STATUS_LABELS: Record<ReservationStatus, string> = {
 };
 
 const EXPLANATIONS: Record<ReservationStatus, string> = {
-  pending: "판매자 확인 후 예약이 확정돼요.",
   approved: "선택한 시간에 방문해 현장에서 결제해 주세요.",
   rejected: "판매자가 요청을 승인하지 않았어요.",
   cancelled: "취소된 예약이에요.",
@@ -59,6 +57,6 @@ export function toReservationView(reservation: Reservation): ReservationView {
     pickup: pickup.format(new Date(reservation.pickupAt)),
     store: reservation.store.name,
     address: reservation.store.address,
-    canCancel: reservation.status === "pending" || reservation.status === "approved",
+    canCancel: reservation.status === "approved",
   };
 }

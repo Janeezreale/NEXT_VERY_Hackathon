@@ -11,9 +11,10 @@ import type { Reservation } from "@/src/types/api";
 import { ACTION_LABELS, toSellerReservationView, type SellerAction, type SellerReservationView } from "./seller-reservation-view";
 import styles from "./reservations.module.css";
 
-const STATUSES = ["승인 대기", "예약 승인", "판매 완료", "예약 거절", "예약 취소", "기한 만료", "미방문"];
+const STATUSES = ["예약 확정", "판매 완료", "예약 취소", "미방문"];
+/** 승인 제도가 있던 때의 이력. 해당 예약이 있을 때만 필터에 보인다. */
+const PAST_STATUSES = ["예약 거절", "기한 만료"];
 const CONFIRM_MESSAGES: Partial<Record<SellerAction, string>> = {
-  reject: "이 예약을 거절할까요? 재고가 돌아가요.",
   cancel: "이 예약을 취소할까요? 재고가 돌아가요.",
   "no-show": "노쇼로 처리할까요? 재고가 돌아가요.",
   complete: "현장 결제와 수령을 마쳤나요? 판매 기록이 만들어져요.",
@@ -24,9 +25,8 @@ function formatPhone(phone: string) {
 }
 
 function badgeClass(status: string) {
-  if (status === "승인 대기") return styles.warning;
   if (status === "예약 거절") return styles.danger;
-  if (status === "예약 승인" || status === "판매 완료") return styles.success;
+  if (status === "예약 확정" || status === "판매 완료") return styles.success;
   return styles.neutral;
 }
 
@@ -40,6 +40,7 @@ export default function ReservationBoard({ reservations: loaded, state }: { rese
   const reservations = loaded.map((item) => updated[item.id] ?? item);
   const [error, setError] = useState("");
   const count = (status: string) => reservations.filter((item) => item.status === status).length;
+  const statuses = [...STATUSES, ...PAST_STATUSES.filter((status) => count(status) > 0)];
   const visible = reservations.filter((item) => filter === "전체" || item.status === filter);
 
   async function run(id: string, action: SellerAction) {
@@ -63,16 +64,15 @@ export default function ReservationBoard({ reservations: loaded, state }: { rese
     return <section className={styles.empty} role="alert"><X size={36} aria-hidden="true" /><h2>예약을 불러오지 못했어요</h2><p>잠시 후 다시 시도해 주세요.</p><button className={styles.outline} onClick={() => router.refresh()}>다시 시도</button></section>;
   }
   if (reservations.length === 0) {
-    return <section className={styles.empty}><Package size={36} aria-hidden="true" /><h2>아직 예약 요청이 없어요</h2><p>소비자가 예약하면 여기에 나타나요.</p></section>;
+    return <section className={styles.empty}><Package size={36} aria-hidden="true" /><h2>아직 예약이 없어요</h2><p>소비자가 예약하면 여기에 나타나요.</p></section>;
   }
 
   return <>
     <section className={styles.summary} aria-label="예약 현황">
-      <div><span>승인 대기</span><strong>{count("승인 대기")}건</strong></div>
-      <div><span>승인 후 픽업 대기</span><strong>{count("예약 승인")}건</strong></div>
+      <div><span>픽업 대기</span><strong>{count("예약 확정")}건</strong></div>
       <div><span>판매 완료</span><strong>{count("판매 완료")}건</strong></div>
     </section>
-    <div className={styles.filters} role="group" aria-label="예약 상태 필터">{["전체", ...STATUSES].map((status) => <button key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>{status}</button>)}</div>
+    <div className={styles.filters} role="group" aria-label="예약 상태 필터">{["전체", ...statuses].map((status) => <button key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>{status}</button>)}</div>
     {error && <p className={styles.notice} role="alert">{error}</p>}
     <section aria-labelledby="reservation-list-title">
       <div className={styles.sectionHeading}><h2 id="reservation-list-title">예약 목록</h2><span>{visible.length}건</span></div>

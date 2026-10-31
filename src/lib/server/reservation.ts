@@ -5,15 +5,13 @@ import { z } from "zod";
 import type { ReservationCreateInput } from "../schemas/api";
 import { createAdminClient } from "../supabase/admin";
 import type { createClient } from "../supabase/server";
-import type { ApiErrorCode, Page, Reservation, ReservationStatus, UserRole } from "../../types/api";
+import type { ApiErrorCode, Page, Reservation, ReservationStatus, SaleStatus, UserRole } from "../../types/api";
 import { ApiError } from "./api";
-import { cursorFilter, encodeCursor, expireOverdueReservations, findPublicProduct } from "./product";
+import { cursorFilter, encodeCursor, findPublicProduct } from "./product";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 export const SELLER_ACTIONS = {
-  approve: "approve",
-  reject: "reject",
   cancel: "seller_cancel",
   "no-show": "no_show",
   complete: "complete",
@@ -29,7 +27,16 @@ const MESSAGES: Partial<Record<ApiErrorCode, string>> = {
   NOT_FOUND: "예약을 찾을 수 없어요.",
   OUT_OF_STOCK: "남은 수량이 부족해요. 수량을 다시 확인해 주세요.",
   SALE_ENDED: "판매가 종료되었어요.",
+  STORE_CLOSED: "지금은 가게 영업시간이 아니라 예약할 수 없어요.",
   INVALID_TRANSITION: "지금 상태에서는 처리할 수 없어요. 예약을 새로 확인해 주세요.",
+};
+
+const SALE_ERRORS: Record<SaleStatus, ApiErrorCode> = {
+  on_sale: "SALE_ENDED",
+  sold_out: "OUT_OF_STOCK",
+  before_open: "STORE_CLOSED",
+  store_closed: "STORE_CLOSED",
+  sale_ended: "SALE_ENDED",
 };
 
 type ReservationRow = {
@@ -100,9 +107,8 @@ export async function createReservation(supabase: Supabase, consumerId: string, 
 
   const { product } = await findPublicProduct(supabase, input.productId);
   if (!product.saleOpen) {
-    throw product.availableQuantity === 0
-      ? new ApiError("OUT_OF_STOCK", MESSAGES.OUT_OF_STOCK as string)
-      : new ApiError("SALE_ENDED", MESSAGES.SALE_ENDED as string);
+    const code = SALE_ERRORS[product.saleStatus];
+    throw new ApiError(code, MESSAGES[code] as string);
   }
   if (product.currentPrice !== input.expectedUnitPrice) {
     throw new ApiError("PRICE_CHANGED", `가격이 ${product.currentPrice.toLocaleString("ko-KR")}원으로 바뀌었어요. 확인 후 다시 예약해 주세요.`);
@@ -134,8 +140,6 @@ export async function listReservations(
   owner: { consumerId: string } | { storeId: string },
   { status, cursor, limit }: { status?: ReservationStatus; cursor?: string; limit: number },
 ): Promise<Page<Reservation>> {
-  await expireOverdueReservations(supabase);
-
   const base = supabase
     .from("reservations")
     .select(RESERVATION_COLUMNS)

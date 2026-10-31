@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  // 브랜드명 승인 전까지 DESIGN.md §0의 플레이스홀더를 사용한다.
-  title: { default: "[서비스명]", template: "%s | [서비스명]" },
+  title: { default: "라스트픽", template: "%s | 라스트픽" },
   description: "신선식품 마감 할인 상품을 찾고 방문 수령을 예약하는 서비스",
 };
 

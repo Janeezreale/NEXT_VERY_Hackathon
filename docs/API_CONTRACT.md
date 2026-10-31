@@ -10,7 +10,7 @@
 - 오류 응답: `error.code`, `error.message`, 선택적 `error.fieldErrors`를 사용합니다. 오류 시 성공 데이터를 반환하지 않습니다.
 - ID는 UUID 문자열, 금액은 원 단위 정수, 시간은 시간대가 포함된 ISO 8601 문자열로 전달합니다. 사용자 표시 시간대는 D02에서 확정합니다.
 - 신선도는 `fresh`(싱싱), `sell_today`(오늘 안에 판매 권장), `discard_tomorrow`(내일 폐기 예정)로 제안합니다.
-- 예약 상태는 `pending`, `approved`, `rejected`, `cancelled`, `completed`, `expired`, `no_show`입니다.
+- 예약 상태는 `approved`, `cancelled`, `completed`, `no_show`입니다. 예약은 생성 즉시 `approved`입니다(D15). `rejected`, `expired`는 과거 예약 이력에만 나옵니다.
 - 인증 정보에서 사용자 ID·역할·매장 소유권을 서버가 확인합니다. 클라이언트가 보낸 사용자 ID나 역할을 권한 근거로 신뢰하지 않습니다.
 - 예약 생성은 클라이언트가 가격을 정하지 않습니다. 서버가 수량·시각·재고·가격을 다시 검증합니다.
 
@@ -19,7 +19,7 @@
 | 모델 | 주요 필드 | 의미 |
 | --- | --- | --- |
 | Product | id, storeId, name, unit, availableQuantity, basePrice, currentPrice, discountRate, freshness, saleEndsAt, saleDeadline, imageUrls, pricedAt, saleOpen | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공. discountRate는 최저가 적용 후 실제 값. 판매자 최저가는 공개 응답에 넣지 않음 |
-| Store | id, name, regionCode, address, closingTime, latitude, longitude | 매장 정보. closingTime은 `HH:mm`. 좌표는 nullable. 업종 필드 없음(D10) |
+| Store | id, name, regionCode, address, openingTime, closingTime, latitude, longitude | 매장 정보. openingTime·closingTime은 `HH:mm`(D16). 좌표는 nullable. 업종 필드 없음(D10) |
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
 | SellerProduct | id, storeId, name, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
@@ -33,7 +33,7 @@
 | 작업 | 메서드·경로 | 입력 | 성공 결과 | 권한 |
 | --- | --- | --- | --- | --- |
 | 현재 사용자 | GET `/api/me` | 없음 | 사용자 ID·역할·지역·매장 등록 여부 | 로그인 |
-| 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, closingTime, latitude?, longitude?. PATCH: 변경 필드 | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS. 좌표 없이 주소만 수정하면 좌표를 비움 |
+| 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, openingTime, closingTime, latitude?, longitude?. PATCH: 변경 필드(오픈·마감은 함께) | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS. 좌표 없이 주소만 수정하면 좌표를 비움 |
 | 주소 검색 | GET `/api/seller/geocode` | query | AddressResult 목록(`items`) | 판매자 |
 | 지도 매장 조회 | GET `/api/stores` | 없음 | 좌표 있는 Store 목록(`items`), 최대 200개 | 비로그인 허용 |
 | 이미지 업로드 | Supabase Storage `product-images` 직접 업로드 | `{storeId}/{uuid}.{jpg,png,webp}` | 업로드 경로 | 판매자, 본인 매장 폴더만. API 경로 없음 |
@@ -42,13 +42,13 @@
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED |
 | 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 409 PRODUCT_HAS_RESERVATIONS |
-| 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있고 마감 전인 Product 목록, 항목마다 store(id, name, address) 포함. 매장 마감으로 제외된 상품 때문에 한 페이지가 limit보다 적어도 nextCursor가 있을 수 있음 | 비로그인 허용 |
+| 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있는 현재 영업일의 Product 목록, 항목마다 store(id, name, address, openingTime, closingTime) 포함. 오픈 전·마감 후 상품도 포함하며 `saleStatus`(on_sale, sold_out, before_open, store_closed, sale_ended)로 구분 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | `{ product, store }`. 품절·판매 종료도 saleOpen false로 반환. 없는 상품·잘못된 ID는 404 | 비로그인 허용 |
-| 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice, contactName, contactPhone | Reservation | 소비자 본인. 픽업은 판매 종료와 가게 마감 30분 전 중 이른 시각까지 |
+| 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice, contactName, contactPhone | Reservation | 소비자 본인. 즉시 확정. 픽업은 판매 종료와 가게 마감 30분 전 중 이른 시각까지. 오픈 전·예약 마감 후는 409 STORE_CLOSED |
 | 내 예약 | GET `/api/me/reservations` | status?, cursor?, limit? | Reservation 목록 | 소비자 본인 |
-| 내 예약 취소 | POST `/api/reservations/:id/cancel` | 경로 ID | Reservation | 소비자 본인, pending·approved만 |
+| 내 예약 취소 | POST `/api/reservations/:id/cancel` | 경로 ID | Reservation | 소비자 본인, approved만 |
 | 판매자 예약 조회 | GET `/api/seller/reservations` | status?, cursor?, limit? | Reservation 목록 | 본인 매장 |
-| 예약 승인·거절·취소·노쇼 | POST `/api/seller/reservations/:id/approve`, `/reject`, `/cancel`, `/no-show` | 경로 ID | Reservation | 본인 매장. 노쇼는 픽업 시각 이후 |
+| 예약 취소·노쇼 | POST `/api/seller/reservations/:id/cancel`, `/no-show` | 경로 ID | Reservation | 본인 매장. 노쇼는 픽업 시각 이후 |
 | 판매 완료 | POST `/api/seller/reservations/:id/complete` | 경로 ID | Reservation | 본인 매장 |
 | 판매 리포트 | GET `/api/seller/reports` | days(1, 7, 30) | Report | 본인 매장 |
 

@@ -8,7 +8,7 @@ import { createClient } from "../supabase/server";
 import { ApiError } from "./api";
 import { requireSeller } from "./auth";
 
-export const STORE_COLUMNS = "id, name, region_code, address, closing_time, latitude, longitude";
+export const STORE_COLUMNS = "id, name, region_code, address, opening_time, closing_time, latitude, longitude";
 const MAPPED_STORE_LIMIT = 200;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -18,6 +18,7 @@ export type StoreRow = {
   name: string;
   region_code: string;
   address: string;
+  opening_time: string;
   closing_time: string;
   latitude: number | null;
   longitude: number | null;
@@ -29,6 +30,7 @@ export function toStore(row: StoreRow): Store {
     name: row.name,
     regionCode: row.region_code,
     address: row.address,
+    openingTime: row.opening_time.slice(0, 5),
     closingTime: row.closing_time.slice(0, 5),
     latitude: row.latitude,
     longitude: row.longitude,

@@ -24,7 +24,7 @@ const reservationRow = {
   confirmed_unit_price: 8800,
   total_price: 8800,
   pickup_at: "2099-01-01T00:00:00Z",
-  status: "pending",
+  status: "approved",
   created_at: "2099-01-01T00:00:00Z",
   cancelled_by: null,
   products: { name: "사과", unit: "개", store_id: "store-1", stores: { id: "store-1", name: "마켓", address: "주소" } },
@@ -49,7 +49,6 @@ function client() {
     rpc: async (name: string, args: unknown) => {
       db.rpcCalls.push([name, args]);
       if (name === "recent_approved_quantities") return { data: [], error: null };
-      if (name === "expire_overdue_reservations") return { data: 0, error: null };
       if (name === "reservation_contacts") return { data: [], error: null };
       return { data: { id: ID }, error: db.rpcError };
     },
@@ -71,7 +70,7 @@ const productRow = (change: Record<string, unknown> = {}) => ({
   freshness: "fresh",
   sale_ends_at: hours(1),
   created_at: hours(-0.25),
-  stores: { id: "store-1", name: "마켓", region_code: "성북구", address: "주소", closing_time: "23:59:59", latitude: null, longitude: null },
+  stores: { id: "store-1", name: "마켓", region_code: "성북구", address: "주소", opening_time: "06:00:00", closing_time: "23:59:59", latitude: null, longitude: null },
   ...change,
 });
 
@@ -115,7 +114,7 @@ describe("POST /api/reservations", () => {
     expect(response.status).toBe(201);
     const [, args] = db.rpcCalls.find(([name]) => name === "create_reservation") as [string, Record<string, unknown>];
     expect(args).toMatchObject({ p_consumer_id: "consumer-1", p_unit_price: 8800, p_quantity: 1, p_contact_name: "홍길동", p_contact_phone: "01012345678" });
-    expect((await response.json()).data).toMatchObject({ productName: "사과", confirmedUnitPrice: 8800, status: "pending" });
+    expect((await response.json()).data).toMatchObject({ productName: "사과", confirmedUnitPrice: 8800, status: "approved" });
   });
 
   it("rejects a changed price before reserving", async () => {
@@ -135,6 +134,8 @@ describe("POST /api/reservations", () => {
   it.each([
     ["sold out", { available_quantity: 0 }, "OUT_OF_STOCK"],
     ["ended", { sale_ends_at: hours(-1) }, "SALE_ENDED"],
+    ["closed", { stores: { ...productRow().stores, closing_time: "10:00:00" } }, "STORE_CLOSED"],
+    ["not yet open", { stores: { ...productRow().stores, opening_time: "13:00:00" } }, "STORE_CLOSED"],
   ])("rejects a %s product", async (_, change, code) => {
     db.product = productRow(change);
     const response = await reserve();
@@ -173,8 +174,6 @@ describe("status changes", () => {
     sellerAction(new Request("http://test", { method: "POST" }), { params: Promise.resolve({ id, action }) });
 
   it.each([
-    ["approve", "approve"],
-    ["reject", "reject"],
     ["cancel", "seller_cancel"],
     ["no-show", "no_show"],
     ["complete", "complete"],
@@ -185,20 +184,21 @@ describe("status changes", () => {
   });
 
   it("rejects consumers on seller actions", async () => {
-    expect((await act("approve")).status).toBe(403);
+    expect((await act("complete")).status).toBe(403);
   });
 
   it("returns 404 for an unknown action or id", async () => {
     db.role = "seller";
-    expect((await act("delete")).status).toBe(404);
-    expect((await act("approve", "x")).status).toBe(404);
+    expect((await act("approve")).status).toBe(404);
+    expect((await act("reject")).status).toBe(404);
+    expect((await act("complete", "x")).status).toBe(404);
     expect(rpcNames()).toEqual([]);
   });
 
   it("maps an invalid transition", async () => {
     db.role = "seller";
     db.rpcError = { message: "INVALID_TRANSITION" };
-    expect((await act("approve")).status).toBe(409);
+    expect((await act("complete")).status).toBe(409);
   });
 
   it("lets a consumer cancel", async () => {

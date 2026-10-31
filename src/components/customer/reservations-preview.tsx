@@ -36,13 +36,13 @@ export default function ReservationsPreview({ reservations, state = "ready" }: {
     }
   }
 
-  return <PreviewShell><header className={styles.sectionHeading}><p className={styles.eyebrow}><Ticket size={16} aria-hidden="true" />MY PICK UP</p><h1>예약 내역</h1><p className={styles.description}>요청부터 픽업까지, 예약 상태를 한눈에 확인하세요.</p></header>
+  return <PreviewShell><header className={styles.sectionHeading}><p className={styles.eyebrow}><Ticket size={16} aria-hidden="true" />MY PICK UP</p><h1>예약 내역</h1><p className={styles.description}>예약부터 픽업까지, 예약 상태를 한눈에 확인하세요.</p></header>
 
     <div className={styles.chips} role="group" aria-label="예약 내역 필터">{["전체", "진행 중", "진행 완료"].map(status => <button key={status} aria-pressed={filter === status} onClick={() => setFilter(status)}>{status}</button>)}</div>
     {cancelError && <p className={styles.error} role="alert">{cancelError}</p>}
 
     <section className={styles.reservationList} aria-label="예약 목록">{state !== "ready" ? <LoadFeedback state={state} subject="예약 내역을" onRetry={() => router.refresh()} /> : rows.length === 0 ? <div className={styles.empty}><Ticket size={36} aria-hidden="true" /><h2>{reservations.length === 0 ? "아직 예약 내역이 없어요" : "해당하는 예약이 없어요"}</h2><p>{reservations.length === 0 ? "마음에 드는 동네 상품을 둘러보세요." : "다른 필터에서 예약을 확인해 주세요."}</p>{reservations.length === 0 ? <Link className={styles.primary} href="/shop">상품 탐색하기</Link> : <button className={styles.primary} onClick={() => setFilter("전체")}>전체 예약 보기</button>}</div> : rows.map(row => <article className={styles.panel} key={row.id}>
-      <div className={styles.reservationTop}><span className={styles.badge} data-status={row.status}>{row.status === "승인 대기" ? <Clock size={15} aria-hidden="true" /> : CLOSED_STATUSES.includes(row.status) ? <XCircle size={15} aria-hidden="true" /> : <CheckCircle2 size={15} aria-hidden="true" />}{row.status}</span></div>
+      <div className={styles.reservationTop}><span className={styles.badge} data-status={row.status}>{CLOSED_STATUSES.includes(row.status) ? <XCircle size={15} aria-hidden="true" /> : <CheckCircle2 size={15} aria-hidden="true" />}{row.status}</span></div>
       <div className={styles.miniProduct}><ProductPhoto product={{ name: row.name, photo: null }} /><div><h2>{row.name}</h2><p className={styles.description}>{row.quantity}{row.unit}</p><p className={styles.reservedPrice}>확정 총액 <strong>{money(row.total)}</strong></p></div></div>
       <p className={styles.reservationPickup}><Clock size={16} aria-hidden="true" />픽업 {row.pickup}</p>
       <details className={styles.reservationDisclosure}>

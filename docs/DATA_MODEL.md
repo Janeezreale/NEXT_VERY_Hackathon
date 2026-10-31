@@ -4,18 +4,18 @@
 
 테이블 이름과 업무 규칙은 기획 기준입니다. 아래 영문 컬럼명과 관계 세부사항은 **설계 제안**입니다. 총괄만 스키마·RLS·트랜잭션을 확정하고 구현합니다.
 
-[schema.sql](../supabase/schema.sql)이 테이블·제약·인덱스·RLS를 구현합니다(2026-10-31, 사용자가 원격 프로젝트에 적용). 빈 프로젝트 배포에는 이 파일을 한 번 실행합니다. 스키마를 변경하면 이 파일을 갱신하고, 이미 적용된 프로젝트에는 변경분 SQL을 따로 실행합니다. 역할은 가입 메타데이터 `role`이 `seller`이면 사장님, 그 외에는 고객으로 저장합니다. 사장님의 가게 위치(`address`, `region_code`)와 마감 시각(`closing_time`)은 stores에 저장합니다. 미정 정책은 좁게 두었습니다: 가입 후 역할 변경 불가(D01), 조회는 로그인 사용자만(D01), 수량·금액 integer(D08), 상품 수정·삭제 차단(D08), 픽업 범위·중복 방지 키 컬럼 없음(D02·D06). 예약·판매 쓰기 함수(L05)와 Storage 버킷·정책(D05)은 아직 없습니다.
+[schema.sql](../supabase/schema.sql)이 테이블·제약·인덱스·RLS를 구현합니다(2026-10-31, 사용자가 원격 프로젝트에 적용). 빈 프로젝트 배포에는 이 파일을 한 번 실행합니다. 스키마를 변경하면 이 파일을 갱신하고, 이미 적용된 프로젝트에는 변경분 SQL을 따로 실행합니다. 역할은 가입 메타데이터 `role`이 `seller`이면 사장님, 그 외에는 고객으로 저장합니다. 사장님의 가게 위치(`address`, `region_code`)와 마감 시각(`closing_time`)은 stores에 저장합니다. [확정 정책](DECISIONS.md#확정-기록)을 반영했습니다: 판매자당 매장 1개, 비로그인은 매장·상품·이미지 조회만 가능(`stores.owner_id` 제외), 금액 1원 이상, 예약 `idempotency_key`의 소비자별 유일성. 가입 후 역할 변경과 상품 수정·삭제는 차단 상태입니다. 예약·판매 쓰기 함수(L05)와 Storage 버킷·정책(D05)은 아직 없습니다.
 
 | 테이블 | 컬럼 제안 | 관계·검증 |
 | --- | --- | --- |
 | profiles | id, role, region_code | id는 Auth 사용자 연결. 역할 변경 권한 통제 |
-| stores | id, owner_id, name, business_type, region_code, address, closing_time | 실제 판매자 소유. 매장 수·운영 시간 모델은 D01·D02 |
+| stores | id, owner_id, name, region_code, address, closing_time | 실제 판매자 소유, 판매자당 1개. 업종 컬럼 없음(D10). 운영 시간 모델은 D02 |
 | products | id, store_id, name, category, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at | 실제 매장 FK. 수량 음수 금지, 최저가 ≤ 기준가 |
 | product_images | id, product_id, storage_path | 실제 상품 연결. 파일 접근·소유권 검증 |
 | reservations | id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at | 수량 양수, 요청 시 가격 저장. approved_at은 최근 승인 수요 계산에 필요 |
 | sales | id, reservation_id, final_amount, completed_at | 예약당 판매 기록 한 번. 리포트 기준 |
 
-정수 수량만 허용할지, 무료 상품을 허용할지, 단위별 집계 방식은 D07·D08에서 확정합니다. 상품별 예약·판매 수량은 예약과 판매 기록으로 추적하고 기존 데이터 변경·삭제 정책도 총괄이 정합니다.
+수량은 양의 정수, 금액은 1원 이상입니다(D08). 단위별 집계 방식은 D07에서 확정합니다. 상품별 예약·판매 수량은 예약과 판매 기록으로 추적하고 기존 데이터 변경·삭제 정책도 총괄이 정합니다.
 
 ## 예약 상태와 재고
 
@@ -24,7 +24,7 @@
 | 요청 | 새 예약 → pending | 요청 수량 확보: 판매 가능 수량 감소 |
 | 승인 | pending → approved | 추가 차감 없음 |
 | 거절 | pending → rejected | 확보 수량 한 번 반환 |
-| 취소 | 허용된 상태 → cancelled | 확보 수량 한 번 반환. 허용 상태는 D03 |
+| 취소 | pending·approved → cancelled | 소비자 본인. 확보 수량 한 번 반환(D03) |
 | 현장 결제·수령 완료 | approved → completed | 추가 차감 없음. sales 한 번 기록 |
 
 거절·취소·완료는 종료 상태로 제안합니다. 자동 만료·노쇼 처리 규칙은 기획에 없으므로 추가하지 않습니다. 필요하면 D03에서 결정합니다.

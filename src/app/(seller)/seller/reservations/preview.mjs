@@ -9,7 +9,7 @@ const source = dirname(fileURLToPath(import.meta.url));
 const root = resolve(source, "../../../../..");
 await access(join(root, "node_modules/next/dist/bin/next"));
 const preview = await mkdtemp(join(tmpdir(), "seller-management-demo-"));
-await cp(join(source, ".."), join(preview, "app/seller"), { recursive: true, filter: (path) => !path.endsWith("preview.mjs") });
+await cp(join(source, ".."), join(preview, "app/seller"), { recursive: true, filter: (path) => !path.endsWith("preview.mjs") && !path.endsWith("seller/layout.tsx") });
 await symlink(join(root, "node_modules"), join(preview, "node_modules"), "dir");
 await writeFile(join(preview, "package.json"), JSON.stringify({ private: true, dependencies: { next: "16.4.3", react: "19.3.1", "react-dom": "19.3.1" } }));
 await writeFile(join(preview, "app/layout.tsx"), 'export default function Layout({ children }: { children: React.ReactNode }) { return <html lang="ko"><body style={{ margin: 0 }}>{children}</body></html>; }');

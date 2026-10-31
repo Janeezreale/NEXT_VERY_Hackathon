@@ -40,7 +40,8 @@ AI 분석과 가격 계산은 별도 처리입니다. AI 호출 뒤 반드시 �
 
 | 경로 제안 | 담당 | 내용 |
 | --- | --- | --- |
-| `app/(seller)/seller/` | A | 등록·상품 관리·예약 관리 화면 |
+| `app/(seller)/seller/` | A | 등록·상품 관리·예약 관리 화면. `layout.tsx`가 매장 등록 판매자만 허용 |
+| `app/(seller)/store/` | 총괄 | 매장 등록·수정 화면. 주소 입력은 `_components/address-field.tsx` |
 | `app/(seller)/seller/report/` | C | A 경로 아래의 명시적 예외: 리포트 화면 |
 | `app/(customer)/shop/`, `app/(customer)/shop/products/` | B | 지역 탐색·상품 상세 |
 | `app/(customer)/shop/reservations/` | B | 내 예약 목록·상세·취소 UI |

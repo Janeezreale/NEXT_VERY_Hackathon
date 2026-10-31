@@ -4,17 +4,15 @@ export type LoadState = "ready" | "loading" | "error";
 export type Availability = "판매 중" | "품절" | "판매 종료" | "재고 확인 불가";
 export type RequestOutcome = "unconnected" | "failure" | "unknown" | "pending";
 export const regions = ["샘플 동네 A", "샘플 동네 B"];
-export const businesses = ["전체", "과일·채소", "꽃집"];
 export const categories = ["전체", "채소", "과일", "꽃"];
 export const firstValue = (value: SearchValues[string]) => typeof value === "string" ? value : "";
 export function filtersFrom(values: SearchValues) {
   const pick = (key: string, allowed: string[], fallback: string) => allowed.includes(firstValue(values[key])) ? firstValue(values[key]) : fallback;
-  return { region: pick("region", regions, ""), business: pick("business", businesses, "전체"), category: pick("category", categories, "전체") };
+  return { region: pick("region", regions, ""), category: pick("category", categories, "전체") };
 }
 export function browseUrl(filters: ReturnType<typeof filtersFrom>) {
   const query = new URLSearchParams();
   if (filters.region) query.set("region", filters.region);
-  if (filters.business !== "전체") query.set("business", filters.business);
   if (filters.category !== "전체") query.set("category", filters.category);
   return `/shop${query.size ? `?${query}` : ""}`;
 }

@@ -16,7 +16,6 @@ type ProductErrors = Partial<Record<keyof ProductCreateInput, string>>;
 
 const EMPTY = {
   name: "",
-  category: "",
   quantity: "",
   unit: "",
   basePrice: "",
@@ -90,12 +89,6 @@ export function ProductForm() {
 
       <FormField id="product-name" label="상품 이름" required error={errors.name}>
         {(control) => <Input {...control} name="name" value={values.name} onChange={(e) => update({ name: e.target.value })} />}
-      </FormField>
-
-      <FormField id="product-category" label="품목" required error={errors.category}>
-        {(control) => (
-          <Input {...control} name="category" value={values.category} onChange={(e) => update({ category: e.target.value })} />
-        )}
       </FormField>
 
       <div className="grid grid-cols-2 gap-4">

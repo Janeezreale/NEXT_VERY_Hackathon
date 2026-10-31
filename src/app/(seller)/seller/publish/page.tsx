@@ -45,7 +45,7 @@ export default async function PublishPage() {
                 <li key={product.id} className="rounded-lg border border-border bg-card p-4 sm:p-6">
                   <p className="text-base leading-6 font-semibold text-foreground">{product.name}</p>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">
-                    {product.category} · {FRESHNESS_LABELS[product.freshness]} · 재고 {product.availableQuantity}
+                    {FRESHNESS_LABELS[product.freshness]} · 재고 {product.availableQuantity}
                     {product.unit}
                   </p>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">

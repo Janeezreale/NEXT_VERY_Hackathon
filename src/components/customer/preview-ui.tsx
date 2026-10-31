@@ -21,7 +21,7 @@ export function ProductPhoto({ product }: { product: PreviewProduct }) {
   return <div className={styles.photo}>
     {/* Remote reference photos are explicitly labelled, never presented as actual inventory. */}
     {/* eslint-disable-next-line @next/next/no-img-element */}
-    {!failed && <img src={`https://images.unsplash.com/${product.photo}?auto=format&fit=crop&w=1000&q=80`} alt={`${product.category} 참고용 사진. 실제 판매 상품이 아닙니다.`} onError={() => setFailed(true)} />}
+    {!failed && <img src={`https://images.unsplash.com/${product.photo}?auto=format&fit=crop&w=1000&q=80`} alt={`${product.name} 참고용 사진. 실제 판매 상품이 아닙니다.`} onError={() => setFailed(true)} />}
     {failed && <span>상품 이미지 없음</span>}
     
   </div>;

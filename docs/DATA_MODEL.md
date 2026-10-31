@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | profiles | id, role, region_code | id는 Auth 사용자 연결. 역할 변경 권한 통제 |
 | stores | id, owner_id, name, region_code, address, closing_time, latitude, longitude | 실제 판매자 소유, 판매자당 1개. 좌표는 nullable이고 둘 다 있거나 둘 다 없음. 업종 컬럼 없음(D10). 운영 시간 모델은 D02 |
-| products | id, store_id, name, category, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at | 실제 매장 FK. 수량 음수 금지, 최저가 ≤ 기준가 |
+| products | id, store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at | 실제 매장 FK. 수량 음수 금지, 최저가 ≤ 기준가 |
 | product_images | id, product_id, storage_path | 실제 상품 연결. 파일 접근·소유권 검증 |
 | reservations | id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at | 수량 양수, 요청 시 가격 저장. approved_at은 최근 승인 수요 계산에 필요 |
 | sales | id, reservation_id, final_amount, completed_at | 예약당 판매 기록 한 번. 리포트 기준 |

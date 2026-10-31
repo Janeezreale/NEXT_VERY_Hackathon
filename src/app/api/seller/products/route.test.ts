@@ -46,7 +46,6 @@ const row = (index = 1) => ({
   id: `00000000-0000-4000-8000-00000000000${index}`,
   store_id: "store-1",
   name: "사과",
-  category: "과일",
   unit: "봉지",
   available_quantity: 3,
   base_price: 10000,
@@ -58,7 +57,6 @@ const row = (index = 1) => ({
 
 const input = {
   name: "사과",
-  category: "과일",
   quantity: 3,
   unit: "봉지",
   basePrice: 10000,
@@ -90,7 +88,6 @@ describe("POST /api/seller/products", () => {
     expect(db.written).toEqual({
       store_id: "store-1",
       name: "사과",
-      category: "과일",
       unit: "봉지",
       available_quantity: 3,
       base_price: 10000,

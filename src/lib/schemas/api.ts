@@ -40,7 +40,6 @@ export const geocodeQuerySchema = z.object({ query: text.max(100, "100자 이내
 export const productCreateSchema = z
   .object({
     name: text,
-    category: text,
     quantity: z.number("수량을 입력해 주세요.").int("정수로 입력해 주세요.").positive("1 이상 입력해 주세요."),
     unit: text,
     basePrice: won,

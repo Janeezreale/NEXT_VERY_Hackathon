@@ -18,11 +18,11 @@
 
 | 모델 | 주요 필드 | 의미 |
 | --- | --- | --- |
-| Product | id, storeId, name, category, unit, availableQuantity, basePrice, minPrice, currentPrice, discountRate, freshness, saleEndsAt, imageUrls, pricedAt | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공 |
+| Product | id, storeId, name, unit, availableQuantity, basePrice, minPrice, currentPrice, discountRate, freshness, saleEndsAt, imageUrls, pricedAt | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공 |
 | Store | id, name, regionCode, address, closingTime, latitude, longitude | 매장 정보. closingTime은 `HH:mm`. 좌표는 nullable. 업종 필드 없음(D10) |
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
-| SellerProduct | id, storeId, name, category, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
+| SellerProduct | id, storeId, name, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
 | Reservation | id, productId, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
 | Report | period, registeredProducts, requestedReservations, approvedReservations, completedSales, soldQuantity, revenue, remainingQuantity, series | 집계 기준·기간·단위는 D07에서 확정 |
 
@@ -38,7 +38,7 @@
 | 지도 매장 조회 | GET `/api/stores` | 없음 | 좌표 있는 Store 목록(`items`), 최대 200개 | 비로그인 허용 |
 | 이미지 업로드 | POST `/api/seller/images` | 이미지 파일 | 서버가 검증한 imagePath | 판매자, 형식·크기·소유권은 D05 |
 | 이미지 분석 | POST `/api/seller/analyses` | imagePath, closingAt | Analysis | 이미지 소유 판매자 |
-| 상품 게시 | POST `/api/seller/products` | name, category, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
+| 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | 변경 필드, 동시 수정 검증 정보 | Product | 본인 매장, D08 확정 후 |
 | 지역 상품 탐색 | GET `/api/products` | region, cursor?, limit? | 판매 중 Product 목록 | 비로그인 허용 |

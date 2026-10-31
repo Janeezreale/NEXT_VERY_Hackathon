@@ -78,20 +78,27 @@ export type Product = {
   unit: string;
   availableQuantity: number;
   basePrice: number;
-  minPrice: number;
   currentPrice: number;
   discountRate: number;
   freshness: Freshness;
   saleEndsAt: string;
+  /** 판매 종료와 오늘 매장 마감 중 이른 시각. 이 시각부터 예약을 막는다. */
+  saleDeadline: string;
+  /** Storage 연결 전까지 빈 배열이다. */
   imageUrls: string[];
   pricedAt: string;
+  /** 재고가 있고 판매 종료·매장 마감 전이면 true */
+  saleOpen: boolean;
 };
+
+/** 소비자 목록 항목. 카드에 매장 이름과 주소가 필요하다. */
+export type ProductListing = Product & { store: Pick<Store, "id" | "name" | "address"> };
 
 /** 판매자가 게시한 상품. 현재가는 가격 엔진이 계산하므로 여기에 넣지 않는다. */
 export type SellerProduct = Pick<
   Product,
-  "id" | "storeId" | "name" | "unit" | "availableQuantity" | "basePrice" | "minPrice" | "freshness" | "saleEndsAt"
-> & { createdAt: string };
+  "id" | "storeId" | "name" | "unit" | "availableQuantity" | "basePrice" | "freshness" | "saleEndsAt"
+> & { minPrice: number; createdAt: string };
 
 /** AI 제안. 불확실한 값은 null로 두고 판매자가 게시 전에 확인한다. */
 export type Analysis = {

@@ -22,9 +22,6 @@ export function contextQuery(filters: ReturnType<typeof filtersFrom>) {
 export function loadState(scenario: string): LoadState {
   return scenario === "loading" || scenario === "error" ? scenario : "ready";
 }
-export function availability(scenario: string): Availability {
-  return ({ soldout: "품절", ended: "판매 종료", unavailable: "재고 확인 불가" } as const)[scenario as "soldout" | "ended" | "unavailable"] ?? "판매 중";
-}
 export function reservationMatches(status: string, filter: string) {
   const active = status === "승인 대기" || status === "예약 승인";
   return filter === "전체" || (filter === "진행 중" ? active : !active);

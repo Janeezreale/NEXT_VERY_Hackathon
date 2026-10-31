@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Leaf, MapPin, ShoppingBasket, Ticket } from "lucide-react";
 import { SessionAuthAction } from "@/src/components/common/logout-button";
-import { money, type PreviewProduct } from "./preview-data";
+import { money } from "./preview-data";
+import type { ProductView } from "./product-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
-export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
+export function PreviewShell({ children, back, demo = false }: { children: ReactNode; back?: string; demo?: boolean }) {
   return <main className={styles.page}>
-    <p className={styles.panel} role="note">데모 상품입니다. 실제로 예약되지 않아요.</p>
+    {demo && <p className={styles.panel} role="note">데모 화면입니다. 실제 예약 내역이 아니에요.</p>}
     <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div className={styles.navLinks}><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div><SessionAuthAction /></nav>
     {back && <Link href={back} className={styles.back}><ArrowLeft size={18} aria-hidden="true" />뒤로</Link>}
     {children}
@@ -17,25 +18,25 @@ export function PreviewShell({ children, back }: { children: ReactNode; back?: s
   </main>;
 }
 
-export function ProductPhoto({ product }: { product: PreviewProduct }) {
+export function ProductPhoto({ product }: { product: ProductView }) {
   const [failed, setFailed] = useState(false);
   return <div className={styles.photo}>
     {/* Remote reference photos are explicitly labelled, never presented as actual inventory. */}
     {/* eslint-disable-next-line @next/next/no-img-element */}
-    {!failed && <img src={`https://images.unsplash.com/${product.photo}?auto=format&fit=crop&w=1000&q=80`} alt={`${product.name} 참고용 사진. 실제 판매 상품이 아닙니다.`} onError={() => setFailed(true)} />}
-    {failed && <span>상품 이미지 없음</span>}
+    {product.photo && !failed && <img src={`https://images.unsplash.com/${product.photo}?auto=format&fit=crop&w=1000&q=80`} alt={`${product.name} 참고용 사진. 실제 판매 상품이 아닙니다.`} onError={() => setFailed(true)} />}
+    {(!product.photo || failed) && <span>이미지 없음</span>}
     
   </div>;
 }
 
-export function CurrentPrice({ product }: { product: PreviewProduct }) {
+export function CurrentPrice({ product }: { product: ProductView }) {
   return <><p className={styles.price}><span className={styles.discount}>{product.discount}% 할인</span><strong><span className={styles.srOnly}>현재가 </span>{money(product.price)}</strong><del><span className={styles.srOnly}>기준가 </span>{money(product.base)}</del></p><p className={styles.unit}>1{product.unit} · 현재가</p></>;
 }
 
-export function PickupFacts({ product }: { product: PreviewProduct }) {
-  return <dl className={styles.details}><div><dt>남은 수량</dt><dd>{product.stock}{product.unit}</dd></div><div><dt>예약 마감</dt><dd>11월 1일 {product.end}</dd></div><div><dt>픽업 가능</dt><dd>11월 1일 {product.pickup}</dd></div></dl>;
+export function PickupFacts({ product }: { product: ProductView }) {
+  return <dl className={styles.details}><div><dt>남은 수량</dt><dd>{product.stock}{product.unit}</dd></div><div><dt>예약 마감</dt><dd>{product.dateLabel} {product.end}</dd></div><div><dt>픽업 가능</dt><dd>{product.dateLabel} {product.pickup}</dd></div></dl>;
 }
 
-export function StoreInfo({ product }: { product: PreviewProduct }) {
+export function StoreInfo({ product }: { product: ProductView }) {
   return <section className={styles.panel}><p className={styles.eyebrow}>픽업 장소</p><h2>{product.store}</h2><p className={styles.address}><MapPin size={18} aria-hidden="true" />{product.address}</p><p className={styles.description}>선택한 시간에 방문해 상품을 확인한 후 현장에서 결제해 주세요.</p></section>;
 }

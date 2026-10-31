@@ -2,7 +2,7 @@
 
 [시작 안내](../README.md) · 근거: [기획 원문](../plan.md) §4–5, §7–8
 
-**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
+**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
 
 ## 공통 형식 제안
 
@@ -18,7 +18,7 @@
 
 | 모델 | 주요 필드 | 의미 |
 | --- | --- | --- |
-| Product | id, storeId, name, unit, availableQuantity, basePrice, minPrice, currentPrice, discountRate, freshness, saleEndsAt, imageUrls, pricedAt | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공 |
+| Product | id, storeId, name, unit, availableQuantity, basePrice, currentPrice, discountRate, freshness, saleEndsAt, saleDeadline, imageUrls, pricedAt, saleOpen | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공. discountRate는 최저가 적용 후 실제 값. imageUrls는 Storage 연결 전까지 빈 배열. 판매자 최저가는 공개 응답에 넣지 않음 |
 | Store | id, name, regionCode, address, closingTime, latitude, longitude | 매장 정보. closingTime은 `HH:mm`. 좌표는 nullable. 업종 필드 없음(D10) |
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
@@ -41,8 +41,8 @@
 | 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | 변경 필드, 동시 수정 검증 정보 | Product | 본인 매장, D08 확정 후 |
-| 지역 상품 탐색 | GET `/api/products` | region, cursor?, limit? | 판매 중 Product 목록 | 비로그인 허용 |
-| 상품 상세 | GET `/api/products/:id` | 경로 ID | Product, Store | 비로그인 허용 |
+| 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있고 마감 전인 Product 목록, 항목마다 store(id, name, address) 포함. 매장 마감으로 제외된 상품 때문에 한 페이지가 limit보다 적어도 nextCursor가 있을 수 있음 | 비로그인 허용 |
+| 상품 상세 | GET `/api/products/:id` | 경로 ID | `{ product, store }`. 품절·판매 종료도 saleOpen false로 반환. 없는 상품·잘못된 ID는 404 | 비로그인 허용 |
 | 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice | Reservation | 소비자 본인 |
 | 내 예약 | GET `/api/me/reservations` | status?, cursor?, limit? | Reservation 목록 | 소비자 본인 |
 | 내 예약 취소 | POST `/api/reservations/:id/cancel` | 경로 ID | Reservation | 소비자 본인, pending·approved만 |

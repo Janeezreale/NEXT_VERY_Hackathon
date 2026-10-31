@@ -1,14 +1,21 @@
 import ProductPreview from "../../../../../components/customer/product-preview";
-import { previewProducts } from "../../../../../components/customer/preview-data";
-import { filtersFrom, browseUrl, contextQuery, firstValue, loadState, availability, type SearchValues } from "../../../../../components/customer/preview-state";
+import { browseUrl, contextQuery, filtersFrom, type SearchValues } from "../../../../../components/customer/preview-state";
+import { loadProduct } from "./load-product";
 
 export default async function ProductPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<SearchValues> }) {
   const { id } = await params;
-  const values = await searchParams;
-  const filters = filtersFrom(values);
+  const filters = filtersFrom(await searchParams);
   const query = contextQuery(filters);
-  const scenario = firstValue(values._preview);
-  const original = previewProducts.find(item => item.id === id);
-  const product = scenario === "missing" ? undefined : original && { ...original, ...(scenario === "long" ? { name: "함께 나누기 좋은 아주 긴 이름의 제철 채소 꾸러미와 다양한 계절 채소 구성 안내" } : {}), ...(scenario === "photo" ? { photo: "missing-preview-photo" } : {}) };
-  return <ProductPreview product={product} state={loadState(scenario)} availability={availability(scenario)} back={browseUrl(filters)} detailUrl={`/shop/products/${encodeURIComponent(id)}${query ? `?${query}` : ""}`} />;
+  const loaded = await loadProduct(id);
+  const ready = loaded.status === "ready";
+  const availability = !ready || loaded.saleOpen ? "판매 중" : loaded.soldOut ? "품절" : "판매 종료";
+  return (
+    <ProductPreview
+      product={ready ? loaded.view : undefined}
+      state={loaded.status === "error" ? "error" : "ready"}
+      availability={availability}
+      back={browseUrl(filters)}
+      detailUrl={`/shop/products/${encodeURIComponent(id)}${query ? `?${query}` : ""}`}
+    />
+  );
 }

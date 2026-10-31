@@ -22,7 +22,12 @@ create table public.stores (
   name text not null check (length(trim(name)) > 0),
   region_code text not null,
   address text not null,
-  closing_time time not null
+  closing_time time not null,
+  latitude double precision,
+  longitude double precision,
+  constraint stores_latitude_range check (latitude between -90 and 90),
+  constraint stores_longitude_range check (longitude between -180 and 180),
+  constraint stores_coordinates_pair check ((latitude is null) = (longitude is null))
 );
 
 create table public.products (
@@ -120,11 +125,11 @@ revoke all on public.profiles, public.stores, public.products, public.product_im
 
 grant select on public.profiles, public.stores, public.products, public.product_images, public.reservations, public.sales
   to authenticated;
-grant select (id, name, region_code, address, closing_time) on public.stores to anon;
+grant select (id, name, region_code, address, closing_time, latitude, longitude) on public.stores to anon;
 grant select on public.products, public.product_images to anon;
 grant update (region_code) on public.profiles to authenticated;
-grant insert (owner_id, name, region_code, address, closing_time) on public.stores to authenticated;
-grant update (name, region_code, address, closing_time) on public.stores to authenticated;
+grant insert (owner_id, name, region_code, address, closing_time, latitude, longitude) on public.stores to authenticated;
+grant update (name, region_code, address, closing_time, latitude, longitude) on public.stores to authenticated;
 grant insert (store_id, name, category, unit, available_quantity, base_price, min_price, freshness, sale_ends_at)
   on public.products to authenticated;
 grant insert (product_id, storage_path), delete on public.product_images to authenticated;

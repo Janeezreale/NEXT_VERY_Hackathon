@@ -61,6 +61,17 @@ describe("storeCreateSchema", () => {
   it.each(["24:00", "9:00", "21:60"])("rejects closing time %s", (closingTime) => {
     expect(storeCreateSchema.safeParse({ ...store, closingTime }).success).toBe(false);
   });
+  it("accepts a store with or without a coordinate pair", () => {
+    expect(storeCreateSchema.safeParse({ ...store, latitude: 37.5, longitude: 127 }).success).toBe(true);
+    expect(storeCreateSchema.safeParse({ ...store, latitude: null, longitude: null }).success).toBe(true);
+  });
+  it.each([
+    ["only a latitude", { latitude: 37.5 }],
+    ["a latitude with a null longitude", { latitude: 37.5, longitude: null }],
+    ["an out-of-range latitude", { latitude: 91, longitude: 127 }],
+  ])("rejects %s", (_, change) => {
+    expect(storeCreateSchema.safeParse({ ...store, ...change }).success).toBe(false);
+  });
   it("rejects a blank address", () => {
     expect(storeCreateSchema.safeParse({ ...store, address: "  " }).success).toBe(false);
   });

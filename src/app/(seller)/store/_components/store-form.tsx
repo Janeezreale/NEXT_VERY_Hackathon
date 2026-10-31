@@ -23,6 +23,8 @@ export function StoreForm({ store }: { store: Store | null }) {
     regionCode: store?.regionCode ?? "",
     address: store?.address ?? "",
     closingTime: store?.closingTime ?? "",
+    latitude: store?.latitude ?? null,
+    longitude: store?.longitude ?? null,
   });
   const [errors, setErrors] = React.useState<StoreErrors>({});
   const [formError, setFormError] = React.useState<string | null>(null);
@@ -79,7 +81,12 @@ export function StoreForm({ store }: { store: Store | null }) {
       </FormField>
 
       <AddressField
-        value={{ regionCode: values.regionCode, address: values.address }}
+        value={{
+          regionCode: values.regionCode,
+          address: values.address,
+          latitude: values.latitude ?? null,
+          longitude: values.longitude ?? null,
+        }}
         errors={{ regionCode: errors.regionCode, address: errors.address }}
         onChange={update}
       />

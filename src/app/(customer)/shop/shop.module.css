@@ -60,6 +60,7 @@
 .back { @apply my-4; }
 .photo { @apply relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl; background: #f1f5f2; color: #626b77; }
 .photo img { @apply block h-full w-full object-cover; }
+.miniProduct .photo span { @apply text-xs; white-space: nowrap; }
 .detailGrid { @apply my-6 grid items-start gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:grid-cols-2; }
 .panel { @apply my-4 min-w-0 rounded-xl border bg-white p-4 sm:p-6; border-color: #e2e8e3; }
 .detailGrid > .panel { @apply m-0; }
@@ -74,7 +75,7 @@
 .badge { @apply my-3 inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold; background: #eaf6ef; color: #176b49; }
 .badge[data-status="승인 대기"] { background: #fffbeb; color: #b45309; }
 .badge[data-status="예약 거절"] { background: #fef2f2; color: #b91c1c; }
-.badge[data-status="예약 취소"] { background: #f1f5f2; color: #626b77; }
+.badge[data-status="예약 취소"], .badge[data-status="기한 만료"], .badge[data-status="미방문"] { background: #f1f5f2; color: #626b77; }
 .sectionHeading { @apply py-8; }
 .sectionHeading h1 { @apply text-2xl leading-8 font-bold sm:text-[32px]; }
 .formWidth { @apply mx-auto w-full max-w-[640px]; }

@@ -1,9 +1,29 @@
-import ReservationsPreview from "../../../../components/customer/reservations-preview";
-import { previewReservations } from "../../../../components/customer/preview-data";
-import { firstValue, loadState, type SearchValues } from "../../../../components/customer/preview-state";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
-export default async function ReservationsPage({ searchParams }: { searchParams: Promise<SearchValues> }) {
-  const scenario = firstValue((await searchParams)._preview);
-  const reservations = scenario === "empty" ? [] : scenario === "active-only" ? previewReservations.filter(row => row.status === "승인 대기" || row.status === "예약 승인") : previewReservations;
-  return <ReservationsPreview reservations={reservations} state={loadState(scenario)} />;
+import ReservationsPreview from "../../../../components/customer/reservations-preview";
+import { toReservationView, type ReservationView } from "../../../../components/customer/reservation-view";
+import { ApiError } from "../../../../lib/server/api";
+import { requireUser } from "../../../../lib/server/auth";
+import { listReservations } from "../../../../lib/server/reservation";
+
+const LIST_LIMIT = 50;
+
+async function loadReservations(): Promise<ReservationView[] | null> {
+  try {
+    const { supabase, id } = await requireUser();
+    const { items } = await listReservations(supabase, { consumerId: id }, { limit: LIST_LIMIT });
+    return items.map(toReservationView);
+  } catch (error) {
+    if (error instanceof ApiError && error.code === "UNAUTHENTICATED") redirect("/login");
+    console.error("Failed to load reservations", error);
+    return null;
+  }
+}
+
+export default async function ReservationsPage() {
+  // 로그인 사용자별 화면이다. 오류 처리가 정적 생성 신호를 삼키지 않도록 먼저 동적 렌더링을 지정한다.
+  await connection();
+  const reservations = await loadReservations();
+  return <ReservationsPreview reservations={reservations ?? []} state={reservations ? "ready" : "error"} />;
 }

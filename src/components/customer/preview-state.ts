@@ -1,10 +1,9 @@
 import { SEOUL_DISTRICTS } from "@/src/lib/regions";
 
-// UI-only contracts for the isolated preview, not shared API/domain types.
+// 소비자 화면의 URL과 필터 상태. API 타입이 아니다.
 export type SearchValues = Record<string, string | string[] | undefined>;
 export type LoadState = "ready" | "loading" | "error";
-export type Availability = "판매 중" | "품절" | "판매 종료" | "재고 확인 불가";
-export type RequestOutcome = "unconnected" | "failure" | "unknown" | "pending";
+export type Availability = "판매 중" | "품절" | "판매 종료";
 export const regions: string[] = [...SEOUL_DISTRICTS];
 export const firstValue = (value: SearchValues[string]) => typeof value === "string" ? value : "";
 export function filtersFrom(values: SearchValues) {
@@ -18,9 +17,6 @@ export function browseUrl(filters: ReturnType<typeof filtersFrom>) {
 }
 export function contextQuery(filters: ReturnType<typeof filtersFrom>) {
   return browseUrl(filters).split("?")[1] ?? "";
-}
-export function loadState(scenario: string): LoadState {
-  return scenario === "loading" || scenario === "error" ? scenario : "ready";
 }
 export function reservationMatches(status: string, filter: string) {
   const active = status === "승인 대기" || status === "예약 승인";

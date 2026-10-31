@@ -5,6 +5,7 @@ import type { Product } from "@/src/types/api";
 import { pickupSlots, toProductView } from "./product-view";
 
 const kst = (value: string) => new Date(`${value}+09:00`);
+const labels = (now: Date, deadline: Date) => pickupSlots(now, deadline).map((slot) => slot.label);
 
 const product: Product = {
   id: "product-1",
@@ -25,19 +26,23 @@ const product: Product = {
 
 describe("pickupSlots", () => {
   it("starts at the next half hour and ends at the deadline", () => {
-    expect(pickupSlots(kst("2026-11-01T17:10:00"), kst("2026-11-01T18:30:00"))).toEqual(["17:30", "18:00", "18:30"]);
+    expect(labels(kst("2026-11-01T17:10:00"), kst("2026-11-01T18:30:00"))).toEqual(["17:30", "18:00", "18:30"]);
   });
 
   it("keeps an exact half hour", () => {
-    expect(pickupSlots(kst("2026-11-01T17:30:00"), kst("2026-11-01T18:00:00"))).toEqual(["17:30", "18:00"]);
+    expect(labels(kst("2026-11-01T17:30:00"), kst("2026-11-01T18:00:00"))).toEqual(["17:30", "18:00"]);
+  });
+
+  it("keeps the exact time for the reservation request", () => {
+    expect(pickupSlots(kst("2026-11-01T17:10:00"), kst("2026-11-01T17:30:00"))).toEqual([{ label: "17:30", at: "2026-11-01T08:30:00.000Z" }]);
   });
 
   it("limits the number of slots", () => {
-    expect(pickupSlots(kst("2026-11-01T09:00:00"), kst("2026-11-01T22:00:00"))).toHaveLength(6);
+    expect(labels(kst("2026-11-01T09:00:00"), kst("2026-11-01T22:00:00"))).toHaveLength(6);
   });
 
   it("offers the deadline when no half hour remains", () => {
-    expect(pickupSlots(kst("2026-11-01T17:05:00"), kst("2026-11-01T17:20:00"))).toEqual(["17:20"]);
+    expect(labels(kst("2026-11-01T17:05:00"), kst("2026-11-01T17:20:00"))).toEqual(["17:20"]);
   });
 });
 

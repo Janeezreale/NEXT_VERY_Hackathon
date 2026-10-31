@@ -4,13 +4,11 @@ import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Leaf, MapPin, ShoppingBasket, Ticket } from "lucide-react";
 import { SessionAuthAction } from "@/src/components/common/logout-button";
-import { money } from "./preview-data";
-import type { ProductView } from "./product-view";
+import { money, type ProductView } from "./product-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
-export function PreviewShell({ children, back, demo = false }: { children: ReactNode; back?: string; demo?: boolean }) {
+export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
   return <main className={styles.page}>
-    {demo && <p className={styles.panel} role="note">데모 화면입니다. 실제 예약 내역이 아니에요.</p>}
     <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div className={styles.navLinks}><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div><SessionAuthAction /></nav>
     {back && <Link href={back} className={styles.back}><ArrowLeft size={18} aria-hidden="true" />뒤로</Link>}
     {children}
@@ -18,12 +16,11 @@ export function PreviewShell({ children, back, demo = false }: { children: React
   </main>;
 }
 
-export function ProductPhoto({ product }: { product: ProductView }) {
+export function ProductPhoto({ product }: { product: Pick<ProductView, "name" | "photo"> }) {
   const [failed, setFailed] = useState(false);
   return <div className={styles.photo}>
-    {/* Remote reference photos are explicitly labelled, never presented as actual inventory. */}
     {/* eslint-disable-next-line @next/next/no-img-element */}
-    {product.photo && !failed && <img src={`https://images.unsplash.com/${product.photo}?auto=format&fit=crop&w=1000&q=80`} alt={`${product.name} 참고용 사진. 실제 판매 상품이 아닙니다.`} onError={() => setFailed(true)} />}
+    {product.photo && !failed && <img src={product.photo} alt={product.name} onError={() => setFailed(true)} />}
     {(!product.photo || failed) && <span>이미지 없음</span>}
     
   </div>;

@@ -22,6 +22,30 @@ export function distanceKm(from: Position, to: Position) {
   return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(a));
 }
 
+export type DistrictBounds = Record<string, number[][][]>;
+
+/** 점이 경계 안에 있는지 본다. 경계의 각 점은 [경도, 위도]다. */
+function isInside({ latitude, longitude }: Position, ring: number[][]) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [x1, y1] = ring[i];
+    const [x2, y2] = ring[j];
+    if (y1 > latitude !== y2 > latitude && longitude < ((x2 - x1) * (latitude - y1)) / (y2 - y1) + x1) inside = !inside;
+  }
+  return inside;
+}
+
+/** 위치가 속한 구. 서울 밖이면 null이다. */
+export function districtAt(bounds: DistrictBounds, position: Position) {
+  return Object.keys(bounds).find((district) => bounds[district].some((ring) => isInside(position, ring))) ?? null;
+}
+
+/** 위치를 켤 때만 경계 파일을 받는다. 계산은 기기 안에서 끝나고 위치는 밖으로 나가지 않는다. */
+export async function findDistrict(position: Position) {
+  const { default: bounds } = await import("@/src/lib/seoul-district-bounds.json");
+  return districtAt(bounds, position);
+}
+
 export function formatDistance(km: number) {
   return km < 1 ? `${Math.round(km * 100) * 10}m` : `${km.toFixed(1)}km`;
 }

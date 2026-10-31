@@ -9,6 +9,11 @@ export type LocationStatus = "off" | "locating" | "on" | "denied" | "unavailable
 /** 약 100m 단위. 작은 흔들림으로 지도와 목록이 다시 그려지지 않게 한다. */
 const round = (value: number) => Math.round(value * 1000) / 1000;
 
+const subscribeNever = () => () => {};
+const hasGeolocation = () => "geolocation" in navigator;
+/** Node에도 navigator가 있어 서버에서 직접 확인하면 브라우저 첫 렌더링과 달라진다. */
+const assumeGeolocation = () => true;
+
 /**
  * 화면을 보는 동안 내 위치를 따라간다. 위치는 브라우저 안에서만 쓰고 서버로 보내거나 저장하지 않는다.
  * 권한 요청은 사용자가 위치 기능을 고른 뒤에만 나간다.
@@ -36,7 +41,7 @@ export function useLocation(autoStart: boolean) {
     };
   }, [attempt]);
 
-  const supported = typeof navigator === "undefined" || "geolocation" in navigator;
+  const supported = React.useSyncExternalStore(subscribeNever, hasGeolocation, assumeGeolocation);
   const status: LocationStatus = attempt === 0 ? "off" : !supported ? "unavailable" : position ? "on" : (failure ?? "locating");
 
   return {

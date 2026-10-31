@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { distanceKm, formatDistance, productDistance, sortProducts } from "./location";
+import { SEOUL_DISTRICTS } from "@/src/lib/regions";
+import bounds from "@/src/lib/seoul-district-bounds.json";
+
+import { distanceKm, districtAt, formatDistance, productDistance, sortProducts } from "./location";
 import type { ProductView } from "./product-view";
 
 const product = (name: string, store: string, latitude: number | null, longitude: number | null) =>
@@ -22,6 +25,34 @@ describe("distanceKm", () => {
 
   it("is zero at the same place", () => {
     expect(distanceKm(gangnam, gangnam)).toBe(0);
+  });
+});
+
+describe("districtAt", () => {
+  it.each([
+    ["성북구청 부근", 37.5894, 127.0167, "성북구"],
+    ["상계역", 37.6607, 127.0735, "노원구"],
+    ["신림역", 37.4842, 126.9297, "관악구"],
+    ["화곡역", 37.5416, 126.8403, "강서구"],
+    ["잠실역", 37.5133, 127.1001, "송파구"],
+    ["홍대입구역", 37.5572, 126.9245, "마포구"],
+    ["가산디지털단지역", 37.4816, 126.8827, "금천구"],
+  ])("finds the district at %s", (_, latitude, longitude, district) => {
+    expect(districtAt(bounds, { latitude, longitude })).toBe(district);
+  });
+
+  it.each([
+    ["부산", 35.1796, 129.0756],
+    ["수원", 37.2636, 127.0286],
+    ["일산", 37.6584, 126.77],
+    ["분당", 37.3825, 127.1189],
+    ["의정부", 37.7381, 127.0337],
+  ])("selects nothing in %s", (_, latitude, longitude) => {
+    expect(districtAt(bounds, { latitude, longitude })).toBeNull();
+  });
+
+  it("has a boundary for every district", () => {
+    expect(Object.keys(bounds).sort()).toEqual([...SEOUL_DISTRICTS].sort());
   });
 });
 

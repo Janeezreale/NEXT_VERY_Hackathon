@@ -17,7 +17,6 @@ export const POST = route(async (request) => {
     .insert({
       store_id: store.id,
       name: input.name,
-      category: input.category,
       unit: input.unit,
       available_quantity: input.quantity,
       base_price: input.basePrice,

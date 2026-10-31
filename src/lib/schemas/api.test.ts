@@ -4,7 +4,6 @@ import { analysisSchema, listQuerySchema, productCreateSchema, reservationCreate
 
 const product = {
   name: "사과",
-  category: "과일",
   quantity: 3,
   unit: "봉지",
   basePrice: 10000,

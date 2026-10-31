@@ -75,7 +75,6 @@ export type Product = {
   id: string;
   storeId: string;
   name: string;
-  category: string;
   unit: string;
   availableQuantity: number;
   basePrice: number;
@@ -91,7 +90,7 @@ export type Product = {
 /** 판매자가 게시한 상품. 현재가는 가격 엔진이 계산하므로 여기에 넣지 않는다. */
 export type SellerProduct = Pick<
   Product,
-  "id" | "storeId" | "name" | "category" | "unit" | "availableQuantity" | "basePrice" | "minPrice" | "freshness" | "saleEndsAt"
+  "id" | "storeId" | "name" | "unit" | "availableQuantity" | "basePrice" | "minPrice" | "freshness" | "saleEndsAt"
 > & { createdAt: string };
 
 /** AI 제안. 불확실한 값은 null로 두고 판매자가 게시 전에 확인한다. */

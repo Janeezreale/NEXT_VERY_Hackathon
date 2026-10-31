@@ -9,7 +9,7 @@ describe("ProductForm", () => {
   const html = renderToStaticMarkup(<ProductForm />);
 
   it("asks for everything needed to publish", () => {
-    for (const name of ["name", "category", "quantity", "unit", "basePrice", "minPrice", "freshness", "saleEndsAt", "sellerConfirmed"]) {
+    for (const name of ["name", "quantity", "unit", "basePrice", "minPrice", "freshness", "saleEndsAt", "sellerConfirmed"]) {
       expect(html).toContain(`name="${name}"`);
     }
   });

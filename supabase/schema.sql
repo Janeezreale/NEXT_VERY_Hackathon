@@ -34,7 +34,6 @@ create table public.products (
   id uuid primary key default gen_random_uuid(),
   store_id uuid not null references public.stores (id) on delete restrict,
   name text not null check (length(trim(name)) > 0),
-  category text not null,
   unit text not null,
   available_quantity integer not null check (available_quantity >= 0),
   base_price integer not null,
@@ -130,7 +129,7 @@ grant select on public.products, public.product_images to anon;
 grant update (region_code) on public.profiles to authenticated;
 grant insert (owner_id, name, region_code, address, closing_time, latitude, longitude) on public.stores to authenticated;
 grant update (name, region_code, address, closing_time, latitude, longitude) on public.stores to authenticated;
-grant insert (store_id, name, category, unit, available_quantity, base_price, min_price, freshness, sale_ends_at)
+grant insert (store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at)
   on public.products to authenticated;
 grant insert (product_id, storage_path), delete on public.product_images to authenticated;
 

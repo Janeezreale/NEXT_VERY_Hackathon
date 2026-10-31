@@ -8,7 +8,7 @@ import type { Page, SellerProduct } from "../../types/api";
 import { ApiError } from "./api";
 
 export const PRODUCT_COLUMNS =
-  "id, store_id, name, category, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at";
+  "id, store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at";
 
 const cursorSchema = z.tuple([z.iso.datetime({ offset: true }), z.uuid()]);
 
@@ -18,7 +18,6 @@ export type ProductRow = {
   id: string;
   store_id: string;
   name: string;
-  category: string;
   unit: string;
   available_quantity: number;
   base_price: number;
@@ -33,7 +32,6 @@ export function toSellerProduct(row: ProductRow): SellerProduct {
     id: row.id,
     storeId: row.store_id,
     name: row.name,
-    category: row.category,
     unit: row.unit,
     availableQuantity: row.available_quantity,
     basePrice: row.base_price,

@@ -61,7 +61,7 @@ export default function StoreMap() {
   }
 
   return (
-    <section aria-label="매장 지도" className={styles.browseList}>
+    <section aria-label="매장 지도" className="mt-4 flex w-full flex-col gap-4">
       <label className={styles.region}>
         <span>
           <MapPin size={18} aria-hidden="true" />

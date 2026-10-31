@@ -83,7 +83,7 @@ export function AddressField({ value, errors, onChange }: AddressFieldProps) {
                 void search();
               }}
             />
-            <Button type="button" variant="outline" loading={searching} loadingText="검색 중…" onClick={search}>
+            <Button type="button" variant="outline" className="shrink-0 whitespace-nowrap" loading={searching} loadingText="검색 중…" onClick={search}>
               <Search className="size-4" aria-hidden="true" />
               검색
             </Button>

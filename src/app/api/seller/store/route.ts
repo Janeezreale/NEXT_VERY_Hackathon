@@ -24,6 +24,8 @@ export const POST = route(async (request) => {
       address: input.address,
       opening_time: input.openingTime,
       closing_time: input.closingTime,
+      description: input.description ?? null,
+      phone: input.phone ?? null,
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
     })
@@ -47,6 +49,8 @@ export const PATCH = route(async (request) => {
       address: input.address,
       opening_time: input.openingTime,
       closing_time: input.closingTime,
+      description: input.description,
+      phone: input.phone,
       latitude: input.latitude === undefined ? clearedCoordinate : input.latitude,
       longitude: input.longitude === undefined ? clearedCoordinate : input.longitude,
     })

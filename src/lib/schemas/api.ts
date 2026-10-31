@@ -35,12 +35,23 @@ function refineBusinessHours({ openingTime, closingTime }: { openingTime?: strin
   }
 }
 
+const emptyToNull = <T>(value: T) => (value === "" ? null : value);
+
 const storeFields = z.object({
   name: text,
   regionCode: text,
   address: text,
   openingTime: clock("오픈 시각을 입력해 주세요."),
   closingTime: clock("마감 시각을 입력해 주세요."),
+  description: z.string().trim().max(300, "300자 이내로 입력해 주세요.").nullable().optional().transform(emptyToNull),
+  phone: z
+    .string()
+    .regex(/^[\d\s-]*$/, "전화번호를 확인해 주세요.")
+    .transform((value) => value.replace(/\D/g, ""))
+    .pipe(z.string().regex(/^(0\d{8,10})?$/, "전화번호를 확인해 주세요."))
+    .nullable()
+    .optional()
+    .transform(emptyToNull),
   latitude: z.number().min(-90).max(90).nullable().optional(),
   longitude: z.number().min(-180).max(180).nullable().optional(),
 });

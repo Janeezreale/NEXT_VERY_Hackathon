@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 import BrowsePreview from "../../../components/customer/browse-preview";
-import { filtersWithSavedRegion, REGION_COOKIE, type SearchValues } from "../../../components/customer/preview-state";
+import { filtersWithSavedRegion, firstValue, REGION_COOKIE, type SearchValues } from "../../../components/customer/preview-state";
 import { toProductView, type ProductView } from "../../../components/customer/product-view";
 import { listPublicProducts } from "../../../lib/server/product";
 import { createClient } from "../../../lib/supabase/server";
@@ -20,7 +20,8 @@ async function loadProducts(region: string): Promise<ProductView[] | null> {
 }
 
 export default async function ShopPage({ searchParams }: { searchParams: Promise<SearchValues> }) {
-  const filters = filtersWithSavedRegion(await searchParams, (await cookies()).get(REGION_COOKIE)?.value);
+  const values = await searchParams;
+  const filters = filtersWithSavedRegion(values, (await cookies()).get(REGION_COOKIE)?.value);
   const products = filters.region ? await loadProducts(filters.region) : [];
-  return <BrowsePreview filters={filters} products={products ?? []} state={products ? "ready" : "error"} />;
+  return <BrowsePreview filters={filters} products={products ?? []} state={products ? "ready" : "error"} initialView={firstValue(values.view) === "map" ? "map" : "list"} />;
 }

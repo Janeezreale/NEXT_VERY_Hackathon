@@ -15,7 +15,7 @@ type NaverMaps = {
     fitBounds(bounds: object): void;
     destroy(): void;
   };
-  Marker: new (options: { position: LatLng; map: object; title?: string }) => { setMap(map: null): void };
+  Marker: new (options: { position: LatLng; map: object; title?: string; icon?: { content: string } }) => { setMap(map: null): void };
   Event: MapEvents;
 };
 
@@ -26,7 +26,14 @@ declare global {
   }
 }
 
-export type MapMarker = { id: string; latitude: number; longitude: number; title: string };
+export type MapMarker = {
+  id: string;
+  latitude: number;
+  longitude: number;
+  title: string;
+  /** 기본 핀 대신 쓸 HTML */
+  icon?: string;
+};
 
 type NaverMapProps = {
   markers: MapMarker[];
@@ -58,7 +65,7 @@ export function NaverMap({ markers, onSelect, label, className }: NaverMapProps)
     const positions = markers.map((marker) => new maps.LatLng(marker.latitude, marker.longitude));
     const map = new maps.Map(element, { center: positions[0], zoom: SINGLE_MARKER_ZOOM });
     const pins = markers.map((marker, index) => {
-      const pin = new maps.Marker({ position: positions[index], map, title: marker.title });
+      const pin = new maps.Marker({ position: positions[index], map, title: marker.title, ...(marker.icon ? { icon: { content: marker.icon } } : {}) });
       if (onSelect) maps.Event.addListener(pin, "click", () => onSelect(marker.id));
       return pin;
     });

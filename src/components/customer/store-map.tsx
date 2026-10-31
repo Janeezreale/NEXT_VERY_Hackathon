@@ -1,21 +1,24 @@
 "use client";
 
-import { MapPin, Store as StoreIcon } from "lucide-react";
+import { ArrowRight, MapPin, Phone, Store as StoreIcon } from "lucide-react";
+import Link from "next/link";
 import * as React from "react";
 
 import { NaverMap } from "@/src/components/common/naver-map";
 import { apiFetch } from "@/src/lib/client/api";
-import { getStoreStatus } from "@/src/lib/pricing/price";
 import { SEOUL_DISTRICTS } from "@/src/lib/regions";
 import type { MappedStore } from "@/src/types/api";
 
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
+import type { Position } from "./location";
+import { toStoreView } from "./store-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
-const STORE_STATUS_LABELS = { before_open: "영업 전", open: "영업 중", closed: "오늘 영업 마감" };
-
 /** 실제 등록된 매장 지도. 서울 밖 매장의 지역은 목록 뒤에 덧붙인다. */
-export default function StoreMap() {
+const MY_POSITION = "my-position";
+const MY_POSITION_ICON = '<div style="width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#176b49;border:3px solid #fff;box-shadow:0 0 0 2px #176b49"></div>';
+
+export default function StoreMap({ position }: { position: Position | null }) {
   const [stores, setStores] = React.useState<MappedStore[]>([]);
   const [state, setState] = React.useState<"loading" | "error" | "ready">("loading");
   const [region, setRegion] = React.useState("");
@@ -53,10 +56,17 @@ export default function StoreMap() {
     [stores, region],
   );
   const markers = React.useMemo(
-    () => visible.map((store) => ({ id: store.id, latitude: store.latitude, longitude: store.longitude, title: store.name })),
-    [visible],
+    () => [
+      ...visible.map((store) => ({ id: store.id, latitude: store.latitude, longitude: store.longitude, title: store.name })),
+      ...(position ? [{ id: MY_POSITION, ...position, title: "내 위치", icon: MY_POSITION_ICON }] : []),
+    ],
+    [visible, position],
   );
-  const selected = visible.find((store) => store.id === selectedId);
+  const selectStore = React.useCallback((id: string) => {
+    if (id !== MY_POSITION) setSelectedId(id);
+  }, []);
+  const found = visible.find((store) => store.id === selectedId);
+  const selected = found ? toStoreView(found, new Date()) : null;
 
   if (state !== "ready") return <LoadFeedback state={state} subject="매장을" onRetry={retry} />;
   if (stores.length === 0) {
@@ -84,22 +94,33 @@ export default function StoreMap() {
         </select>
       </label>
       <p role="status">매장 {visible.length}곳</p>
-      {markers.length === 0 ? (
+      {visible.length === 0 ? (
         <EmptyFeedback title={`${region}에 등록된 매장이 없어요`} description="다른 지역을 선택해 보세요." />
       ) : (
-        <NaverMap markers={markers} onSelect={setSelectedId} label="매장 위치 지도" className="h-80" />
+        <NaverMap markers={markers} onSelect={selectStore} label="매장 위치 지도" className="h-80" />
       )}
-      {markers.length === 0 ? null : selected ? (
+      {visible.length === 0 ? null : selected ? (
         <article className={styles.panel}>
           <p className={styles.store}>
             <StoreIcon size={14} aria-hidden="true" />
-            {selected.regionCode}
+            {selected.region}
           </p>
           <h3>{selected.name}</h3>
+          {selected.description ? <p className={styles.description}>{selected.description}</p> : null}
           <p>{selected.address}</p>
           <p>
-            {STORE_STATUS_LABELS[getStoreStatus(selected.openingTime, selected.closingTime, new Date())]} · 영업시간 {selected.openingTime}–{selected.closingTime}
+            {selected.status} · 영업시간 {selected.hours}
           </p>
+          {selected.phone ? (
+            <p className={styles.address}>
+              <Phone size={18} aria-hidden="true" />
+              <Link href={`tel:${selected.phone}`}>{selected.phoneLabel}</Link>
+            </p>
+          ) : null}
+          <Link href={`/shop/stores/${selected.id}`} className={styles.detailButton}>
+            가게 프로필과 판매 상품 보기
+            <ArrowRight size={18} aria-hidden="true" />
+          </Link>
         </article>
       ) : (
         <p>지도의 표시를 누르면 매장 정보를 볼 수 있어요.</p>

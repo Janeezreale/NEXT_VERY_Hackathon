@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import { ArrowLeft, Leaf, MapPin, ShoppingBasket, Ticket } from "lucide-react";
+import { ArrowLeft, ArrowRight, Leaf, MapPin, ShoppingBasket, Store, Ticket } from "lucide-react";
 import { SessionAuthAction } from "@/src/components/common/logout-button";
-import { money, type ProductView } from "./product-view";
+import { money, SALE_STATUS_LABELS, type ProductView } from "./product-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
 export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
@@ -32,6 +32,10 @@ export function CurrentPrice({ product }: { product: ProductView }) {
 
 export function PickupFacts({ product }: { product: ProductView }) {
   return <dl className={styles.details}><div><dt>남은 수량</dt><dd>{product.stock}{product.unit}</dd></div><div><dt>예약 마감</dt><dd>{product.dateLabel} {product.end}</dd></div><div><dt>픽업 가능</dt><dd>{product.dateLabel} {product.pickup}</dd></div></dl>;
+}
+
+export function ProductCard({ product, href, distance }: { product: ProductView; href: string; distance?: string }) {
+  return <article className={styles.card}><ProductPhoto product={product} /><div className={styles.cardBody}><p className={styles.store}><Store size={14} aria-hidden="true" />{product.store}{distance && ` · ${distance}`}</p><h3>{product.name}</h3><CurrentPrice product={product} />{product.notice ? <><span className={styles.badge} data-status="예약 취소">{SALE_STATUS_LABELS[product.saleStatus]}</span><p className={styles.notice}>{product.notice}</p></> : <PickupFacts product={product} />}<Link href={href} className={styles.detailButton}>상품 상세 보기<ArrowRight size={18} aria-hidden="true" /></Link></div></article>;
 }
 
 export function StoreInfo({ product }: { product: ProductView }) {

@@ -20,6 +20,8 @@
 .chips button[aria-pressed="true"]::before { content: "✓ "; }
 .resultsHeading { @apply mt-8 mb-4 flex flex-wrap items-center justify-between gap-3 sm:mt-12; }
 .resultsHeading h2 { @apply text-xl leading-7 font-bold sm:text-2xl; }
+.sort { @apply flex items-center gap-2 text-sm font-semibold; }
+.sort select { @apply min-h-11 rounded-lg border bg-white px-2 text-sm; border-color: #64748b; color: #1f2937; }
 .resultsHeading p { @apply mt-1 text-sm leading-5; color: #626b77; }
 .card { @apply overflow-hidden rounded-xl border bg-white; border-color: #e2e8e3; box-shadow: 0 2px 8px rgb(31 41 55 / .04); }
 .cardBody { @apply p-4 sm:p-6; }

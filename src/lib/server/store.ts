@@ -2,13 +2,14 @@ import "server-only";
 
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { z } from "zod";
 
 import type { MappedStore, Store } from "../../types/api";
 import { createClient } from "../supabase/server";
 import { ApiError } from "./api";
 import { requireSeller } from "./auth";
 
-export const STORE_COLUMNS = "id, name, region_code, address, opening_time, closing_time, latitude, longitude";
+export const STORE_COLUMNS = "id, name, region_code, address, opening_time, closing_time, description, phone, latitude, longitude";
 const MAPPED_STORE_LIMIT = 200;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -20,6 +21,8 @@ export type StoreRow = {
   address: string;
   opening_time: string;
   closing_time: string;
+  description: string | null;
+  phone: string | null;
   latitude: number | null;
   longitude: number | null;
 };
@@ -32,6 +35,8 @@ export function toStore(row: StoreRow): Store {
     address: row.address,
     openingTime: row.opening_time.slice(0, 5),
     closingTime: row.closing_time.slice(0, 5),
+    description: row.description,
+    phone: row.phone,
     latitude: row.latitude,
     longitude: row.longitude,
   };
@@ -46,6 +51,14 @@ export async function listMappedStores(supabase: Supabase): Promise<MappedStore[
     .limit(MAPPED_STORE_LIMIT);
   if (error) throw error;
   return (data as StoreRow[]).map((row) => toStore(row) as MappedStore);
+}
+
+/** 소비자가 보는 가게 프로필 */
+export async function findPublicStore(supabase: Supabase, id: string): Promise<Store | null> {
+  if (!z.uuid().safeParse(id).success) return null;
+  const { data, error } = await supabase.from("stores").select(STORE_COLUMNS).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? toStore(data as StoreRow) : null;
 }
 
 export async function findStore(supabase: Supabase, ownerId: string): Promise<Store | null> {

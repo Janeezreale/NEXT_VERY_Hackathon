@@ -74,7 +74,7 @@ const list = (query = "") => GET(new Request(`http://test/api/seller/products${q
 beforeEach(() => {
   db.user = { id: "seller-1" };
   db.role = "seller";
-  db.store = { id: "store-1", name: "초록가게", region_code: "마포구", address: "주소", opening_time: "06:00:00", closing_time: "21:00:00" };
+  db.store = { id: "store-1", name: "초록가게", region_code: "마포구", address: "주소", opening_time: "06:00:00", closing_time: "21:00:00", description: null, phone: null };
   db.rows = [];
   db.written = null;
   db.storeFilter = null;

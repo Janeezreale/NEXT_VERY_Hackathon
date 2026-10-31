@@ -15,11 +15,11 @@ import { validateLogin, type FieldErrors, type LoginValues } from "../_lib/valid
 
 const FIELD_ORDER: (keyof LoginValues)[] = ["email", "password"];
 
-export function LoginForm() {
+export function LoginForm({ initialError = null }: { initialError?: string | null }) {
   const router = useRouter();
   const [values, setValues] = React.useState<LoginValues>({ email: "", password: "" });
   const [errors, setErrors] = React.useState<FieldErrors<LoginValues>>({});
-  const [formError, setFormError] = React.useState<string | null>(null);
+  const [formError, setFormError] = React.useState<string | null>(initialError);
   const [submitting, setSubmitting] = React.useState(false);
   const alertRef = React.useRef<HTMLDivElement>(null);
 
@@ -46,7 +46,10 @@ export function LoginForm() {
     try {
       const result = await submitLogin({ ...values, email: values.email.trim() });
       if (result.ok) {
-        router.push(result.redirectTo);
+        if ("redirectTo" in result) {
+          router.replace(result.redirectTo);
+          router.refresh();
+        }
         return;
       }
       setFormError(result.formError);

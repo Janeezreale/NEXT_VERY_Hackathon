@@ -54,6 +54,7 @@ export function SignupForm() {
   const [errors, setErrors] = React.useState<FieldErrors<SignupValues>>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+  const [notice, setNotice] = React.useState<string | null>(null);
   const alertRef = React.useRef<HTMLDivElement>(null);
 
   function update<K extends keyof SignupValues>(key: K, value: SignupValues[K]) {
@@ -87,7 +88,12 @@ export function SignupForm() {
     try {
       const result = await submitSignup({ ...values, email: values.email.trim() });
       if (result.ok) {
-        router.push(result.redirectTo);
+        if ("redirectTo" in result) {
+          router.replace(result.redirectTo);
+          router.refresh();
+        } else {
+          setNotice(result.notice);
+        }
         return;
       }
       setFormError(result.formError);
@@ -104,6 +110,25 @@ export function SignupForm() {
   }, [formError]);
 
   const roleErrorId = errors.role ? "signup-role-error" : undefined;
+
+  if (notice) {
+    return (
+      <div className="flex flex-col gap-5">
+        <FormAlert tone="info" title="인증 메일을 확인해 주세요">
+          {notice}
+        </FormAlert>
+        <p className="text-sm leading-5 text-muted-foreground">
+          메일이 보이지 않으면 스팸함을 확인해 주세요. 인증을 마친 뒤 로그인할 수 있어요.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-md bg-primary px-4 text-sm leading-5 font-semibold text-primary-foreground hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          로그인 화면으로
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5" aria-busy={submitting}>

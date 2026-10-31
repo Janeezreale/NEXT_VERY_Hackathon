@@ -86,7 +86,6 @@ export type Product = {
   saleEndsAt: string;
   /** 판매 종료와 오늘 매장 마감 중 이른 시각. 이 시각부터 예약을 막는다. */
   saleDeadline: string;
-  /** Storage 연결 전까지 빈 배열이다. */
   imageUrls: string[];
   pricedAt: string;
   /** 재고가 있고 판매 종료·매장 마감 전이면 true */

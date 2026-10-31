@@ -2,7 +2,7 @@
 
 [시작 안내](../README.md) · 근거: [기획 원문](../plan.md) §4–5, §7–8
 
-**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`, 예약 생성·조회·취소, 판매자 예약 조회·상태 변경입니다. 
+**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`, `POST /api/seller/analyses`, 예약 생성·조회·취소, 판매자 예약 조회·상태 변경입니다. 
 
 ## 공통 형식 제안
 
@@ -18,7 +18,7 @@
 
 | 모델 | 주요 필드 | 의미 |
 | --- | --- | --- |
-| Product | id, storeId, name, unit, availableQuantity, basePrice, currentPrice, discountRate, freshness, saleEndsAt, saleDeadline, imageUrls, pricedAt, saleOpen | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공. discountRate는 최저가 적용 후 실제 값. imageUrls는 Storage 연결 전까지 빈 배열. 판매자 최저가는 공개 응답에 넣지 않음 |
+| Product | id, storeId, name, unit, availableQuantity, basePrice, currentPrice, discountRate, freshness, saleEndsAt, saleDeadline, imageUrls, pricedAt, saleOpen | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공. discountRate는 최저가 적용 후 실제 값. 판매자 최저가는 공개 응답에 넣지 않음 |
 | Store | id, name, regionCode, address, closingTime, latitude, longitude | 매장 정보. closingTime은 `HH:mm`. 좌표는 nullable. 업종 필드 없음(D10) |
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
@@ -36,9 +36,9 @@
 | 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, closingTime, latitude?, longitude?. PATCH: 변경 필드 | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS. 좌표 없이 주소만 수정하면 좌표를 비움 |
 | 주소 검색 | GET `/api/seller/geocode` | query | AddressResult 목록(`items`) | 판매자 |
 | 지도 매장 조회 | GET `/api/stores` | 없음 | 좌표 있는 Store 목록(`items`), 최대 200개 | 비로그인 허용 |
-| 이미지 업로드 | POST `/api/seller/images` | 이미지 파일 | 서버가 검증한 imagePath | 판매자, 형식·크기·소유권은 D05 |
-| 이미지 분석 | POST `/api/seller/analyses` | imagePath, closingAt | Analysis | 이미지 소유 판매자 |
-| 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
+| 이미지 업로드 | Supabase Storage `product-images` 직접 업로드 | `{storeId}/{uuid}.{jpg,png,webp}` | 업로드 경로 | 판매자, 본인 매장 폴더만. API 경로 없음 |
+| 이미지 분석 | POST `/api/seller/analyses` | imagePath | Analysis | 이미지 소유 판매자 |
+| 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, imagePath?, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED |
 | 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 409 PRODUCT_HAS_RESERVATIONS |

@@ -1,6 +1,6 @@
 import { listQuerySchema, productCreateSchema } from "../../../../lib/schemas/api";
 import { ok, parseInput, parseJson, route } from "../../../../lib/server/api";
-import { listSellerProducts, PRODUCT_COLUMNS, toSellerProduct, type ProductRow } from "../../../../lib/server/product";
+import { assertOwnImage, listSellerProducts, PRODUCT_COLUMNS, toSellerProduct, type ProductRow } from "../../../../lib/server/product";
 import { requireSellerStore } from "../../../../lib/server/store";
 
 export const GET = route(async (request) => {
@@ -12,6 +12,7 @@ export const GET = route(async (request) => {
 export const POST = route(async (request) => {
   const { supabase, store } = await requireSellerStore();
   const input = await parseJson(request, productCreateSchema);
+  if (input.imagePath) assertOwnImage(input.imagePath, store.id);
   const { data, error } = await supabase
     .from("products")
     .insert({
@@ -27,5 +28,10 @@ export const POST = route(async (request) => {
     .select(PRODUCT_COLUMNS)
     .single();
   if (error) throw error;
-  return ok(toSellerProduct(data as ProductRow), 201);
+  const product = toSellerProduct(data as ProductRow);
+  if (input.imagePath) {
+    const { error: imageError } = await supabase.from("product_images").insert({ product_id: product.id, storage_path: input.imagePath });
+    if (imageError) throw imageError;
+  }
+  return ok(product, 201);
 });

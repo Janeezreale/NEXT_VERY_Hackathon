@@ -57,7 +57,7 @@ export function toProductView(product: Product, store: Pick<Store, "name" | "add
     end: time.format(deadline),
     pickup: `${slots[0].label}–${time.format(deadline)}`,
     slots,
-    photo: null,
+    photo: product.imageUrls[0] ?? null,
     description: null,
   };
 }

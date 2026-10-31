@@ -50,6 +50,10 @@ C와 총괄이 앱 초기화 시 `app/globals.css`의 Tailwind import·디자인
 
 `SUPABASE_SECRET_KEY`는 Supabase 콘솔의 Secret key이고 서버 전용입니다. 예약 생성이 서버 계산 가격을 저장할 때 쓰며, 브라우저에 노출하면 가격과 재고를 조작할 수 있습니다.
 
+AI 분석은 `OPENAI_API_KEY`, `OPENAI_VISION_MODEL`을 씁니다. 모델은 이미지 입력과 구조화 출력을 지원해야 하며 현재 `gpt-5.4-mini-2026-03-17`로 확인했습니다.
+
+Supabase 프로젝트는 eu-west-1(아일랜드)입니다. Vercel 함수는 `vercel.json`에서 같은 지역인 `dub1`로 고정합니다. 서버의 DB 왕복이 많아 두 리전을 맞춰야 합니다.
+
 네이버 지도는 NCP 콘솔의 같은 Application에서 Dynamic Map과 Geocoding을 모두 켭니다. Web 서비스 URL에는 `http://localhost`와 배포 도메인을 포트·경로 없이 등록합니다. `NEXT_PUBLIC_NAVER_MAPS_CLIENT_ID`는 공개값이고, `NAVER_MAPS_CLIENT_SECRET`은 서버 전용입니다. 무료 이용량은 Maps 대표 계정에만 제공됩니다.
 
 Vercel CLI·Supabase CLI는 현재 로컬 앱 패키지에 추가하지 않습니다. 배포·마이그레이션 워크플로를 정할 때 별도로 준비합니다.

@@ -16,7 +16,7 @@ import {
 } from "./validation";
 
 /**
- * Supabase Auth 이메일/비밀번호 로그인·회원가입·로그아웃(D01 제안: 이메일/비밀번호, seller/buyer).
+ * Supabase Auth 이메일/비밀번호 로그인·회원가입·로그아웃(D01 제안: 이메일/비밀번호, seller/consumer).
  *
  * - 입력은 서버에서 다시 검증한다.
  * - 가입 유형은 user_metadata.role로 전달한다. 이 값은 사용자가 바꿀 수 있으므로
@@ -72,7 +72,7 @@ export async function submitLogin(values: LoginValues): Promise<AuthResult> {
 
 export async function submitSignup(values: SignupValues): Promise<AuthResult> {
   const input: SignupValues = {
-    role: values.role === "seller" || values.role === "buyer" ? values.role : "",
+    role: values.role === "seller" || values.role === "consumer" ? values.role : "",
     email: String(values.email ?? "").trim(),
     password: String(values.password ?? ""),
     passwordConfirm: String(values.passwordConfirm ?? ""),

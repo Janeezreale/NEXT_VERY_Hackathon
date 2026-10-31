@@ -6,7 +6,7 @@
  */
 export const PASSWORD_MIN_LENGTH = 8;
 
-export type UserRole = "buyer" | "seller";
+export type UserRole = "consumer" | "seller";
 
 export type LoginValues = { email: string; password: string };
 export type SignupValues = {

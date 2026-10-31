@@ -30,8 +30,8 @@ const ROLE_OPTIONS: {
   Icon: typeof Store;
 }[] = [
   {
-    value: "buyer",
-    title: "구매자",
+    value: "consumer",
+    title: "소비자",
     description: "우리 동네 마감 할인 상품을 찾고 픽업을 예약해요.",
     Icon: ShoppingBasket,
   },

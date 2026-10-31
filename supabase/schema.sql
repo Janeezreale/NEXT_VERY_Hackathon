@@ -1,7 +1,6 @@
 -- 배포용 전체 스키마.
 -- 빈 Supabase 프로젝트에 한 번만 실행한다. 이미 적용된 프로젝트에 다시 실행하면 오류가 난다.
 -- 스키마를 변경할 때는 이 파일을 갱신하고, 이미 적용된 프로젝트에는 변경분 SQL을 따로 실행한다.
--- 재고·예약·판매 변경 함수는 L05, Storage 버킷·정책은 D05 확정 후 추가한다.
 -- 정책 근거: docs/DATA_MODEL.md, docs/DECISIONS.md. 미정 정책은 가장 좁은 권한으로 두고 확정 시 넓힌다.
 
 create type public.user_role as enum ('consumer', 'seller');

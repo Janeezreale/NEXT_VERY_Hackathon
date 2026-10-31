@@ -37,10 +37,21 @@ describe("ProductForm", () => {
       expect(edit(null)).not.toContain("사진 삭제");
     });
 
+    it("edits only the stock left and leaves reserved quantity alone", () => {
+      const html = renderToStaticMarkup(<ProductForm product={product} reservedQuantity={3} storeId="s" closingTime="23:00" />);
+      expect(html).toContain("남은 재고");
+      expect(html).toContain("예약 수량 3개: 따로 확보되어 바뀌지 않아요.");
+    });
+
     it("does not promise AI suggestions", () => {
       expect(edit(null)).not.toContain("AI 제안");
       expect(edit(null)).not.toContain("이름과 수량을 제안");
     });
+  });
+
+  it("offers fixed units", () => {
+    expect(html).toContain('<select');
+    for (const unit of ["개", "봉지", "박스", "kg"]) expect(html).toContain(`<option>${unit}</option>`);
   });
 
   it("offers the three freshness levels", () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Product } from "@/src/types/api";
 
-import { pickupSlots, toProductView } from "./product-view";
+import { normalizeQuantity, pickupSlots, toProductView } from "./product-view";
 
 const kst = (value: string) => new Date(`${value}+09:00`);
 const labels = (now: Date, deadline: Date) => pickupSlots(now, deadline).map((slot) => slot.label);
@@ -24,6 +24,21 @@ const product: Product = {
   saleStatus: "on_sale",
   saleOpen: true,
 };
+
+describe("normalizeQuantity", () => {
+  it.each([
+    ["3", "3"],
+    ["12", "5"],
+    ["a2b", "2"],
+    ["03", "3"],
+    ["0", ""],
+    ["", ""],
+    ["-1", "1"],
+    ["1.5", "5"],
+  ])("turns %s into %s with 5 left", (value, expected) => {
+    expect(normalizeQuantity(value, 5)).toBe(expected);
+  });
+});
 
 describe("pickupSlots", () => {
   it("starts at the next half hour and ends at the deadline", () => {
@@ -50,6 +65,10 @@ describe("pickupSlots", () => {
 describe("toProductView", () => {
   const store = { name: "테스트 마켓", address: "서울 성북구", openingTime: "09:00", closingTime: "21:00" };
   const view = toProductView(product, store, new Date("2026-11-01T08:10:00Z"));
+
+  it("shows when the price was calculated in Korean time", () => {
+    expect(view.pricedAt).toBe("17:10");
+  });
 
   it("uses server prices without recalculating them", () => {
     expect(view).toMatchObject({ price: 8800, base: 10000, discount: 12, stock: 3 });

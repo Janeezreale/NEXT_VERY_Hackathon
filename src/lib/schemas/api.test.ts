@@ -24,6 +24,12 @@ const reservation = {
 };
 
 describe("productCreateSchema", () => {
+  it("accepts only listed units", () => {
+    expect(productCreateSchema.safeParse({ ...product, unit: "박스" }).success).toBe(true);
+    const unknown = productCreateSchema.safeParse({ ...product, unit: "자루" });
+    expect(unknown.error?.issues[0].message).toBe("단위를 선택해 주세요.");
+  });
+
   it("accepts a confirmed product", () => {
     expect(productCreateSchema.safeParse(product).success).toBe(true);
   });

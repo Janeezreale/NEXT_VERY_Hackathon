@@ -11,6 +11,12 @@ const date = new Intl.DateTimeFormat("ko-KR", { month: "long", day: "numeric", t
 
 export type PickupSlot = { label: string; at: string };
 
+/** 입력 중인 예약 수량. 숫자만 남기고 재고를 넘지 않게 한다. 지우는 중에는 빈 값을 허용한다. */
+export function normalizeQuantity(value: string, stock: number) {
+  const digits = value.replace(/\D/g, "").replace(/^0+/, "");
+  return digits && Number(digits) > stock ? String(stock) : digits;
+}
+
 export const SALE_STATUS_LABELS: Record<SaleStatus, string> = {
   on_sale: "판매 중",
   sold_out: "품절",
@@ -46,6 +52,8 @@ export type ProductView = {
   description: string | null;
   saleStatus: SaleStatus;
   hours: string;
+  /** 현재가를 계산한 한국 시각 */
+  pricedAt: string;
   /** 예약할 수 없는 이유. 예약 가능하면 null이다. */
   notice: string | null;
 };
@@ -82,6 +90,7 @@ export function toProductView(product: Product, store: Pick<Store, "name" | "add
     description: null,
     saleStatus: product.saleStatus,
     hours,
+    pricedAt: time.format(new Date(product.pricedAt)),
     notice: saleNotice(product.saleStatus, store.openingTime, hours),
   };
 }

@@ -5,7 +5,12 @@ import type { ProductView } from "./product-view";
 import ReservePreview from "./reserve-preview";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
-vi.mock("@/src/components/common/logout-button", () => ({ SessionAuthAction: () => null }));
+const session = vi.hoisted(() => ({ role: "consumer" as string | null }));
+vi.mock("@/src/components/common/logout-button", () => ({
+  SessionAuthAction: () => null,
+  LogoutButton: ({ label }: { label: string }) => <button>{label}</button>,
+  useSessionRole: () => session.role,
+}));
 
 const product: ProductView = {
   id: "p", name: "사과", store: "마켓", address: "주소", latitude: null, longitude: null, price: 8800, base: 10000, discount: 12, stock: 5, unit: "봉지",
@@ -20,6 +25,19 @@ describe("ReservePreview", () => {
     expect(html).toContain('name="quantity"');
     expect(html).toContain('inputMode="numeric"');
     expect(html).toContain('value="1"');
+  });
+
+  it("does not warn a consumer", () => {
+    expect(html).not.toContain("판매자 계정으로 로그인되어 있어요");
+  });
+
+  it("stops a seller session and offers to switch account", () => {
+    session.role = "seller";
+    const seller = renderToStaticMarkup(<ReservePreview product={product} back="/shop" />);
+    session.role = "consumer";
+    expect(seller).toContain("판매자 계정으로 로그인되어 있어요");
+    expect(seller).toContain("다른 계정으로 로그인");
+    expect(seller).toMatch(/type="submit" disabled=""/);
   });
 
   it("keeps the step buttons", () => {

@@ -81,7 +81,7 @@ export const loadSellerStore = cache(async (): Promise<Store | null> => {
     return await findStore(supabase, id);
   } catch (error) {
     if (error instanceof ApiError && error.code === "UNAUTHENTICATED") redirect("/login");
-    if (error instanceof ApiError && error.code === "FORBIDDEN") redirect("/shop");
+    if (error instanceof ApiError && error.code === "FORBIDDEN") redirect("/shop?notice=seller-only");
     throw error;
   }
 });

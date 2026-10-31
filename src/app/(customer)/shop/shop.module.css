@@ -21,7 +21,7 @@
 .resultsHeading { @apply mt-8 mb-4 flex flex-wrap items-center justify-between gap-3 sm:mt-12; }
 .resultsHeading h2 { @apply text-xl leading-7 font-bold sm:text-2xl; }
 .sort { @apply flex items-center gap-2 text-sm font-semibold; }
-.sort select { @apply min-h-11 rounded-lg border bg-white px-2 text-sm; border-color: #64748b; color: #1f2937; }
+.sort select { @apply min-h-11 rounded-lg border bg-white px-2 text-sm font-normal; border-color: #64748b; color: #1f2937; }
 .resultsHeading p { @apply mt-1 text-sm leading-5; color: #626b77; }
 .card { @apply overflow-hidden rounded-xl border bg-white; border-color: #e2e8e3; box-shadow: 0 2px 8px rgb(31 41 55 / .04); }
 .cardBody { @apply p-4 sm:p-6; }
@@ -73,7 +73,8 @@
 .page button:disabled { cursor: not-allowed; background: #f1f5f2; color: #626b77; }
 .info { @apply my-4 rounded-lg p-4 text-sm leading-6; background: #eff6ff; color: #1d4ed8; }
 .address { @apply mt-4 flex items-start gap-2 text-base; }
-.address svg { flex-shrink: 0; }
+.address svg { flex-shrink: 0; margin-top: 3px; }
+.address a { color: #176b49; font-weight: 600; }
 .badge { @apply my-3 inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold; background: #eaf6ef; color: #176b49; }
 .badge[data-status="예약 거절"] { background: #fef2f2; color: #b91c1c; }
 .badge[data-status="예약 취소"], .badge[data-status="기한 만료"], .badge[data-status="미방문"] { background: #f1f5f2; color: #626b77; }
@@ -92,7 +93,7 @@
 .miniProduct h2 { @apply text-base leading-6; overflow-wrap: anywhere; }
 .quantity { @apply mt-6 flex items-center justify-between rounded-lg border p-2; border-color: #e2e8e3; }
 .quantity button { @apply flex h-12 w-12 items-center justify-center rounded-lg border bg-white; border-color: #64748b; }
-.quantityInput { @apply flex items-baseline gap-2; }
+.quantityInput { @apply flex items-center gap-2; }
 .quantityInput input { @apply h-12 w-20 rounded-lg border bg-white text-center text-2xl font-bold; border-color: #64748b; color: #1f2937; font-variant-numeric: tabular-nums; }
 .quantityInput > span:last-child { @apply text-sm; }
 .panel legend { @apply px-2 text-xl font-semibold; }
@@ -123,6 +124,8 @@
 .page .unit { margin-top: 4px; }
 .page .store { margin-bottom: 8px; }
 .page .info { margin-top: 16px; margin-bottom: 16px; }
+.page .notice { margin-top: 16px; }
+.page .address { margin-top: 16px; }
 .page .reservedPrice { margin-top: 12px; }
 .page .error { margin-top: 12px; }
 .slot:focus-within { outline: 2px solid #176b49; outline-offset: 3px; }
@@ -150,6 +153,8 @@
 .browseList .card .details > div, .browseList .card .details > div:last-child { display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 8px; padding: 0; border: 0; }
 .browseList .card .details dt, .browseList .card .details dd { font-size: 14px; line-height: 20px; }
 .browseList .card .details dd { font-weight: 500; }
+.browseList .card .badge { display: flex; width: fit-content; margin-top: 8px; }
+.page .browseList .card .notice { margin: 8px 0 0; line-height: 20px; }
 .browseList .card .detailButton { @apply min-h-11 w-auto justify-start border-0 bg-transparent p-0; margin-top: 4px; }
 .browseList .card .detailButton:hover { text-decoration: underline; }
 @media (min-width: 640px) {
@@ -170,6 +175,19 @@
 .page h1, .page h2, .page h3, .page dd { overflow-wrap: anywhere; }
 .page svg { flex-shrink: 0; }
 @media (prefers-reduced-motion: reduce) { .page button { transition: none; } }
+/* 보기 전환과 내 위치는 한 줄에 둔다. */
+.browseControls { @apply mb-4 flex flex-wrap items-center justify-between gap-2; }
+.locationToggle button { @apply inline-flex items-center gap-1; }
+.locationToggle button[aria-pressed="true"]::before { content: none; }
+.page .locationNote { @apply mb-4 mt-0 text-sm leading-5; color: #626b77; }
+/* 가게 프로필의 영업시간·주소·전화번호 */
+.storeFacts { @apply mt-4 grid gap-2 text-sm leading-5; }
+.page .storeFacts .address { @apply m-0 text-sm leading-5; }
+.storeFacts .address svg { margin-top: 1px; }
+/* 지도에서 고른 가게. 상품 카드와 같은 글자 크기와 간격을 쓴다. */
+.storePanel h3 { @apply text-xl leading-7 font-semibold; }
+.page .storePanel .description { @apply mt-2 text-sm leading-5; }
+.storePanel .detailButton { @apply mt-4; }
 /* 휴대폰 첫 화면에서 상품 카드가 보이도록 머리말을 줄인다. */
 @media (max-width: 639px) {
   .page { padding-top: 0; }

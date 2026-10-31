@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Leaf, MapPin, ShoppingBasket, Store, Ticket } from "lucide-react";
-import { SessionAuthAction } from "@/src/components/common/logout-button";
+import { LogoutButton, SessionAuthAction } from "@/src/components/common/logout-button";
 import { money, SALE_STATUS_LABELS, type ProductView } from "./product-view";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
@@ -14,6 +14,11 @@ export function PreviewShell({ children, back }: { children: ReactNode; back?: s
     {children}
     <footer className={styles.footer}>동네에서 발견하고, 매장에서 만나요.</footer>
   </main>;
+}
+
+/** 지금 계정으로 할 수 없는 일을 알리고 계정을 바꿀 수 있게 한다. */
+export function AccountNotice({ children }: { children: ReactNode }) {
+  return <div className={styles.info} role="alert"><p>{children}</p><LogoutButton className="mt-3" label="다른 계정으로 로그인" /></div>;
 }
 
 export function ProductPhoto({ product }: { product: Pick<ProductView, "name" | "photo"> }) {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Leaf, LocateFixed, MapPin, ShoppingBasket } from "lucide-react";
 import { LiveRefresh } from "@/src/components/common/live-refresh";
 import { findDistrict, formatDistance, productDistance, PRODUCT_SORTS, SORT_LABELS, sortProducts, type ProductSort } from "./location";
-import { PreviewShell, ProductCard } from "./preview-ui";
+import { AccountNotice, PreviewShell, ProductCard } from "./preview-ui";
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
 import StoreMap from "./store-map";
 import { browseUrl, contextQuery, filtersFrom, regionCookie, regions } from "./preview-state";
@@ -20,7 +20,7 @@ const LOCATION_ERRORS: Record<string, string> = {
   unavailable: "위치를 확인하지 못했어요. 잠시 후 다시 시도해 주세요.",
 };
 
-export default function BrowsePreview({ filters, products, state = "ready", initialView = "list" }: { filters: Filters; products: ProductView[]; state?: "ready" | "error"; initialView?: "list" | "map" }) {
+export default function BrowsePreview({ filters, products, state = "ready", initialView = "list", sellerOnly = false }: { filters: Filters; products: ProductView[]; state?: "ready" | "error"; initialView?: "list" | "map"; sellerOnly?: boolean }) {
   const router = useRouter();
   const [view, setView] = useState(initialView);
   /** 정렬은 받은 목록 안에서 바꾸므로 서버를 다시 부르지 않는다. */
@@ -60,13 +60,13 @@ export default function BrowsePreview({ filters, products, state = "ready", init
   };
   return <PreviewShell>
     <LiveRefresh />
+    {sellerOnly && <AccountNotice>판매자 화면은 판매자 계정으로만 볼 수 있어요. 지금은 소비자 계정으로 로그인되어 있어요.</AccountNotice>}
     <header className={styles.heading}><div><p className={styles.eyebrow}><Leaf size={16} aria-hidden="true" />우리 동네의 신선한 발견</p><h1>가까운 동네에서,<br />가볍게 만나는 신선함</h1><p className={styles.description}>필요한 만큼 골라 담고, 매장에서 직접 픽업하세요.</p></div><div className={styles.headingIcon} aria-hidden="true"><ShoppingBasket size={64} strokeWidth={1.3} /></div></header>
-    <div className={`${styles.chips} mb-4`} role="group" aria-label="보기 방식">{([["list", "상품 목록"], ["map", "매장 지도"]] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)}>{label}</button>)}</div>
-    <div className={`${styles.chips} mb-4`}>
-      <button type="button" aria-pressed={location.status === "on"} onClick={location.status === "on" ? location.stop : startLocation}><LocateFixed size={16} aria-hidden="true" className="mr-1 inline" />{LOCATION_LABELS[location.status]}</button>
+    <div className={styles.browseControls}><div className={styles.chips} role="group" aria-label="보기 방식">{([["list", "상품 목록"], ["map", "매장 지도"]] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)}>{label}</button>)}</div>
+      <div className={`${styles.chips} ${styles.locationToggle}`}><button type="button" aria-pressed={location.status === "on"} onClick={location.status === "on" ? location.stop : startLocation}><LocateFixed size={16} aria-hidden="true" />{LOCATION_LABELS[location.status]}</button></div>
     </div>
     {LOCATION_ERRORS[location.status] && <p className={`${styles.error} mb-4`} role="alert">{LOCATION_ERRORS[location.status]}</p>}
-    {outsideSeoul && location.status === "on" && <p className={`${styles.description} mb-4`} role="status">서울 밖에서는 지역을 직접 골라 주세요.</p>}
+    {outsideSeoul && location.status === "on" && <p className={styles.locationNote} role="status">서울 밖에서는 지역을 직접 골라 주세요.</p>}
     {view === "map" ? <StoreMap position={location.position} /> : <>
     <section className={styles.filters} aria-label="상품 탐색 조건">
       <label className={styles.region}><span><MapPin size={18} aria-hidden="true" />둘러볼 지역</span><select value={filters.region} onChange={event => change({ region: event.target.value })}><option value="">지역을 선택해 주세요</option>{regions.map(region => <option key={region}>{region}</option>)}</select></label>

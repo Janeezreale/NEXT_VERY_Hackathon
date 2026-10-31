@@ -270,16 +270,14 @@ function toProduct(row: PublicProductRow, recentApprovedQuantity: number, now: D
   };
 }
 
-/** 지역의 재고가 있는 오늘 상품. 마감했거나 오픈 전이어도 보여주고 saleStatus로 예약만 막는다. */
+/** 지역이나 가게의 재고가 있는 오늘 상품. 마감했거나 오픈 전이어도 보여주고 saleStatus로 예약만 막는다. */
 export async function listPublicProducts(
   supabase: Supabase,
-  { region, cursor, limit }: { region: string; cursor?: string; limit: number },
+  { cursor, limit, ...scope }: ({ region: string } | { storeId: string }) & { cursor?: string; limit: number },
 ): Promise<Page<ProductListing>> {
   const now = new Date();
-  let query = supabase
-    .from("products")
-    .select(PUBLIC_PRODUCT_COLUMNS)
-    .eq("stores.region_code", region)
+  const products = supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS);
+  let query = ("region" in scope ? products.eq("stores.region_code", scope.region) : products.eq("store_id", scope.storeId))
     .gt("available_quantity", 0)
     .gte("sale_ends_at", getBusinessDayStart(now).toISOString())
     .order("created_at", { ascending: false })
@@ -296,8 +294,8 @@ export async function listPublicProducts(
   const quantities = await loadRecentApprovedQuantities(supabase, page.map((row) => row.id));
   return {
     items: page.map((row) => {
-      const { id, name, address, openingTime, closingTime } = toStore(row.stores);
-      return { ...toProduct(row, quantities.get(row.id) ?? 0, now), store: { id, name, address, openingTime, closingTime } };
+      const { id, name, address, openingTime, closingTime, latitude, longitude } = toStore(row.stores);
+      return { ...toProduct(row, quantities.get(row.id) ?? 0, now), store: { id, name, address, openingTime, closingTime, latitude, longitude } };
     }),
     nextCursor: rows.length > limit ? encodeCursor(page[page.length - 1]) : null,
   };

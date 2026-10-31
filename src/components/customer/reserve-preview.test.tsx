@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 vi.mock("@/src/components/common/logout-button", () => ({ SessionAuthAction: () => null }));
 
 const product: ProductView = {
-  id: "p", name: "사과", store: "마켓", address: "주소", price: 8800, base: 10000, discount: 12, stock: 5, unit: "봉지",
+  id: "p", name: "사과", store: "마켓", address: "주소", latitude: null, longitude: null, price: 8800, base: 10000, discount: 12, stock: 5, unit: "봉지",
   dateLabel: "11월 1일", end: "20:00", pickup: "17:30–20:00", slots: [{ label: "17:30", at: "2026-11-01T08:30:00.000Z" }],
   photo: null, description: null, saleStatus: "on_sale", hours: "09:00–21:00", pricedAt: "17:10", notice: null,
 };

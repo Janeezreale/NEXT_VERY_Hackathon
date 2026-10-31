@@ -24,11 +24,15 @@ create table public.stores (
   address text not null,
   opening_time time not null,
   closing_time time not null,
+  description text,
+  phone text,
   latitude double precision,
   longitude double precision,
   constraint stores_latitude_range check (latitude between -90 and 90),
   constraint stores_longitude_range check (longitude between -180 and 180),
   constraint stores_coordinates_pair check ((latitude is null) = (longitude is null)),
+  constraint stores_description_length check (char_length(description) <= 300),
+  constraint stores_phone_format check (phone ~ '^0[0-9]{8,10}$'),
   -- 영업일은 오전 6시에 시작한다. 06:00 이전 마감은 다음 날 새벽이다.
   constraint stores_business_hours check (opening_time >= time '06:00' and (closing_time < time '06:00' or closing_time > opening_time))
 );
@@ -451,11 +455,11 @@ grant select on public.profiles, public.stores, public.products, public.product_
   to authenticated;
 grant select (id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at, idempotency_key, cancelled_by)
   on public.reservations to authenticated;
-grant select (id, name, region_code, address, opening_time, closing_time, latitude, longitude) on public.stores to anon;
+grant select (id, name, region_code, address, opening_time, closing_time, description, phone, latitude, longitude) on public.stores to anon;
 grant select on public.products, public.product_images to anon;
 grant update (region_code) on public.profiles to authenticated;
-grant insert (owner_id, name, region_code, address, opening_time, closing_time, latitude, longitude) on public.stores to authenticated;
-grant update (name, region_code, address, opening_time, closing_time, latitude, longitude) on public.stores to authenticated;
+grant insert (owner_id, name, region_code, address, opening_time, closing_time, description, phone, latitude, longitude) on public.stores to authenticated;
+grant update (name, region_code, address, opening_time, closing_time, description, phone, latitude, longitude) on public.stores to authenticated;
 grant insert (store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at)
   on public.products to authenticated;
 grant insert (product_id, storage_path), delete on public.product_images to authenticated;

@@ -70,7 +70,7 @@ const productRow = (change: Record<string, unknown> = {}) => ({
   freshness: "fresh",
   sale_ends_at: hours(1),
   created_at: hours(-0.25),
-  stores: { id: "store-1", name: "마켓", region_code: "성북구", address: "주소", opening_time: "06:00:00", closing_time: "23:59:59", latitude: null, longitude: null },
+  stores: { id: "store-1", name: "마켓", region_code: "성북구", address: "주소", opening_time: "06:00:00", closing_time: "23:59:59", description: null, phone: null, latitude: null, longitude: null },
   ...change,
 });
 
@@ -134,7 +134,7 @@ describe("POST /api/reservations", () => {
   it.each([
     ["sold out", { available_quantity: 0 }, "OUT_OF_STOCK"],
     ["ended", { sale_ends_at: hours(-1) }, "SALE_ENDED"],
-    ["closed", { stores: { ...productRow().stores, closing_time: "10:00:00" } }, "STORE_CLOSED"],
+    ["closed", { stores: { ...productRow().stores, closing_time: "10:00:00", description: null, phone: null } }, "STORE_CLOSED"],
     ["not yet open", { stores: { ...productRow().stores, opening_time: "13:00:00" } }, "STORE_CLOSED"],
   ])("rejects a %s product", async (_, change, code) => {
     db.product = productRow(change);

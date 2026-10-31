@@ -19,7 +19,7 @@
 | 모델 | 주요 필드 | 의미 |
 | --- | --- | --- |
 | Product | id, storeId, name, unit, availableQuantity, basePrice, currentPrice, discountRate, freshness, saleEndsAt, saleDeadline, imageUrls, pricedAt, saleOpen | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공. discountRate는 최저가 적용 후 실제 값. 판매자 최저가는 공개 응답에 넣지 않음 |
-| Store | id, name, regionCode, address, openingTime, closingTime, latitude, longitude | 매장 정보. openingTime·closingTime은 `HH:mm`(D16). 좌표는 nullable. 업종 필드 없음(D10) |
+| Store | id, name, regionCode, address, openingTime, closingTime, description, phone, latitude, longitude | 매장 정보. openingTime·closingTime은 `HH:mm`(D16). 좌표는 nullable. 업종 필드 없음(D10) |
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
 | SellerProduct | id, storeId, name, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
@@ -33,7 +33,7 @@
 | 작업 | 메서드·경로 | 입력 | 성공 결과 | 권한 |
 | --- | --- | --- | --- | --- |
 | 현재 사용자 | GET `/api/me` | 없음 | 사용자 ID·역할·지역·매장 등록 여부 | 로그인 |
-| 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, openingTime, closingTime, latitude?, longitude?. PATCH: 변경 필드(오픈·마감은 함께) | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS. 좌표 없이 주소만 수정하면 좌표를 비움 |
+| 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, openingTime, closingTime, description?, phone?, latitude?, longitude?. PATCH: 변경 필드(오픈·마감은 함께) | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS. 좌표 없이 주소만 수정하면 좌표를 비움 |
 | 주소 검색 | GET `/api/seller/geocode` | query | AddressResult 목록(`items`) | 판매자 |
 | 지도 매장 조회 | GET `/api/stores` | 없음 | 좌표 있는 Store 목록(`items`), 최대 200개 | 비로그인 허용 |
 | 이미지 업로드 | Supabase Storage `product-images` 직접 업로드 | `{storeId}/{uuid}.{jpg,png,webp}` | 업로드 경로 | 판매자, 본인 매장 폴더만. API 경로 없음 |

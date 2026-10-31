@@ -25,7 +25,7 @@ const row = {
   name: "테스트 마켓",
   region_code: "성북구",
   address: "서울 성북구 안암로 145",
-  opening_time: "06:00:00", closing_time: "23:00:00",
+  opening_time: "06:00:00", closing_time: "23:00:00", description: null, phone: null,
   latitude: 37.5894,
   longitude: 127.0316,
 };
@@ -42,7 +42,7 @@ describe("GET /api/stores", () => {
     const response = await GET(new Request("http://test/api/stores"), undefined);
     expect(response.status).toBe(200);
     expect((await response.json()).data.items).toEqual([
-      { id: "store-1", name: "테스트 마켓", regionCode: "성북구", address: row.address, openingTime: "06:00", closingTime: "23:00", latitude: row.latitude, longitude: row.longitude },
+      { id: "store-1", name: "테스트 마켓", regionCode: "성북구", address: row.address, openingTime: "06:00", closingTime: "23:00", description: null, phone: null, latitude: row.latitude, longitude: row.longitude },
     ]);
     expect(db.columns).not.toContain("owner_id");
   });

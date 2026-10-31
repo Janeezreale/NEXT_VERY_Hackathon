@@ -39,7 +39,7 @@ vi.mock("../../../../../lib/supabase/server", () => ({
       select: () => ({
         eq: () => ({
           single: async () => ({ data: { role: db.role, region_code: null }, error: null }),
-          maybeSingle: async () => ({ data: { id: STORE_ID, name: "마켓", region_code: "성북구", address: "주소", opening_time: "06:00:00", closing_time: "23:00:00", latitude: null, longitude: null }, error: null }),
+          maybeSingle: async () => ({ data: { id: STORE_ID, name: "마켓", region_code: "성북구", address: "주소", opening_time: "06:00:00", closing_time: "23:00:00", description: null, phone: null, latitude: null, longitude: null }, error: null }),
         }),
       }),
     }),

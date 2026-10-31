@@ -65,6 +65,9 @@ export type Store = {
   openingTime: string;
   /** 매일 마감 시각. "HH:mm" */
   closingTime: string;
+  /** 가게 프로필. 입력하지 않으면 null이다. */
+  description: string | null;
+  phone: string | null;
   /** 주소 검색을 쓰지 못한 매장은 null이고 지도에 표시되지 않는다. */
   latitude: number | null;
   longitude: number | null;
@@ -104,7 +107,7 @@ export type Product = {
 };
 
 /** 소비자 목록 항목. 카드에 매장 이름과 주소가 필요하다. */
-export type ProductListing = Product & { store: Pick<Store, "id" | "name" | "address" | "openingTime" | "closingTime"> };
+export type ProductListing = Product & { store: Pick<Store, "id" | "name" | "address" | "openingTime" | "closingTime" | "latitude" | "longitude"> };
 
 /** 판매자가 게시한 상품. 현재가는 가격 엔진이 계산하므로 여기에 넣지 않는다. */
 export type SellerProduct = Pick<

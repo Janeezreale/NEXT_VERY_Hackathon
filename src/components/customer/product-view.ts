@@ -39,6 +39,9 @@ export type ProductView = {
   name: string;
   store: string;
   address: string;
+  /** 가게 좌표. 주소를 직접 입력한 가게는 null이다. */
+  latitude: number | null;
+  longitude: number | null;
   price: number;
   base: number;
   discount: number;
@@ -68,7 +71,7 @@ export function pickupSlots(now: Date, deadline: Date): PickupSlot[] {
   return slots.length > 0 ? slots : [{ label: time.format(deadline), at: deadline.toISOString() }];
 }
 
-export function toProductView(product: Product, store: Pick<Store, "name" | "address" | "openingTime" | "closingTime">, now: Date): ProductView {
+export function toProductView(product: Product, store: Pick<Store, "name" | "address" | "openingTime" | "closingTime" | "latitude" | "longitude">, now: Date): ProductView {
   const deadline = new Date(product.saleDeadline);
   const slots = pickupSlots(now, deadline);
   const hours = `${store.openingTime}–${store.closingTime}`;
@@ -77,6 +80,8 @@ export function toProductView(product: Product, store: Pick<Store, "name" | "add
     name: product.name,
     store: store.name,
     address: store.address,
+    latitude: store.latitude,
+    longitude: store.longitude,
     price: product.currentPrice,
     base: product.basePrice,
     discount: product.discountRate,

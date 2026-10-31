@@ -69,6 +69,24 @@ describe("storeCreateSchema", () => {
     expect(storeCreateSchema.safeParse({ ...store, closingTime }).success).toBe(false);
   });
 
+  it("keeps the profile optional", () => {
+    expect(storeCreateSchema.parse(store)).not.toHaveProperty("phone", "");
+    expect(storeCreateSchema.parse({ ...store, description: "  ", phone: "" })).toMatchObject({ description: null, phone: null });
+  });
+
+  it("stores phone digits only", () => {
+    expect(storeCreateSchema.parse({ ...store, phone: "02-1234-5678" }).phone).toBe("0212345678");
+  });
+
+  it.each(["1234", "abc", "021234567890"])("rejects phone %s", (phone) => {
+    expect(storeCreateSchema.safeParse({ ...store, phone }).success).toBe(false);
+  });
+
+  it("limits the description to 300 characters", () => {
+    expect(storeCreateSchema.safeParse({ ...store, description: "가".repeat(300) }).success).toBe(true);
+    expect(storeCreateSchema.safeParse({ ...store, description: "가".repeat(301) }).success).toBe(false);
+  });
+
   it("requires an opening time", () => {
     expect(storeCreateSchema.safeParse({ ...store, openingTime: undefined }).success).toBe(false);
   });

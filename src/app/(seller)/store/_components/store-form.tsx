@@ -24,6 +24,8 @@ export function StoreForm({ store }: { store: Store | null }) {
     address: store?.address ?? "",
     openingTime: store?.openingTime ?? "",
     closingTime: store?.closingTime ?? "",
+    description: store?.description ?? "",
+    phone: store?.phone ?? "",
     latitude: store?.latitude ?? null,
     longitude: store?.longitude ?? null,
   });
@@ -124,6 +126,34 @@ export function StoreForm({ store }: { store: Store | null }) {
             name="closingTime"
             value={values.closingTime}
             onChange={(e) => update({ closingTime: e.target.value })}
+          />
+        )}
+      </FormField>
+
+      <FormField id="store-description" label="가게 소개" hint="소비자가 가게 프로필에서 봐요. 300자 이내로 적어 주세요." error={errors.description}>
+        {(control) => (
+          <textarea
+            {...control}
+            name="description"
+            rows={4}
+            maxLength={300}
+            value={values.description ?? ""}
+            onChange={(e) => update({ description: e.target.value })}
+            className="block w-full rounded-md border border-input bg-card px-3 py-2 text-base leading-6 text-foreground"
+          />
+        )}
+      </FormField>
+
+      <FormField id="store-phone" label="가게 전화번호" hint="입력하면 소비자에게 공개돼요." error={errors.phone}>
+        {(control) => (
+          <Input
+            {...control}
+            type="tel"
+            inputMode="tel"
+            name="phone"
+            autoComplete="tel"
+            value={values.phone ?? ""}
+            onChange={(e) => update({ phone: e.target.value })}
           />
         )}
       </FormField>

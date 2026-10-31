@@ -63,7 +63,7 @@ describe("pickupSlots", () => {
 });
 
 describe("toProductView", () => {
-  const store = { name: "테스트 마켓", address: "서울 성북구", openingTime: "09:00", closingTime: "21:00" };
+  const store = { name: "테스트 마켓", address: "서울 성북구", openingTime: "09:00", closingTime: "21:00", latitude: 37.5, longitude: 127 };
   const view = toProductView(product, store, new Date("2026-11-01T08:10:00Z"));
 
   it("shows when the price was calculated in Korean time", () => {

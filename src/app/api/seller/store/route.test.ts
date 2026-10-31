@@ -33,8 +33,8 @@ vi.mock("../../../../lib/supabase/server", () => ({
   }),
 }));
 
-const row = { id: "store-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", opening_time: "06:00:00", closing_time: "21:00:00", latitude: 37.5, longitude: 127 };
-const store = { id: "store-1", name: "초록가게", regionCode: "마포구", address: "서울 마포구", openingTime: "06:00", closingTime: "21:00", latitude: 37.5, longitude: 127 };
+const row = { id: "store-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", opening_time: "06:00:00", closing_time: "21:00:00", description: null, phone: null, latitude: 37.5, longitude: 127 };
+const store = { id: "store-1", name: "초록가게", regionCode: "마포구", address: "서울 마포구", openingTime: "06:00", closingTime: "21:00", description: null, phone: null, latitude: 37.5, longitude: 127 };
 const input = { name: "초록가게", regionCode: "마포구", address: "서울 마포구", openingTime: "09:00", closingTime: "21:00" };
 const send = (method: string, body: unknown) =>
   new Request("http://test/api/seller/store", { method, body: JSON.stringify(body) });
@@ -90,7 +90,7 @@ describe("/api/seller/store", () => {
     const response = await POST(send("POST", { ...input, owner_id: "someone-else" }), undefined);
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ data: store });
-    expect(db.written).toEqual({ owner_id: "seller-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", opening_time: "09:00", closing_time: "21:00", latitude: null, longitude: null });
+    expect(db.written).toEqual({ owner_id: "seller-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", opening_time: "09:00", closing_time: "21:00", description: null, phone: null, latitude: null, longitude: null });
   });
 
   it("returns a validation error in Korean for a blank address", async () => {

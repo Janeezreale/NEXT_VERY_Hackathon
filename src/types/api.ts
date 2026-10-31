@@ -14,6 +14,9 @@ export const FRESHNESS_LABELS: Record<Freshness, string> = {
   discard_tomorrow: "내일 폐기 예정",
 };
 
+/** 판매자가 고르는 상품 단위. 수량은 정수이므로 무게는 kg만 둔다. */
+export const PRODUCT_UNITS = ["개", "봉지", "팩", "박스", "송이", "단", "통", "kg"] as const;
+
 /** 예약은 생성 즉시 approved로 확정된다. rejected·expired는 승인 제도가 있던 때의 이력이다. */
 export const RESERVATION_STATUSES = ["approved", "rejected", "cancelled", "completed", "expired", "no_show"] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];

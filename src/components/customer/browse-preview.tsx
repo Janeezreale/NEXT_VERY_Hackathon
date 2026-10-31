@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ArrowRight, Leaf, MapPin, ShoppingBasket, Store } from "lucide-react";
+import { LiveRefresh } from "@/src/components/common/live-refresh";
 import { CurrentPrice, PickupFacts, PreviewShell, ProductPhoto } from "./preview-ui";
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
 import StoreMap from "./store-map";
@@ -21,6 +22,7 @@ export default function BrowsePreview({ filters, products, state = "ready" }: { 
   };
   const context = contextQuery(filters);
   return <PreviewShell>
+    <LiveRefresh />
     <header className={styles.heading}><div><p className={styles.eyebrow}><Leaf size={16} aria-hidden="true" />우리 동네의 신선한 발견</p><h1>가까운 동네에서,<br />가볍게 만나는 신선함</h1><p className={styles.description}>필요한 만큼 골라 담고, 매장에서 직접 픽업하세요.</p></div><div className={styles.headingIcon} aria-hidden="true"><ShoppingBasket size={64} strokeWidth={1.3} /></div></header>
     <div className={`${styles.chips} mb-4`} role="group" aria-label="보기 방식">{([["list", "상품 목록"], ["map", "매장 지도"]] as const).map(([value, label]) => <button key={value} type="button" aria-pressed={view === value} onClick={() => setView(value)}>{label}</button>)}</div>
     {view === "map" ? <StoreMap /> : <>

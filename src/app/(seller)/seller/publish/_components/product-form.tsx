@@ -11,7 +11,7 @@ import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
 import { saleEndError } from "@/src/lib/pricing/price";
 import { productCreateSchema, productUpdateSchema, type ProductCreateInput, type ProductUpdateInput } from "@/src/lib/schemas/api";
-import { FRESHNESS_LABELS, FRESHNESS_LEVELS, type Analysis, type Freshness, type SellerProduct } from "@/src/types/api";
+import { FRESHNESS_LABELS, FRESHNESS_LEVELS, PRODUCT_UNITS, type Analysis, type Freshness, type SellerProduct } from "@/src/types/api";
 
 import { ImagePicker } from "./image-picker";
 
@@ -43,7 +43,7 @@ function toInput(values: typeof EMPTY) {
   };
 }
 
-export function ProductForm({ product, imageUrl = null, storeId, closingTime }: { product?: SellerProduct; imageUrl?: string | null; storeId?: string; closingTime: string }) {
+export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, storeId, closingTime }: { product?: SellerProduct; reservedQuantity?: number; imageUrl?: string | null; storeId?: string; closingTime: string }) {
   const router = useRouter();
   const [values, setValues] = React.useState(
     product
@@ -147,7 +147,13 @@ export function ProductForm({ product, imageUrl = null, storeId, closingTime }: 
       </FormField>
 
       <div className="grid grid-cols-2 gap-4">
-        <FormField id="product-quantity" label="수량" required error={errors.quantity}>
+        <FormField
+          id="product-quantity"
+          label={product ? "남은 재고" : "수량"}
+          required
+          hint={product ? `예약 수량 ${reservedQuantity}${product.unit}: 따로 확보되어 바뀌지 않아요.` : undefined}
+          error={errors.quantity}
+        >
           {(control) => (
             <Input
               {...control}
@@ -161,8 +167,21 @@ export function ProductForm({ product, imageUrl = null, storeId, closingTime }: 
             />
           )}
         </FormField>
-        <FormField id="product-unit" label="단위" required hint="예: 개, 봉지" error={errors.unit}>
-          {(control) => <Input {...control} name="unit" value={values.unit} onChange={(e) => update({ unit: e.target.value })} />}
+        <FormField id="product-unit" label="단위" required error={errors.unit}>
+          {(control) => (
+            <select
+              {...control}
+              name="unit"
+              value={values.unit}
+              onChange={(e) => update({ unit: e.target.value })}
+              className="block h-12 w-full rounded-md border border-input bg-card px-3 text-base leading-6 text-foreground"
+            >
+              <option value="">선택</option>
+              {PRODUCT_UNITS.map((unit) => (
+                <option key={unit}>{unit}</option>
+              ))}
+            </select>
+          )}
         </FormField>
       </div>
 

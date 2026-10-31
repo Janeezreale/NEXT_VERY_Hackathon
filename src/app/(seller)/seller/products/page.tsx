@@ -1,9 +1,11 @@
 import { Package, TriangleAlert } from "lucide-react";
 import { redirect } from "next/navigation";
 
+import { LiveRefresh } from "@/src/components/common/live-refresh";
 import { money } from "@/src/components/customer/product-view";
 import { getSaleDeadline, isSaleOpen } from "@/src/lib/pricing/price";
-import { listSellerProducts } from "@/src/lib/server/product";
+import { loadRecentApprovedQuantities } from "@/src/lib/server/pricing";
+import { listSellerProducts, loadReservedQuantities, sellerCurrentPrice } from "@/src/lib/server/product";
 import { loadSellerStore } from "@/src/lib/server/store";
 import { createClient } from "@/src/lib/supabase/server";
 import { FRESHNESS_LABELS, type SellerProduct } from "@/src/types/api";
@@ -14,9 +16,13 @@ import styles from "./_components/products.module.css";
 const LIST_LIMIT = 50;
 const dateTime = new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" });
 
-async function loadProducts(storeId: string): Promise<SellerProduct[] | null> {
+async function loadProducts(storeId: string) {
   try {
-    return (await listSellerProducts(await createClient(), storeId, { limit: LIST_LIMIT })).items;
+    const supabase = await createClient();
+    const { items } = await listSellerProducts(supabase, storeId, { limit: LIST_LIMIT });
+    const ids = items.map((item) => item.id);
+    const [recent, reserved] = await Promise.all([loadRecentApprovedQuantities(supabase, ids), loadReservedQuantities(supabase, ids)]);
+    return { items, recent, reserved };
   } catch (error) {
     console.error("Failed to load seller products", error);
     return null;
@@ -26,7 +32,8 @@ async function loadProducts(storeId: string): Promise<SellerProduct[] | null> {
 export default async function SellerProductsPage() {
   const store = await loadSellerStore();
   if (!store) redirect("/store");
-  const products = await loadProducts(store.id);
+  const loaded = await loadProducts(store.id);
+  const products = loaded?.items ?? null;
   const now = new Date();
 
   function status(product: SellerProduct) {
@@ -36,13 +43,14 @@ export default async function SellerProductsPage() {
 
   return (
     <main className={styles.page}>
+      <LiveRefresh />
       <div className={styles.container}>
         <SellerNav current="/seller/products" />
         <header className={styles.header}>
           <div>
             <p className={styles.eyebrow}>{store.name} · 상품 관리</p>
             <h1>내 상품과 재고</h1>
-            <p className={styles.subtle}>남은 수량을 확인하고 새 상품을 게시해 보세요.</p>
+            <p className={styles.subtle}>남은 수량과 현재가를 확인하세요. 현재가는 30초마다 새로 계산돼요.</p>
           </div>
           <a className={styles.primary} href="/seller/publish">상품 게시</a>
         </header>
@@ -65,13 +73,16 @@ export default async function SellerProductsPage() {
             <div className={styles.grid}>
               {products.map((product) => {
                 const label = status(product);
+                const { currentPrice, discountRate } = sellerCurrentPrice(product, store.closingTime, loaded?.recent.get(product.id) ?? 0, now);
                 return (
                   <article className={styles.card} key={product.id}>
                     <div className={styles.cardBody}>
                       <span className={`${styles.badge} ${label === "판매 중" ? styles.success : styles.neutral}`}>{label}</span>
                       <h3>{product.name}</h3>
                       <dl className={styles.details}>
+                        <div><dt>현재가</dt><dd>{money(currentPrice)} ({discountRate}% 할인)</dd></div>
                         <div><dt>판매 가능 재고</dt><dd>{product.availableQuantity}{product.unit}</dd></div>
+                        <div><dt>예약된 수량</dt><dd>{loaded?.reserved.get(product.id) ?? 0}{product.unit}</dd></div>
                         <div><dt>기준가</dt><dd>{money(product.basePrice)}</dd></div>
                         <div><dt>최저가</dt><dd>{money(product.minPrice)}</dd></div>
                         <div><dt>신선도</dt><dd>{FRESHNESS_LABELS[product.freshness]}</dd></div>

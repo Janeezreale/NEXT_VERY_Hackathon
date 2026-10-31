@@ -27,7 +27,7 @@ export function ProductPhoto({ product }: { product: Pick<ProductView, "name" | 
 }
 
 export function CurrentPrice({ product }: { product: ProductView }) {
-  return <><p className={styles.price}><span className={styles.discount}>{product.discount}% 할인</span><strong><span className={styles.srOnly}>현재가 </span>{money(product.price)}</strong><del><span className={styles.srOnly}>기준가 </span>{money(product.base)}</del></p><p className={styles.unit}>1{product.unit} · 현재가</p></>;
+  return <><p className={styles.price}><span className={styles.discount}>{product.discount}% 할인</span><strong><span className={styles.srOnly}>현재가 </span>{money(product.price)}</strong><del><span className={styles.srOnly}>기준가 </span>{money(product.base)}</del></p><p className={styles.unit}>1{product.unit} · {product.pricedAt} 기준 현재가</p></>;
 }
 
 export function PickupFacts({ product }: { product: ProductView }) {

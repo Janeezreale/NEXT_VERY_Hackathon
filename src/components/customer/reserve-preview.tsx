@@ -3,15 +3,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
+import { LiveRefresh } from "@/src/components/common/live-refresh";
 import { reservationCreateSchema } from "@/src/lib/schemas/api";
 import { apiFetch, ApiClientError } from "@/src/lib/client/api";
-import { money, type PickupSlot, type ProductView } from "./product-view";
+import { money, normalizeQuantity, type PickupSlot, type ProductView } from "./product-view";
 import { CurrentPrice, PreviewShell, ProductPhoto } from "./preview-ui";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
 export default function ReservePreview({ product, back }: { product: ProductView; back: string }) {
   const router = useRouter();
-  const [quantity, setQuantity] = useState(1);
+  const [quantityText, setQuantityText] = useState("1");
+  const quantity = Number(quantityText);
   const [slot, setSlot] = useState<PickupSlot | null>(null);
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -54,12 +56,12 @@ export default function ReservePreview({ product, back }: { product: ProductView
     }
   }
 
-  return <PreviewShell back={back}><div className={styles.formWidth}>
+  return <PreviewShell back={back}><LiveRefresh /><div className={styles.formWidth}>
     <header className={styles.sectionHeading}><p className={styles.eyebrow}>PICK UP</p><h1>픽업 예약</h1><p className={styles.description}>수량과 방문 시간을 고르고 내용을 확인해 주세요.</p></header>
     <ol className={styles.steps} aria-label="예약 단계">{["선택", "내용 확인"].map((label, index) => <li key={label} aria-current={index === ["input", "review"].indexOf(step) ? "step" : undefined}><span>{index + 1}</span>{label}</li>)}</ol>
     <section className={styles.miniProduct}><ProductPhoto product={product} /><div><p className={styles.store}>{product.store}</p><h2>{product.name}</h2><CurrentPrice product={product} /></div></section>
-    {step === "input" ? <form onSubmit={event => { event.preventDefault(); if (!slot) { setError("픽업 시간을 하나 선택해 주세요."); firstSlot.current?.focus(); return; } setError(""); const contact = reservationCreateSchema.shape; const invalid = contact.contactName.safeParse(contactName).error ?? contact.contactPhone.safeParse(contactPhone).error; if (invalid) { setContactError(invalid.issues[0].message); return; } setContactError(""); setStep("review"); focusResult(); }}>
-      <section className={styles.panel}><h2>얼마나 필요하세요?</h2><p className={styles.description}>남은 수량 {product.stock}{product.unit}</p><div className={styles.quantity}><button type="button" aria-label="수량 줄이기" disabled={quantity <= 1} onClick={() => setQuantity(value => value - 1)}><Minus size={18} aria-hidden="true" /></button><output aria-live="polite">{quantity}<span>{product.unit}</span></output><button type="button" aria-label="수량 늘리기" disabled={quantity >= product.stock} onClick={() => setQuantity(value => value + 1)}><Plus size={18} aria-hidden="true" /></button></div></section>
+    {step === "input" ? <form onSubmit={event => { event.preventDefault(); if (quantity < 1) { setQuantityText("1"); return; } if (!slot) { setError("픽업 시간을 하나 선택해 주세요."); firstSlot.current?.focus(); return; } setError(""); const contact = reservationCreateSchema.shape; const invalid = contact.contactName.safeParse(contactName).error ?? contact.contactPhone.safeParse(contactPhone).error; if (invalid) { setContactError(invalid.issues[0].message); return; } setContactError(""); setStep("review"); focusResult(); }}>
+      <section className={styles.panel}><h2>얼마나 필요하세요?</h2><p className={styles.description}>남은 수량 {product.stock}{product.unit}</p><div className={styles.quantity}><button type="button" aria-label="수량 줄이기" disabled={quantity <= 1} onClick={() => setQuantityText(String(quantity - 1))}><Minus size={18} aria-hidden="true" /></button><label className={styles.quantityInput}><span className={styles.srOnly}>예약 수량</span><input name="quantity" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" value={quantityText} onChange={event => setQuantityText(normalizeQuantity(event.target.value, product.stock))} onBlur={() => { if (quantity < 1) setQuantityText("1"); }} /><span>{product.unit}</span></label><button type="button" aria-label="수량 늘리기" disabled={quantity >= product.stock} onClick={() => setQuantityText(String(quantity + 1))}><Plus size={18} aria-hidden="true" /></button></div></section>
       <fieldset className={styles.panel}><legend>언제 방문하실까요?</legend><p className={styles.description}>{product.dateLabel} · {product.pickup}</p><div className={styles.slotGrid}>{product.slots.map((option, index) => <label className={styles.slot} key={option.at}><input ref={index === 0 ? firstSlot : undefined} type="radio" name="pickup" value={option.at} checked={slot?.at === option.at} onChange={() => { setSlot(option); setError(""); }} aria-describedby={error ? "pickup-error" : "pickup-help"} />{option.label}</label>)}</div><p id="pickup-help" className={styles.description}>방문 가능한 시간을 선택해 주세요.</p>{error && <p id="pickup-error" className={styles.error} role="alert">{error}</p>}</fieldset>
       <section className={styles.panel}><h2>연락받을 정보</h2><p className={styles.description}>판매자가 예약 확인과 수령에만 사용해요.</p><label className={styles.contactField}><span>이름</span><input name="contactName" autoComplete="name" value={contactName} onChange={event => setContactName(event.target.value)} /></label><label className={styles.contactField}><span>휴대폰 번호</span><input name="contactPhone" type="tel" inputMode="tel" autoComplete="tel" placeholder="010-1234-5678" value={contactPhone} onChange={event => setContactPhone(event.target.value)} /></label>{contactError && <p className={styles.error} role="alert">{contactError}</p>}</section>
       <button className={styles.primary} type="submit">예약 내용 확인하기</button>

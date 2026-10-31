@@ -67,6 +67,29 @@ export function cursorFilter(cursor: string) {
   }
 }
 
+/** 상품별 예약으로 확보된 수량. 재고(available_quantity)에는 이미 빠져 있다. */
+export async function loadReservedQuantities(supabase: Supabase, productIds: string[]): Promise<Map<string, number>> {
+  if (productIds.length === 0) return new Map();
+  const { data, error } = await supabase.from("reservations").select("product_id, quantity").eq("status", "approved").in("product_id", productIds);
+  if (error) throw error;
+  const reserved = new Map<string, number>();
+  for (const row of data) reserved.set(row.product_id, (reserved.get(row.product_id) ?? 0) + row.quantity);
+  return reserved;
+}
+
+/** 판매자가 보는 현재가. 소비자에게 보이는 값과 같은 규칙으로 계산한다. */
+export function sellerCurrentPrice(product: SellerProduct, closingTime: string, recentApprovedQuantity: number, now: Date) {
+  return calculatePrice({
+    basePrice: product.basePrice,
+    minPrice: product.minPrice,
+    freshness: product.freshness,
+    deadline: getSaleDeadline(new Date(product.saleEndsAt), closingTime, now),
+    createdAt: new Date(product.createdAt),
+    recentApprovedQuantity,
+    now,
+  });
+}
+
 export async function listSellerProducts(
   supabase: Supabase,
   storeId: string,

@@ -90,8 +90,9 @@
 .miniProduct h2 { @apply text-base leading-6; overflow-wrap: anywhere; }
 .quantity { @apply mt-6 flex items-center justify-between rounded-lg border p-2; border-color: #e2e8e3; }
 .quantity button { @apply flex h-12 w-12 items-center justify-center rounded-lg border bg-white; border-color: #64748b; }
-.quantity output { @apply flex items-baseline gap-2 text-2xl font-bold; font-variant-numeric: tabular-nums; }
-.quantity output span { @apply text-sm font-normal; }
+.quantityInput { @apply flex items-baseline gap-2; }
+.quantityInput input { @apply h-12 w-20 rounded-lg border bg-white text-center text-2xl font-bold; border-color: #64748b; color: #1f2937; font-variant-numeric: tabular-nums; }
+.quantityInput > span:last-child { @apply text-sm; }
 .panel legend { @apply px-2 text-xl font-semibold; }
 .slotGrid { @apply my-4 grid grid-cols-2 gap-3 sm:grid-cols-3; }
 .slot { @apply flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border px-3; border-color: #64748b; }

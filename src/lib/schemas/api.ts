@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 import { PRICING_CONFIG } from "../pricing/config";
-import { FRESHNESS_LEVELS, RESERVATION_STATUSES, USER_ROLES } from "../../types/api";
+import { FRESHNESS_LEVELS, PRODUCT_UNITS, RESERVATION_STATUSES, USER_ROLES } from "../../types/api";
 
 const text = z.string("입력해 주세요.").trim().min(1, "입력해 주세요.");
+const unit = z.enum(PRODUCT_UNITS, "단위를 선택해 주세요.");
 const won = z.number("금액을 입력해 주세요.").int("원 단위로 입력해 주세요.").positive("1원 이상 입력해 주세요.");
 const timestamp = z.iso.datetime({ offset: true, error: "시각을 입력해 주세요." });
 const imagePath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/, "사진을 다시 올려 주세요.");
@@ -68,7 +69,7 @@ export const productCreateSchema = z
   .object({
     name: text,
     quantity: z.number("수량을 입력해 주세요.").int("정수로 입력해 주세요.").positive("1 이상 입력해 주세요."),
-    unit: text,
+    unit,
     basePrice: won,
     minPrice: won,
     freshness: freshnessSchema,
@@ -87,7 +88,7 @@ export const productCreateSchema = z
 
 const productFields = {
   name: text,
-  unit: text,
+  unit,
   basePrice: won,
   minPrice: won,
   freshness: freshnessSchema,
@@ -129,7 +130,7 @@ export const reservationCreateSchema = z.object({
 export const analysisSchema = z.object({
   name: text,
   estimatedQuantity: z.number().int().positive().nullable(),
-  unit: text.nullable(),
+  unit: unit.nullable(),
   freshness: freshnessSchema,
   needsConfirmation: z.boolean(),
   uncertaintyReason: text.nullable(),

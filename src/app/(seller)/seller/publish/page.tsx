@@ -19,7 +19,7 @@ export default async function PublishPage() {
 
   return (
     <main className="min-h-dvh bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">
-      <div className="mx-auto flex max-w-[480px] flex-col gap-6">
+      <div className="mx-auto flex max-w-[480px] flex-col gap-8 lg:gap-12">
         <Link href="/seller/dashboard" className="text-sm leading-5 text-muted-foreground underline">
           대시보드로 돌아가기
         </Link>
@@ -42,7 +42,7 @@ export default async function PublishPage() {
           ) : (
             <ul className="flex flex-col gap-3">
               {items.map((product) => (
-                <li key={product.id} className="rounded-lg border border-border bg-card p-4">
+                <li key={product.id} className="rounded-lg border border-border bg-card p-4 sm:p-6">
                   <p className="text-base leading-6 font-semibold text-foreground">{product.name}</p>
                   <p className="mt-1 text-sm leading-5 text-muted-foreground">
                     {product.category} · {FRESHNESS_LABELS[product.freshness]} · 재고 {product.availableQuantity}

@@ -8,7 +8,7 @@ import styles from "../../app/(customer)/shop/shop.module.css";
 
 export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
   return <main className={styles.page}>
-    <p className={styles.panel} role="note">개발용 데모 데이터입니다. 실제 상품이 아니며 예약되지 않습니다.</p>
+    <p className={styles.panel} role="note">데모 상품입니다. 실제로 예약되지 않아요.</p>
     <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div></nav>
     {back && <Link href={back} className={styles.back}><ArrowLeft size={18} aria-hidden="true" />뒤로</Link>}
     {children}

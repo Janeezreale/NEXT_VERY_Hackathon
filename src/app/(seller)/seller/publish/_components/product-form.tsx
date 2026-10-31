@@ -92,7 +92,7 @@ export function ProductForm() {
         {(control) => <Input {...control} name="name" value={values.name} onChange={(e) => update({ name: e.target.value })} />}
       </FormField>
 
-      <FormField id="product-category" label="품목" required hint="소비자가 필터로 찾는 분류예요." error={errors.category}>
+      <FormField id="product-category" label="품목" required error={errors.category}>
         {(control) => (
           <Input {...control} name="category" value={values.category} onChange={(e) => update({ category: e.target.value })} />
         )}

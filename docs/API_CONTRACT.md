@@ -41,7 +41,7 @@
 | 상품 게시 | POST `/api/seller/products` | name, category, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
 | 재고·상품 수정 | PATCH `/api/seller/products/:id` | 변경 필드, 동시 수정 검증 정보 | Product | 본인 매장, D08 확정 후 |
-| 지역 상품 탐색 | GET `/api/products` | region, category?, cursor?, limit? | 판매 중 Product 목록 | 비로그인 허용 |
+| 지역 상품 탐색 | GET `/api/products` | region, cursor?, limit? | 판매 중 Product 목록 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | Product, Store | 비로그인 허용 |
 | 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice | Reservation | 소비자 본인 |
 | 내 예약 | GET `/api/me/reservations` | status?, cursor?, limit? | Reservation 목록 | 소비자 본인 |

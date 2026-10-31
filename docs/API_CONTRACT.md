@@ -2,7 +2,7 @@
 
 [시작 안내](../README.md) · 근거: [기획 원문](../plan.md) §4–5, §7–8
 
-**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
+**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`, 예약 생성·조회·취소, 판매자 예약 조회·상태 변경입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
 
 ## 공통 형식 제안
 
@@ -10,7 +10,7 @@
 - 오류 응답: `error.code`, `error.message`, 선택적 `error.fieldErrors`를 사용합니다. 오류 시 성공 데이터를 반환하지 않습니다.
 - ID는 UUID 문자열, 금액은 원 단위 정수, 시간은 시간대가 포함된 ISO 8601 문자열로 전달합니다. 사용자 표시 시간대는 D02에서 확정합니다.
 - 신선도는 `fresh`(싱싱), `sell_today`(오늘 안에 판매 권장), `discard_tomorrow`(내일 폐기 예정)로 제안합니다.
-- 예약 상태는 `pending`, `approved`, `rejected`, `cancelled`, `completed`로 제안합니다.
+- 예약 상태는 `pending`, `approved`, `rejected`, `cancelled`, `completed`, `expired`, `no_show`입니다.
 - 인증 정보에서 사용자 ID·역할·매장 소유권을 서버가 확인합니다. 클라이언트가 보낸 사용자 ID나 역할을 권한 근거로 신뢰하지 않습니다.
 - 예약 생성은 클라이언트가 가격을 정하지 않습니다. 서버가 수량·시각·재고·가격을 다시 검증합니다.
 
@@ -23,7 +23,7 @@
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
 | SellerProduct | id, storeId, name, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
-| Reservation | id, productId, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
+| Reservation | id, productId, productName, unit, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, cancelledBy, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
 | Report | period, registeredProducts, requestedReservations, approvedReservations, completedSales, soldQuantity, revenue, remainingQuantity, series | 집계 기준·기간·단위는 D07에서 확정 |
 
 필수·선택·nullable 여부, 문자열 길이, 페이지 제한, 지역 코드 목록, 구체적인 중첩 구조는 L03에서 공유 타입과 함께 확정합니다. 이 표만으로 서로 다른 응답 타입을 독립 구현하지 않습니다.
@@ -47,8 +47,8 @@
 | 내 예약 | GET `/api/me/reservations` | status?, cursor?, limit? | Reservation 목록 | 소비자 본인 |
 | 내 예약 취소 | POST `/api/reservations/:id/cancel` | 경로 ID | Reservation | 소비자 본인, pending·approved만 |
 | 판매자 예약 조회 | GET `/api/seller/reservations` | status?, cursor?, limit? | Reservation 목록 | 본인 매장 |
-| 예약 승인·거절 | POST `/api/seller/reservations/:id/approve` 또는 `/reject` | 경로 ID | Reservation | 본인 매장 |
-| 판매 완료 | POST `/api/seller/reservations/:id/complete` | 경로 ID | Reservation, saleId | 본인 매장 |
+| 예약 승인·거절·취소·노쇼 | POST `/api/seller/reservations/:id/approve`, `/reject`, `/cancel`, `/no-show` | 경로 ID | Reservation | 본인 매장. 노쇼는 픽업 시각 이후 |
+| 판매 완료 | POST `/api/seller/reservations/:id/complete` | 경로 ID | Reservation | 본인 매장 |
 | 판매 리포트 | GET `/api/seller/reports` | from, to | Report | 본인 매장 |
 
 회원가입·로그인·로그아웃은 Supabase Auth를 사용합니다. C는 UI를 맡고 총괄이 인증 호출·세션·역할 부여 방식을 확정합니다. 독자적인 비밀번호 저장 API는 만들지 않습니다.

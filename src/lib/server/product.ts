@@ -47,18 +47,24 @@ export function toSellerProduct(row: ProductRow): SellerProduct {
   };
 }
 
-function encodeCursor(row: ProductRow) {
+export function encodeCursor(row: { created_at: string; id: string }) {
   return Buffer.from(JSON.stringify([row.created_at, row.id])).toString("base64url");
 }
 
 /** 최신 게시 순의 다음 위치. 같은 시각의 상품이 누락되지 않도록 id까지 함께 비교한다. */
-function cursorFilter(cursor: string) {
+export function cursorFilter(cursor: string) {
   try {
     const [createdAt, id] = cursorSchema.parse(JSON.parse(Buffer.from(cursor, "base64url").toString()));
     return `created_at.lt."${createdAt}",and(created_at.eq."${createdAt}",id.lt.${id})`;
   } catch {
     throw new ApiError("VALIDATION_ERROR", "목록 위치가 올바르지 않아요.");
   }
+}
+
+/** 기한이 지난 대기 예약을 만료해 재고를 돌려준다. 스케줄러가 없어 조회할 때 호출한다. */
+export async function expireOverdueReservations(supabase: Supabase) {
+  const { error } = await supabase.rpc("expire_overdue_reservations");
+  if (error) throw error;
 }
 
 export async function listSellerProducts(
@@ -125,6 +131,7 @@ export async function listPublicProducts(
   supabase: Supabase,
   { region, cursor, limit }: { region: string; cursor?: string; limit: number },
 ): Promise<Page<ProductListing>> {
+  await expireOverdueReservations(supabase);
   const now = new Date();
   let query = supabase
     .from("products")
@@ -157,6 +164,7 @@ export async function listPublicProducts(
 
 /** 상품 상세. 품절·판매 종료 상품도 saleOpen: false로 돌려준다. */
 export async function findPublicProduct(supabase: Supabase, id: string): Promise<{ product: Product; store: Store }> {
+  await expireOverdueReservations(supabase);
   const { data, error } = await supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("id", id).maybeSingle();
   if (error) throw error;
   if (!data) throw new ApiError("NOT_FOUND", "상품을 찾을 수 없어요.");

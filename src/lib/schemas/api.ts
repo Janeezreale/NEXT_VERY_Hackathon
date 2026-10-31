@@ -30,6 +30,8 @@ const storeFields = z.object({
 
 export const productListQuerySchema = listQuerySchema.extend({ region: text });
 
+export const reservationListQuerySchema = listQuerySchema.extend({ status: reservationStatusSchema.optional() });
+
 export const storeCreateSchema = storeFields.refine(hasBothOrNeitherCoordinate, coordinateError);
 
 export const storeUpdateSchema = storeFields

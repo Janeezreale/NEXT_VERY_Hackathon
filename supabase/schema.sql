@@ -6,7 +6,7 @@
 
 create type public.user_role as enum ('consumer', 'seller');
 create type public.freshness_level as enum ('fresh', 'sell_today', 'discard_tomorrow');
-create type public.reservation_status as enum ('pending', 'approved', 'rejected', 'cancelled', 'completed');
+create type public.reservation_status as enum ('pending', 'approved', 'rejected', 'cancelled', 'completed', 'expired', 'no_show');
 
 -- 테이블
 
@@ -62,6 +62,7 @@ create table public.reservations (
   approved_at timestamptz,
   created_at timestamptz not null default now(),
   idempotency_key uuid not null,
+  cancelled_by public.user_role,
   constraint reservations_consumer_idempotency_key unique (consumer_id, idempotency_key),
   constraint reservations_total_price_matches check (total_price = quantity * confirmed_unit_price),
   constraint reservations_approved_at_required check (status not in ('approved', 'completed') or approved_at is not null)
@@ -135,6 +136,206 @@ $$;
 
 revoke all on function public.recent_approved_quantities(uuid[]) from public, anon, authenticated;
 grant execute on function public.recent_approved_quantities(uuid[]) to anon, authenticated;
+
+-- 예약 함수. 잠금 순서는 언제나 products → reservations다.
+-- 오류는 메시지에 API 오류 코드를 담아 서버가 변환한다.
+
+create function public.reservation_deadline(sale_ends_at timestamptz, closing_time time)
+returns timestamptz
+language sql
+stable
+set search_path = ''
+as $$
+  select least(
+    sale_ends_at,
+    ((now() at time zone 'Asia/Seoul')::date + closing_time) at time zone 'Asia/Seoul'
+  );
+$$;
+
+-- 확정 가격을 인자로 받으므로 서버 전용이다. 브라우저 권한으로 열면 가격을 조작할 수 있다.
+create function public.create_reservation(
+  p_consumer_id uuid,
+  p_product_id uuid,
+  p_quantity integer,
+  p_pickup_at timestamptz,
+  p_idempotency_key uuid,
+  p_unit_price integer
+)
+returns public.reservations
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_product public.products;
+  v_closing time;
+  v_deadline timestamptz;
+  v_reservation public.reservations;
+begin
+  select * into v_reservation from public.reservations
+  where consumer_id = p_consumer_id and idempotency_key = p_idempotency_key;
+  if found then
+    return v_reservation;
+  end if;
+
+  if not exists (select 1 from public.profiles where id = p_consumer_id and role = 'consumer') then
+    raise exception 'FORBIDDEN';
+  end if;
+
+  select * into v_product from public.products where id = p_product_id for update;
+  if not found then
+    raise exception 'NOT_FOUND';
+  end if;
+
+  select closing_time into v_closing from public.stores where id = v_product.store_id;
+  v_deadline := public.reservation_deadline(v_product.sale_ends_at, v_closing);
+  if now() >= v_deadline then
+    raise exception 'SALE_ENDED';
+  end if;
+  if p_pickup_at <= now() or p_pickup_at > v_deadline then
+    raise exception 'VALIDATION_ERROR';
+  end if;
+  if v_product.available_quantity < p_quantity then
+    raise exception 'OUT_OF_STOCK';
+  end if;
+
+  update public.products
+  set available_quantity = available_quantity - p_quantity
+  where id = p_product_id;
+
+  insert into public.reservations
+    (product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, idempotency_key)
+  values
+    (p_product_id, p_consumer_id, p_quantity, p_unit_price, p_quantity * p_unit_price, p_pickup_at, p_idempotency_key)
+  returning * into v_reservation;
+  return v_reservation;
+exception
+  when unique_violation then
+    select * into strict v_reservation from public.reservations
+    where consumer_id = p_consumer_id and idempotency_key = p_idempotency_key;
+    return v_reservation;
+end;
+$$;
+
+create function public.change_reservation_status(p_reservation_id uuid, p_action text)
+returns public.reservations
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_product_id uuid;
+  v_reservation public.reservations;
+  v_is_owner boolean;
+  v_return_stock boolean := false;
+begin
+  if v_uid is null then
+    raise exception 'UNAUTHENTICATED';
+  end if;
+
+  select product_id into v_product_id from public.reservations where id = p_reservation_id;
+  if not found then
+    raise exception 'NOT_FOUND';
+  end if;
+
+  perform 1 from public.products where id = v_product_id for update;
+  select * into strict v_reservation from public.reservations where id = p_reservation_id for update;
+
+  select stores.owner_id = v_uid into v_is_owner
+  from public.products join public.stores on stores.id = products.store_id
+  where products.id = v_product_id;
+
+  if p_action = 'cancel' then
+    if v_reservation.consumer_id <> v_uid then
+      raise exception 'FORBIDDEN';
+    end if;
+    if v_reservation.status not in ('pending', 'approved') then
+      raise exception 'INVALID_TRANSITION';
+    end if;
+    update public.reservations set status = 'cancelled', cancelled_by = 'consumer'
+    where id = p_reservation_id returning * into v_reservation;
+    v_return_stock := true;
+  elsif p_action in ('approve', 'reject', 'seller_cancel', 'no_show', 'complete') then
+    if not v_is_owner then
+      raise exception 'FORBIDDEN';
+    end if;
+
+    if p_action = 'approve' and v_reservation.status = 'pending' and v_reservation.pickup_at > now() then
+      update public.reservations set status = 'approved', approved_at = now()
+      where id = p_reservation_id returning * into v_reservation;
+    elsif p_action = 'reject' and v_reservation.status = 'pending' then
+      update public.reservations set status = 'rejected'
+      where id = p_reservation_id returning * into v_reservation;
+      v_return_stock := true;
+    elsif p_action = 'seller_cancel' and v_reservation.status in ('pending', 'approved') then
+      update public.reservations set status = 'cancelled', cancelled_by = 'seller'
+      where id = p_reservation_id returning * into v_reservation;
+      v_return_stock := true;
+    elsif p_action = 'no_show' and v_reservation.status = 'approved' and v_reservation.pickup_at <= now() then
+      update public.reservations set status = 'no_show'
+      where id = p_reservation_id returning * into v_reservation;
+      v_return_stock := true;
+    elsif p_action = 'complete' and v_reservation.status = 'approved' then
+      update public.reservations set status = 'completed'
+      where id = p_reservation_id returning * into v_reservation;
+      insert into public.sales (reservation_id, final_amount)
+      values (p_reservation_id, v_reservation.total_price);
+    else
+      raise exception 'INVALID_TRANSITION';
+    end if;
+  else
+    raise exception 'VALIDATION_ERROR';
+  end if;
+
+  if v_return_stock then
+    update public.products
+    set available_quantity = available_quantity + v_reservation.quantity
+    where id = v_product_id;
+  end if;
+  return v_reservation;
+end;
+$$;
+
+-- 스케줄러 없이 조회·예약 시점에 호출한다. 여러 번 호출해도 재고는 한 번만 반환된다.
+create function public.expire_overdue_reservations()
+returns integer
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_due record;
+  v_quantity integer;
+  v_expired integer := 0;
+begin
+  for v_due in
+    select id, product_id from public.reservations
+    where status = 'pending' and pickup_at <= now()
+    order by product_id, id
+  loop
+    perform 1 from public.products where id = v_due.product_id for update;
+    update public.reservations set status = 'expired'
+    where id = v_due.id and status = 'pending'
+    returning quantity into v_quantity;
+    if found then
+      update public.products
+      set available_quantity = available_quantity + v_quantity
+      where id = v_due.product_id;
+      v_expired := v_expired + 1;
+    end if;
+  end loop;
+  return v_expired;
+end;
+$$;
+
+revoke all on function public.reservation_deadline(timestamptz, time) from public, anon, authenticated;
+revoke all on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer) from public, anon, authenticated;
+revoke all on function public.change_reservation_status(uuid, text) from public, anon;
+revoke all on function public.expire_overdue_reservations() from public;
+grant execute on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer) to service_role;
+grant execute on function public.change_reservation_status(uuid, text) to authenticated;
+grant execute on function public.expire_overdue_reservations() to anon, authenticated, service_role;
 
 -- 권한: Supabase 기본 권한을 제거하고 필요한 컬럼만 허용한다.
 -- reservations·sales 쓰기와 products 수정은 허용하지 않는다(L05 함수, D08).

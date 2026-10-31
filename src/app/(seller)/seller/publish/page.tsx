@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { listSellerProducts } from "@/src/lib/server/product";
-import { requireSellerStore } from "@/src/lib/server/store";
+import { loadSellerStore } from "@/src/lib/server/store";
+import { createClient } from "@/src/lib/supabase/server";
 import { FRESHNESS_LABELS } from "@/src/types/api";
 
 import { ProductForm } from "./_components/product-form";
@@ -14,8 +16,9 @@ const won = new Intl.NumberFormat("ko-KR");
 const dateTime = new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" });
 
 export default async function PublishPage() {
-  const { supabase, store } = await requireSellerStore();
-  const { items, nextCursor } = await listSellerProducts(supabase, store.id, { limit: LIST_LIMIT });
+  const store = await loadSellerStore();
+  if (!store) redirect("/store");
+  const { items, nextCursor } = await listSellerProducts(await createClient(), store.id, { limit: LIST_LIMIT });
 
   return (
     <main className="min-h-dvh bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">

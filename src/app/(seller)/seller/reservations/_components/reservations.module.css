@@ -8,9 +8,10 @@
 .page button:focus-visible, .page select:focus-visible, .page a:focus-visible { outline: 2px solid #176b49; outline-offset: 3px; }
 .container { max-width: 1200px; margin: auto; }
 .header { padding: 32px 0 24px; }
-.page h1 { font-size: 1.5rem; line-height: 1.333; letter-spacing: -.02em; margin-bottom: 8px; }
-.page h2 { font-size: 1.25rem; line-height: 1.4; }
-.page h3 { font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
+.page h1 { font-size: 1.5rem; line-height: 1.333; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; }
+.page h2 { font-size: 1.25rem; line-height: 1.4; font-weight: 600; }
+.page h3 { font-size: 1rem; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
+.card > .badge + h3 { margin-top: 12px; }
 .eyebrow { color: #176b49; font-size: .875rem; font-weight: 600; margin-bottom: 8px !important; }
 .subtle { color: var(--muted); font-size: .875rem; }
 .summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-top: 24px; }

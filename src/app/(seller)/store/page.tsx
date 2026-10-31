@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { LogoutButton } from "@/src/components/common/logout-button";
+import { LogoutButton, RoleLabel } from "@/src/components/common/logout-button";
 import { loadSellerStore } from "@/src/lib/server/store";
 
 import { SellerNav } from "../seller/_components/seller-nav";
@@ -13,7 +13,8 @@ export default async function StorePage() {
 
   return (
     <main className="min-h-dvh bg-background px-4 pt-4 pb-12 sm:px-6">
-      <div className="mx-auto mb-4 flex max-w-[480px] justify-end">
+      <div className="mx-auto mb-4 flex max-w-[480px] items-center justify-end gap-3">
+        <RoleLabel role="seller" />
         <LogoutButton />
       </div>
       {store ? <div className="mx-auto mb-6 max-w-[1200px]"><SellerNav current="/store" /></div> : null}

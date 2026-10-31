@@ -151,7 +151,6 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
           id="product-quantity"
           label={product ? "남은 재고" : "수량"}
           required
-          hint={product ? `예약 수량 ${reservedQuantity}${product.unit}: 따로 확보되어 바뀌지 않아요.` : undefined}
           error={errors.quantity}
         >
           {(control) => (
@@ -183,6 +182,7 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
             </select>
           )}
         </FormField>
+        {product ? <p className="col-span-2 text-sm leading-5 text-muted-foreground">예약 수량 {reservedQuantity}{product.unit}: 따로 확보되어 바뀌지 않아요.</p> : null}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

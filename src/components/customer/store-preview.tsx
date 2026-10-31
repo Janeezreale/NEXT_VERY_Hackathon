@@ -23,9 +23,11 @@ export default function StorePreview({ store, products, state }: { store: StoreV
       <p className={styles.eyebrow}>{store.region}</p>
       <h1 className={styles.productTitle}>{store.name}</h1>
       {store.description && <p className={styles.description}>{store.description}</p>}
-      <p className={styles.address}><Clock size={18} aria-hidden="true" />{store.status} · 영업시간 {store.hours}</p>
-      <p className={styles.address}><MapPin size={18} aria-hidden="true" />{store.address}</p>
-      {store.phone && <p className={styles.address}><Phone size={18} aria-hidden="true" /><Link href={`tel:${store.phone}`}>{store.phoneLabel}</Link></p>}
+      <div className={styles.storeFacts}>
+        <p className={styles.address}><Clock size={18} aria-hidden="true" />{store.status} · 영업시간 {store.hours}</p>
+        <p className={styles.address}><MapPin size={18} aria-hidden="true" />{store.address}</p>
+        {store.phone && <p className={styles.address}><Phone size={18} aria-hidden="true" /><Link href={`tel:${store.phone}`}>{store.phoneLabel}</Link></p>}
+      </div>
     </header>
     <div className={styles.resultsHeading} id="products"><div><h2>판매 상품</h2>{state === "ready" && <p role="status">상품 {products.length}개</p>}</div></div>
     {state !== "ready" ? <LoadFeedback state={state} subject="상품을" onRetry={() => router.refresh()} /> : products.length === 0 ? <EmptyFeedback title="지금 판매 중인 상품이 없어요" description="다른 가게도 둘러보세요." /> : <section className={styles.browseList} aria-label="판매 상품 목록">{products.map(product => <ProductCard key={product.id} product={product} href={`/shop/products/${product.id}`} />)}</section>}

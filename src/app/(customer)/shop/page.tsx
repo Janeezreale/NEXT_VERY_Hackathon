@@ -23,5 +23,5 @@ export default async function ShopPage({ searchParams }: { searchParams: Promise
   const values = await searchParams;
   const filters = filtersWithSavedRegion(values, (await cookies()).get(REGION_COOKIE)?.value);
   const products = filters.region ? await loadProducts(filters.region) : [];
-  return <BrowsePreview filters={filters} products={products ?? []} state={products ? "ready" : "error"} initialView={firstValue(values.view) === "map" ? "map" : "list"} />;
+  return <BrowsePreview filters={filters} products={products ?? []} state={products ? "ready" : "error"} initialView={firstValue(values.view) === "map" ? "map" : "list"} sellerOnly={firstValue(values.notice) === "seller-only"} />;
 }

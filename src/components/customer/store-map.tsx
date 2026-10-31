@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, MapPin, Phone, Store as StoreIcon } from "lucide-react";
+import { ArrowRight, Clock, MapPin, Phone, Store as StoreIcon } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
@@ -100,23 +100,29 @@ export default function StoreMap({ position }: { position: Position | null }) {
         <NaverMap markers={markers} onSelect={selectStore} label="매장 위치 지도" className="h-80" />
       )}
       {visible.length === 0 ? null : selected ? (
-        <article className={styles.panel}>
+        <article className={`${styles.panel} ${styles.storePanel}`}>
           <p className={styles.store}>
             <StoreIcon size={14} aria-hidden="true" />
             {selected.region}
           </p>
           <h3>{selected.name}</h3>
           {selected.description ? <p className={styles.description}>{selected.description}</p> : null}
-          <p>{selected.address}</p>
-          <p>
-            {selected.status} · 영업시간 {selected.hours}
-          </p>
-          {selected.phone ? (
+          <div className={styles.storeFacts}>
             <p className={styles.address}>
-              <Phone size={18} aria-hidden="true" />
-              <Link href={`tel:${selected.phone}`}>{selected.phoneLabel}</Link>
+              <Clock size={18} aria-hidden="true" />
+              {selected.status} · 영업시간 {selected.hours}
             </p>
-          ) : null}
+            <p className={styles.address}>
+              <MapPin size={18} aria-hidden="true" />
+              {selected.address}
+            </p>
+            {selected.phone ? (
+              <p className={styles.address}>
+                <Phone size={18} aria-hidden="true" />
+                <Link href={`tel:${selected.phone}`}>{selected.phoneLabel}</Link>
+              </p>
+            ) : null}
+          </div>
           <Link href={`/shop/stores/${selected.id}`} className={styles.detailButton}>
             가게 프로필과 판매 상품 보기
             <ArrowRight size={18} aria-hidden="true" />

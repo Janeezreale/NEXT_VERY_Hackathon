@@ -15,7 +15,7 @@ export function DeleteProductButton({ id, name }: { id: string; name: string }) 
   const [error, setError] = useState("");
 
   async function remove() {
-    if (busy || !window.confirm(`${name} 상품을 삭제할까요?`)) return;
+    if (busy || !window.confirm(`${name} 상품을 삭제할까요?\n진행 중인 예약과 판매 기록은 그대로 남아요.`)) return;
     setBusy(true);
     setError("");
     try {

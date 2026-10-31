@@ -48,6 +48,7 @@ create table public.products (
   freshness public.freshness_level not null,
   sale_ends_at timestamptz not null,
   created_at timestamptz not null default now(),
+  deleted_at timestamptz,
   constraint products_min_price_lte_base_price check (min_price <= base_price)
 );
 
@@ -201,7 +202,7 @@ begin
   end if;
 
   select * into v_product from public.products where id = p_product_id for update;
-  if not found then
+  if not found or v_product.deleted_at is not null then
     raise exception 'NOT_FOUND';
   end if;
 
@@ -305,7 +306,7 @@ begin
   if v_return_stock then
     update public.products
     set available_quantity = available_quantity + v_reservation.quantity
-    where id = v_product_id;
+    where id = v_product_id and deleted_at is null;
   end if;
   return v_reservation;
 end;
@@ -338,7 +339,7 @@ declare
   v_product public.products;
 begin
   select * into v_product from public.products where id = p_product_id for update;
-  if not found then
+  if not found or v_product.deleted_at is not null then
     raise exception 'NOT_FOUND';
   end if;
   if not exists (select 1 from public.stores where id = v_product.store_id and owner_id = auth.uid()) then
@@ -358,27 +359,30 @@ begin
 end;
 $$;
 
--- 예약 이력이 있는 상품은 남긴다. 판매 기록과 소비자 내역이 상품을 참조한다.
+-- 예약 이력이 있는 상품은 숨기고 재고를 0으로 둔다. 판매 기록과 예약 내역이 상품을 참조한다.
+-- 행을 실제로 지웠으면 true를 돌려준다. 호출자는 그때만 사진 파일을 지운다.
 create function public.delete_product(p_product_id uuid)
-returns void
+returns boolean
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_store_id uuid;
+  v_product public.products;
 begin
-  select store_id into v_store_id from public.products where id = p_product_id for update;
-  if not found then
+  select * into v_product from public.products where id = p_product_id for update;
+  if not found or v_product.deleted_at is not null then
     raise exception 'NOT_FOUND';
   end if;
-  if not exists (select 1 from public.stores where id = v_store_id and owner_id = auth.uid()) then
+  if not exists (select 1 from public.stores where id = v_product.store_id and owner_id = auth.uid()) then
     raise exception 'FORBIDDEN';
   end if;
   if exists (select 1 from public.reservations where product_id = p_product_id) then
-    raise exception 'PRODUCT_HAS_RESERVATIONS';
+    update public.products set deleted_at = now(), available_quantity = 0 where id = p_product_id;
+    return false;
   end if;
   delete from public.products where id = p_product_id;
+  return true;
 end;
 $$;
 

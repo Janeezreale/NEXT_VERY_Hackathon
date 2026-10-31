@@ -35,6 +35,7 @@ function client() {
     const chain = {
       select: () => chain,
       eq: () => chain,
+      is: () => chain,
       single: async () => ({
         data: table === "profiles" ? { role: db.role, region_code: null } : reservationRow,
         error: null,

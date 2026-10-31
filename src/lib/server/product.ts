@@ -99,6 +99,7 @@ export async function listSellerProducts(
     .from("products")
     .select(PRODUCT_COLUMNS)
     .eq("store_id", storeId)
+    .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(limit + 1);
@@ -120,7 +121,6 @@ const PRODUCT_ERRORS: Partial<Record<ApiErrorCode, string>> = {
   NOT_FOUND: "상품을 찾을 수 없어요.",
   FORBIDDEN: "이 상품을 변경할 권한이 없어요.",
   STOCK_CHANGED: "그 사이 예약으로 재고가 바뀌었어요. 최신 재고를 확인해 주세요.",
-  PRODUCT_HAS_RESERVATIONS: "예약이 있는 상품은 삭제할 수 없어요.",
 };
 
 function toProductError(error: { message: string }) {
@@ -130,7 +130,7 @@ function toProductError(error: { message: string }) {
 
 export async function findSellerProduct(supabase: Supabase, storeId: string, id: string): Promise<SellerProduct | null> {
   if (!z.uuid().safeParse(id).success) return null;
-  const { data, error } = await supabase.from("products").select(PRODUCT_COLUMNS).eq("id", id).eq("store_id", storeId).maybeSingle();
+  const { data, error } = await supabase.from("products").select(PRODUCT_COLUMNS).eq("id", id).eq("store_id", storeId).is("deleted_at", null).maybeSingle();
   if (error) throw error;
   return data ? toSellerProduct(data as ProductRow) : null;
 }
@@ -215,11 +215,12 @@ export async function removeUnusedImages(supabase: Supabase, storeId: string, no
   }
 }
 
+/** 예약 이력이 있으면 DB 함수가 상품을 숨기기만 한다. 예약 내역이 쓰는 사진은 실제로 지웠을 때만 함께 지운다. */
 export async function deleteProduct(supabase: Supabase, id: string) {
   const paths = await linkedImagePaths(supabase, id);
-  const { error } = await supabase.rpc("delete_product", { p_product_id: id });
+  const { data: removed, error } = await supabase.rpc("delete_product", { p_product_id: id });
   if (error) throw toProductError(error);
-  if (paths.length > 0) await removeImageFiles(supabase, paths);
+  if (removed === true && paths.length > 0) await removeImageFiles(supabase, paths);
 }
 
 type PublicProductRow = ProductRow & { stores: StoreRow; product_images?: { storage_path: string }[] };
@@ -278,6 +279,7 @@ export async function listPublicProducts(
   const now = new Date();
   const products = supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS);
   let query = ("region" in scope ? products.eq("stores.region_code", scope.region) : products.eq("store_id", scope.storeId))
+    .is("deleted_at", null)
     .gt("available_quantity", 0)
     .gte("sale_ends_at", getBusinessDayStart(now).toISOString())
     .order("created_at", { ascending: false })
@@ -303,7 +305,7 @@ export async function listPublicProducts(
 
 /** 상품 상세. 품절·판매 종료 상품도 saleOpen: false로 돌려준다. */
 export async function findPublicProduct(supabase: Supabase, id: string): Promise<{ product: Product; store: Store }> {
-  const { data, error } = await supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("id", id).maybeSingle();
+  const { data, error } = await supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("id", id).is("deleted_at", null).maybeSingle();
   if (error) throw error;
   if (!data) throw new ApiError("NOT_FOUND", "상품을 찾을 수 없어요.");
 

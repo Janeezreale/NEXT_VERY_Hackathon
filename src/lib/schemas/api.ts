@@ -15,16 +15,27 @@ export const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
 
-export const storeCreateSchema = z.object({
+const hasBothOrNeitherCoordinate = ({ latitude, longitude }: { latitude?: number | null; longitude?: number | null }) =>
+  (latitude === undefined) === (longitude === undefined) && (latitude === null) === (longitude === null);
+const coordinateError = { path: ["latitude"], message: "위치를 다시 선택해 주세요." };
+
+const storeFields = z.object({
   name: text,
   regionCode: text,
   address: text,
   closingTime: z.string("마감 시각을 입력해 주세요.").regex(/^([01]\d|2[0-3]):[0-5]\d$/, "마감 시각을 입력해 주세요."),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
-export const storeUpdateSchema = storeCreateSchema
+export const storeCreateSchema = storeFields.refine(hasBothOrNeitherCoordinate, coordinateError);
+
+export const storeUpdateSchema = storeFields
   .partial()
-  .refine((value) => Object.values(value).some((field) => field !== undefined), "변경할 내용을 입력해 주세요.");
+  .refine((value) => Object.values(value).some((field) => field !== undefined), "변경할 내용을 입력해 주세요.")
+  .refine(hasBothOrNeitherCoordinate, coordinateError);
+
+export const geocodeQuerySchema = z.object({ query: text.max(100, "100자 이내로 입력해 주세요.") });
 
 export const productCreateSchema = z
   .object({

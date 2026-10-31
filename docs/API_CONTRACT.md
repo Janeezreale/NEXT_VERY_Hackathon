@@ -2,7 +2,7 @@
 
 [시작 안내](../README.md) · 근거: [기획 원문](../plan.md) §4–5, §7–8
 
-**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
+**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
 
 ## 공통 형식 제안
 
@@ -19,7 +19,8 @@
 | 모델 | 주요 필드 | 의미 |
 | --- | --- | --- |
 | Product | id, storeId, name, category, unit, availableQuantity, basePrice, minPrice, currentPrice, discountRate, freshness, saleEndsAt, imageUrls, pricedAt | 화면에 표시할 현재 상품. 금액·할인율은 서버 제공 |
-| Store | id, name, regionCode, address, closingTime | 매장 정보. closingTime은 `HH:mm`. 업종 필드 없음(D10) |
+| Store | id, name, regionCode, address, closingTime, latitude, longitude | 매장 정보. closingTime은 `HH:mm`. 좌표는 nullable. 업종 필드 없음(D10) |
+| AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
 | SellerProduct | id, storeId, name, category, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
 | Reservation | id, productId, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
@@ -32,7 +33,9 @@
 | 작업 | 메서드·경로 | 입력 | 성공 결과 | 권한 |
 | --- | --- | --- | --- | --- |
 | 현재 사용자 | GET `/api/me` | 없음 | 사용자 ID·역할·지역·매장 등록 여부 | 로그인 |
-| 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, closingTime. PATCH: 변경 필드 | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS |
+| 매장 조회·등록·수정 | GET / POST / PATCH `/api/seller/store` | POST: name, regionCode, address, closingTime, latitude?, longitude?. PATCH: 변경 필드 | Store | 판매자 본인, 매장 1개. 없으면 GET·PATCH는 404, 중복 등록은 409 STORE_EXISTS. 좌표 없이 주소만 수정하면 좌표를 비움 |
+| 주소 검색 | GET `/api/seller/geocode` | query | AddressResult 목록(`items`) | 판매자 |
+| 지도 매장 조회 | GET `/api/stores` | 없음 | 좌표 있는 Store 목록(`items`), 최대 200개 | 비로그인 허용 |
 | 이미지 업로드 | POST `/api/seller/images` | 이미지 파일 | 서버가 검증한 imagePath | 판매자, 형식·크기·소유권은 D05 |
 | 이미지 분석 | POST `/api/seller/analyses` | imagePath, closingAt | Analysis | 이미지 소유 판매자 |
 | 상품 게시 | POST `/api/seller/products` | name, category, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
@@ -65,6 +68,7 @@
 | 413 / 415 | IMAGE_TOO_LARGE / UNSUPPORTED_IMAGE | 다른 이미지 선택 |
 | 422 | AI_RESULT_INVALID | 분석 결과 검증 실패 안내, 다시 분석 |
 | 502 / 503 | AI_UNAVAILABLE | 실패 안내와 재시도 제공 |
+| 503 | MAP_UNAVAILABLE | 주소 직접 입력 안내 |
 | 500 | INTERNAL_ERROR | 일반 오류 표시, 내부 키·스택 노출 금지 |
 
 네트워크 시간 초과는 성공·실패가 불명확할 수 있습니다. 예약·판매 완료의 재시도는 같은 `idempotencyKey`를 다시 보내며(D06) 프론트엔드 버튼 비활성화만으로 해결하지 않습니다.

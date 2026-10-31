@@ -9,6 +9,7 @@
 | 웹 | Next.js 16 App Router / TypeScript | 하나의 앱에서 판매자·소비자 화면 제공 |
 | 스타일 | Tailwind CSS / shadcn/ui | 모바일 우선, 공통 컴포넌트 재사용 |
 | 인증·데이터·파일 | Supabase Auth / PostgreSQL / Storage | 계정, RLS, 상품·재고·예약·판매, 사진 |
+| 지도 | NAVER Maps Web Dynamic Map / Geocoding | 매장 지도 표시, 서버 경유 주소 검색 |
 | 서버 | Next.js Route Handlers / Zod | API, 입력·AI 응답 검증 |
 | AI | OpenAI Responses API | 이미지 분석과 구조화된 결과 제안 |
 | 가격 | TypeScript 규칙 엔진 | 조회 시 계산, 예약 시 확정 |

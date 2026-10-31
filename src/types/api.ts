@@ -31,6 +31,7 @@ export type ApiErrorCode =
   | "UNSUPPORTED_IMAGE"
   | "AI_RESULT_INVALID"
   | "AI_UNAVAILABLE"
+  | "MAP_UNAVAILABLE"
   | "INTERNAL_ERROR";
 
 export type FieldErrors = Record<string, string[]>;
@@ -55,6 +56,19 @@ export type Store = {
   address: string;
   /** 매일 마감 시각. "HH:mm" */
   closingTime: string;
+  /** 주소 검색을 쓰지 못한 매장은 null이고 지도에 표시되지 않는다. */
+  latitude: number | null;
+  longitude: number | null;
+};
+
+export type MappedStore = Store & { latitude: number; longitude: number };
+
+export type AddressResult = {
+  roadAddress: string;
+  jibunAddress: string;
+  regionCode: string;
+  latitude: number;
+  longitude: number;
 };
 
 export type Product = {

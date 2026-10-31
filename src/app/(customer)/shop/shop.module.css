@@ -14,7 +14,6 @@
 .region { @apply flex flex-col gap-2 md:col-span-2; }
 .region > span { @apply flex items-center gap-2 text-sm font-semibold; }
 .region select { @apply min-h-12 w-full rounded-lg border bg-white px-3 text-base sm:max-w-80; border-color: #64748b; color: #1f2937; }
-.label { @apply mb-2 block text-sm font-semibold; }
 .chips { @apply flex flex-wrap gap-2; }
 .chips button { @apply min-h-11 rounded-full border bg-white px-4 text-sm; border-color: #e2e8e3; color: #626b77; }
 .chips button[aria-pressed="true"] { background: #eaf6ef; border-color: #176b49; color: #176b49; font-weight: 600; }
@@ -42,7 +41,6 @@
 .empty p { @apply text-sm leading-6; color: #626b77; }
 
 .primary:hover { background: #196545; }
-.skeleton { @apply min-h-96 rounded-xl; background: #f1f5f2; }
 .notice { @apply mt-4 text-sm leading-6; color: #176b49; }
 .footer { @apply mt-8 border-t pt-6 text-sm leading-6; border-color: #e2e8e3; color: #626b77; }
 .srOnly { @apply sr-only; }
@@ -56,6 +54,8 @@
 .navLinks { @apply order-last flex w-full items-center gap-4 sm:order-none sm:ml-auto sm:w-auto; }
 .navLinks a, .localNav .wordmark, .back { @apply inline-flex min-h-11 items-center gap-2 text-sm font-semibold; color: #176b49; }
 .localNav .wordmark { @apply text-base; }
+.contactField { @apply mt-4 flex flex-col gap-2 text-sm font-semibold; }
+.contactField input { @apply min-h-12 w-full rounded-lg border bg-white px-3 text-base font-normal; border-color: #64748b; color: #1f2937; }
 .localNav button { @apply text-sm font-semibold; }
 .back { @apply my-4; }
 .photo { @apply relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl; background: #f1f5f2; color: #626b77; }
@@ -150,7 +150,6 @@
 .browseList .card .details dd { font-weight: 500; }
 .browseList .card .detailButton { @apply min-h-11 w-auto justify-start border-0 bg-transparent p-0; margin-top: 4px; }
 .browseList .card .detailButton:hover { text-decoration: underline; }
-.browseList .skeleton { min-height: 220px; }
 @media (min-width: 640px) {
   .browseList .card { grid-template-columns: 144px minmax(0, 1fr); gap: 20px; padding: 24px; }
   .browseList .card > .photo { width: 144px; height: 192px; }

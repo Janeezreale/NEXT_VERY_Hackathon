@@ -63,6 +63,8 @@ create table public.reservations (
   created_at timestamptz not null default now(),
   idempotency_key uuid not null,
   cancelled_by public.user_role,
+  contact_name text not null check (length(trim(contact_name)) > 0),
+  contact_phone text not null check (contact_phone ~ '^01[0-9]{8,9}$'),
   constraint reservations_consumer_idempotency_key unique (consumer_id, idempotency_key),
   constraint reservations_total_price_matches check (total_price = quantity * confirmed_unit_price),
   constraint reservations_approved_at_required check (status not in ('approved', 'completed') or approved_at is not null)
@@ -159,7 +161,9 @@ create function public.create_reservation(
   p_quantity integer,
   p_pickup_at timestamptz,
   p_idempotency_key uuid,
-  p_unit_price integer
+  p_unit_price integer,
+  p_contact_name text,
+  p_contact_phone text
 )
 returns public.reservations
 language plpgsql
@@ -204,9 +208,9 @@ begin
   where id = p_product_id;
 
   insert into public.reservations
-    (product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, idempotency_key)
+    (product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, idempotency_key, contact_name, contact_phone)
   values
-    (p_product_id, p_consumer_id, p_quantity, p_unit_price, p_quantity * p_unit_price, p_pickup_at, p_idempotency_key)
+    (p_product_id, p_consumer_id, p_quantity, p_unit_price, p_quantity * p_unit_price, p_pickup_at, p_idempotency_key, p_contact_name, p_contact_phone)
   returning * into v_reservation;
   return v_reservation;
 exception
@@ -330,12 +334,102 @@ end;
 $$;
 
 revoke all on function public.reservation_deadline(timestamptz, time) from public, anon, authenticated;
-revoke all on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer) from public, anon, authenticated;
+revoke all on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer, text, text) from public, anon, authenticated;
 revoke all on function public.change_reservation_status(uuid, text) from public, anon;
 revoke all on function public.expire_overdue_reservations() from public;
-grant execute on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer) to service_role;
+grant execute on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer, text, text) to service_role;
 grant execute on function public.change_reservation_status(uuid, text) to authenticated;
 grant execute on function public.expire_overdue_reservations() to anon, authenticated, service_role;
+
+-- 재고는 판매자가 화면에서 본 값과 같을 때만 바꾼다. 그 사이 들어온 예약의 확보 수량을 덮어쓰지 않기 위해서다.
+create function public.update_product(
+  p_product_id uuid,
+  p_name text,
+  p_unit text,
+  p_quantity integer,
+  p_expected_quantity integer,
+  p_base_price integer,
+  p_min_price integer,
+  p_freshness public.freshness_level,
+  p_sale_ends_at timestamptz
+)
+returns public.products
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_product public.products;
+begin
+  select * into v_product from public.products where id = p_product_id for update;
+  if not found then
+    raise exception 'NOT_FOUND';
+  end if;
+  if not exists (select 1 from public.stores where id = v_product.store_id and owner_id = auth.uid()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if v_product.available_quantity <> p_expected_quantity then
+    raise exception 'STOCK_CHANGED';
+  end if;
+
+  update public.products
+  set name = p_name, unit = p_unit, available_quantity = p_quantity,
+      base_price = p_base_price, min_price = p_min_price,
+      freshness = p_freshness, sale_ends_at = p_sale_ends_at
+  where id = p_product_id
+  returning * into v_product;
+  return v_product;
+end;
+$$;
+
+-- 예약 이력이 있는 상품은 남긴다. 판매 기록과 소비자 내역이 상품을 참조한다.
+create function public.delete_product(p_product_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_store_id uuid;
+begin
+  select store_id into v_store_id from public.products where id = p_product_id for update;
+  if not found then
+    raise exception 'NOT_FOUND';
+  end if;
+  if not exists (select 1 from public.stores where id = v_store_id and owner_id = auth.uid()) then
+    raise exception 'FORBIDDEN';
+  end if;
+  if exists (select 1 from public.reservations where product_id = p_product_id) then
+    raise exception 'PRODUCT_HAS_RESERVATIONS';
+  end if;
+  delete from public.products where id = p_product_id;
+end;
+$$;
+
+revoke all on function public.update_product(uuid, text, text, integer, integer, integer, integer, public.freshness_level, timestamptz) from public, anon;
+revoke all on function public.delete_product(uuid) from public, anon;
+grant execute on function public.update_product(uuid, text, text, integer, integer, integer, integer, public.freshness_level, timestamptz) to authenticated;
+grant execute on function public.delete_product(uuid) to authenticated;
+
+-- 연락처는 직접 조회할 수 없다. 판매자는 본인 매장의 진행 중 예약만 이 함수로 읽는다.
+create function public.reservation_contacts(p_reservation_ids uuid[])
+returns table (reservation_id uuid, contact_name text, contact_phone text)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select reservations.id, reservations.contact_name, reservations.contact_phone
+  from public.reservations
+  join public.products on products.id = reservations.product_id
+  join public.stores on stores.id = products.store_id
+  where reservations.id = any (p_reservation_ids)
+    and reservations.status in ('pending', 'approved')
+    and stores.owner_id = auth.uid();
+$$;
+
+revoke all on function public.reservation_contacts(uuid[]) from public, anon;
+grant execute on function public.reservation_contacts(uuid[]) to authenticated;
 
 -- 권한: Supabase 기본 권한을 제거하고 필요한 컬럼만 허용한다.
 -- reservations·sales 쓰기와 products 수정은 허용하지 않는다(L05 함수, D08).
@@ -343,8 +437,10 @@ grant execute on function public.expire_overdue_reservations() to anon, authenti
 revoke all on public.profiles, public.stores, public.products, public.product_images, public.reservations, public.sales
   from anon, authenticated;
 
-grant select on public.profiles, public.stores, public.products, public.product_images, public.reservations, public.sales
+grant select on public.profiles, public.stores, public.products, public.product_images, public.sales
   to authenticated;
+grant select (id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at, idempotency_key, cancelled_by)
+  on public.reservations to authenticated;
 grant select (id, name, region_code, address, closing_time, latitude, longitude) on public.stores to anon;
 grant select on public.products, public.product_images to anon;
 grant update (region_code) on public.profiles to authenticated;

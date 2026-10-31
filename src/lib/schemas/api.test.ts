@@ -19,6 +19,8 @@ const reservation = {
   pickupAt: "2026-11-01T18:00:00+09:00",
   idempotencyKey: "0d8b1c52-7a3e-4f0a-8e2d-5b7c9a1d2e33",
   expectedUnitPrice: 7300,
+  contactName: "홍길동",
+  contactPhone: "01012345678",
 };
 
 describe("productCreateSchema", () => {

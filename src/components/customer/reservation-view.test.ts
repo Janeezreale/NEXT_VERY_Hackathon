@@ -16,6 +16,7 @@ const reservation: Reservation = {
   status: "pending",
   createdAt: "2026-11-01T08:00:00Z",
   cancelledBy: null,
+  contact: null,
   store: { id: "store-1", name: "테스트 마켓", address: "서울 성북구" },
 };
 

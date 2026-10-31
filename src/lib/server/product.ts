@@ -5,7 +5,8 @@ import { z } from "zod";
 import { calculatePrice, getSaleDeadline, isSaleOpen } from "../pricing/price";
 import { freshnessSchema } from "../schemas/api";
 import type { createClient } from "../supabase/server";
-import type { Page, Product, ProductListing, SellerProduct, Store } from "../../types/api";
+import type { ProductUpdateInput } from "../schemas/api";
+import type { ApiErrorCode, Page, Product, ProductListing, SellerProduct, Store } from "../../types/api";
 import { ApiError } from "./api";
 import { loadRecentApprovedQuantities } from "./pricing";
 import { STORE_COLUMNS, toStore, type StoreRow } from "./store";
@@ -91,6 +92,46 @@ export async function listSellerProducts(
     items: page.map(toSellerProduct),
     nextCursor: rows.length > limit ? encodeCursor(page[page.length - 1]) : null,
   };
+}
+
+const PRODUCT_ERRORS: Partial<Record<ApiErrorCode, string>> = {
+  NOT_FOUND: "상품을 찾을 수 없어요.",
+  FORBIDDEN: "이 상품을 변경할 권한이 없어요.",
+  STOCK_CHANGED: "그 사이 예약으로 재고가 바뀌었어요. 최신 재고를 확인해 주세요.",
+  PRODUCT_HAS_RESERVATIONS: "예약이 있는 상품은 삭제할 수 없어요.",
+};
+
+function toProductError(error: { message: string }) {
+  const message = PRODUCT_ERRORS[error.message as ApiErrorCode];
+  return message ? new ApiError(error.message as ApiErrorCode, message) : error;
+}
+
+export async function findSellerProduct(supabase: Supabase, storeId: string, id: string): Promise<SellerProduct | null> {
+  if (!z.uuid().safeParse(id).success) return null;
+  const { data, error } = await supabase.from("products").select(PRODUCT_COLUMNS).eq("id", id).eq("store_id", storeId).maybeSingle();
+  if (error) throw error;
+  return data ? toSellerProduct(data as ProductRow) : null;
+}
+
+export async function updateProduct(supabase: Supabase, id: string, input: ProductUpdateInput): Promise<SellerProduct> {
+  const { data, error } = await supabase.rpc("update_product", {
+    p_product_id: id,
+    p_name: input.name,
+    p_unit: input.unit,
+    p_quantity: input.quantity,
+    p_expected_quantity: input.expectedQuantity,
+    p_base_price: input.basePrice,
+    p_min_price: input.minPrice,
+    p_freshness: input.freshness,
+    p_sale_ends_at: input.saleEndsAt,
+  });
+  if (error) throw toProductError(error);
+  return toSellerProduct(data as ProductRow);
+}
+
+export async function deleteProduct(supabase: Supabase, id: string) {
+  const { error } = await supabase.rpc("delete_product", { p_product_id: id });
+  if (error) throw toProductError(error);
 }
 
 type PublicProductRow = ProductRow & { stores: StoreRow };

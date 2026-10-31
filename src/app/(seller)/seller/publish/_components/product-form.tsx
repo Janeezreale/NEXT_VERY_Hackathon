@@ -9,10 +9,13 @@ import { FormField } from "@/src/components/common/form-field";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
-import { productCreateSchema, type ProductCreateInput } from "@/src/lib/schemas/api";
+import { productCreateSchema, productUpdateSchema, type ProductCreateInput, type ProductUpdateInput } from "@/src/lib/schemas/api";
 import { FRESHNESS_LABELS, FRESHNESS_LEVELS, type Freshness, type SellerProduct } from "@/src/types/api";
 
-type ProductErrors = Partial<Record<keyof ProductCreateInput, string>>;
+type ProductErrors = Partial<Record<keyof ProductCreateInput | keyof ProductUpdateInput, string>>;
+
+const toLocalInput = (iso: string) =>
+  new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeStyle: "short", timeZone: "Asia/Seoul" }).format(new Date(iso)).replace(" ", "T");
 
 const EMPTY = {
   name: "",
@@ -37,9 +40,22 @@ function toInput(values: typeof EMPTY) {
   };
 }
 
-export function ProductForm() {
+export function ProductForm({ product }: { product?: SellerProduct }) {
   const router = useRouter();
-  const [values, setValues] = React.useState(EMPTY);
+  const [values, setValues] = React.useState(
+    product
+      ? {
+          name: product.name,
+          quantity: String(product.availableQuantity),
+          unit: product.unit,
+          basePrice: String(product.basePrice),
+          minPrice: String(product.minPrice),
+          freshness: product.freshness,
+          saleEndsAt: toLocalInput(product.saleEndsAt),
+          sellerConfirmed: true,
+        }
+      : EMPTY,
+  );
   const [errors, setErrors] = React.useState<ProductErrors>({});
   const [formError, setFormError] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -57,26 +73,35 @@ export function ProductForm() {
     setFormError(null);
     setNotice(null);
 
-    const parsed = productCreateSchema.safeParse(toInput(values));
+    const parsed = product
+      ? productUpdateSchema.safeParse({ ...toInput(values), expectedQuantity: product.availableQuantity })
+      : productCreateSchema.safeParse(toInput(values));
     if (!parsed.success) {
-      setErrors(firstFieldErrors(z.flattenError(parsed.error).fieldErrors));
+      const issues: z.ZodError = parsed.error;
+      setErrors(firstFieldErrors(z.flattenError(issues).fieldErrors));
       return;
     }
 
     setSubmitting(true);
     try {
-      const product = await apiFetch<SellerProduct>("/api/seller/products", {
-        method: "POST",
+      const saved = await apiFetch<SellerProduct>(product ? `/api/seller/products/${product.id}` : "/api/seller/products", {
+        method: product ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
+      if (product) {
+        router.replace("/seller/products");
+        router.refresh();
+        return;
+      }
       setValues(EMPTY);
-      setNotice(`${product.name} 상품을 게시했어요.`);
+      setNotice(`${saved.name} 상품을 게시했어요.`);
       router.refresh();
     } catch (error) {
       if (!(error instanceof ApiClientError)) throw error;
       setFormError(error.message);
       if (error.fieldErrors) setErrors(firstFieldErrors(error.fieldErrors));
+      if (error.code === "STOCK_CHANGED") router.refresh();
     } finally {
       setSubmitting(false);
     }
@@ -98,7 +123,7 @@ export function ProductForm() {
               {...control}
               type="number"
               inputMode="numeric"
-              min={1}
+              min={product ? 0 : 1}
               step={1}
               name="quantity"
               value={values.quantity}
@@ -172,7 +197,7 @@ export function ProductForm() {
         )}
       </FormField>
 
-      <div className="flex flex-col gap-2">
+      {product ? null : <div className="flex flex-col gap-2">
         <label className="flex items-start gap-2 text-sm leading-5 text-foreground">
           <input
             type="checkbox"
@@ -190,10 +215,10 @@ export function ProductForm() {
             {errors.sellerConfirmed}
           </p>
         ) : null}
-      </div>
+      </div>}
 
-      <Button type="submit" fullWidth loading={submitting} loadingText="게시 중…" className="mt-1">
-        상품 게시하기
+      <Button type="submit" fullWidth loading={submitting} loadingText={product ? "저장 중…" : "게시 중…"} className="mt-1">
+        {product ? "저장하기" : "상품 게시하기"}
       </Button>
     </form>
   );

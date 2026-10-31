@@ -43,7 +43,7 @@ function toInput(values: typeof EMPTY) {
   };
 }
 
-export function ProductForm({ product, storeId, closingTime }: { product?: SellerProduct; storeId?: string; closingTime: string }) {
+export function ProductForm({ product, imageUrl = null, storeId, closingTime }: { product?: SellerProduct; imageUrl?: string | null; storeId?: string; closingTime: string }) {
   const router = useRouter();
   const [values, setValues] = React.useState(
     product
@@ -61,7 +61,8 @@ export function ProductForm({ product, storeId, closingTime }: { product?: Selle
   );
   const [errors, setErrors] = React.useState<ProductErrors>({});
   const [formError, setFormError] = React.useState<string | null>(null);
-  const [imagePath, setImagePath] = React.useState<string>();
+  /** 수정할 때 undefined는 그대로 두기, null은 지우기다. */
+  const [imagePath, setImagePath] = React.useState<string | null>();
   const [formKey, setFormKey] = React.useState(0);
   const [aiNote, setAiNote] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
@@ -96,8 +97,8 @@ export function ProductForm({ product, storeId, closingTime }: { product?: Selle
     }
 
     const parsed = product
-      ? productUpdateSchema.safeParse({ ...toInput(values), expectedQuantity: product.availableQuantity })
-      : productCreateSchema.safeParse({ ...toInput(values), imagePath });
+      ? productUpdateSchema.safeParse({ ...toInput(values), expectedQuantity: product.availableQuantity, imagePath })
+      : productCreateSchema.safeParse({ ...toInput(values), imagePath: imagePath ?? undefined });
     if (!parsed.success) {
       const issues: z.ZodError = parsed.error;
       setErrors(firstFieldErrors(z.flattenError(issues).fieldErrors));
@@ -137,9 +138,9 @@ export function ProductForm({ product, storeId, closingTime }: { product?: Selle
       {formError ? <FormAlert>{formError}</FormAlert> : null}
       {notice ? <FormAlert tone="info">{notice}</FormAlert> : null}
 
-      {storeId ? <ImagePicker key={formKey} storeId={storeId} onUploaded={setImagePath} onAnalyzed={applyAnalysis} /> : null}
+      {storeId ? <ImagePicker key={formKey} storeId={storeId} editing={Boolean(product)} currentUrl={imageUrl} onUploaded={setImagePath} onAnalyzed={applyAnalysis} /> : null}
       {aiNote ? <FormAlert tone="info" title="확인이 필요해요">{aiNote}</FormAlert> : null}
-      {storeId ? <p className="text-sm leading-5 text-muted-foreground">AI 제안은 사진의 겉모습만 본 결과예요. 게시 전에 꼭 확인해 주세요.</p> : null}
+      {storeId && !product ? <p className="text-sm leading-5 text-muted-foreground">AI 제안은 사진의 겉모습만 본 결과예요. 게시 전에 꼭 확인해 주세요.</p> : null}
 
       <FormField id="product-name" label="상품 이름" required error={errors.name}>
         {(control) => <Input {...control} name="name" value={values.name} onChange={(e) => update({ name: e.target.value })} />}

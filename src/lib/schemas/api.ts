@@ -99,6 +99,8 @@ export const productUpdateSchema = z
     ...productFields,
     quantity: z.number("수량을 입력해 주세요.").int("정수로 입력해 주세요.").min(0, "0 이상 입력해 주세요."),
     expectedQuantity: z.number().int().min(0),
+    /** 없으면 사진을 그대로 두고, null이면 지운다. */
+    imagePath: imagePath.nullable().optional(),
   })
   .refine((value) => value.minPrice <= value.basePrice, {
     path: ["minPrice"],

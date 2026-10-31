@@ -6,7 +6,7 @@ import { getSupabaseEnv, hasSupabaseEnv } from "./env";
 
 /**
  * 요청마다 Supabase 세션 쿠키를 갱신한다.
- * 화면 접근 권한은 여기서 결정하지 않는다. 권한은 서버 API와 DB RLS에서 검증한다(AGENTS.md).
+ * 화면 접근 권한은 여기서 결정하지 않는다. 권한은 서버 API와 DB RLS에서 검증한다.
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });

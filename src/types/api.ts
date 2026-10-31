@@ -155,4 +155,6 @@ export type Reservation = {
   /** 판매자가 진행 중 예약을 볼 때만 값이 있다. */
   contact: { name: string; phone: string } | null;
   store: Pick<Store, "id" | "name" | "address">;
+  /** 상품 사진. 없으면 null이다. */
+  imageUrl: string | null;
 };

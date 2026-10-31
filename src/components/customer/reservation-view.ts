@@ -31,6 +31,7 @@ const pickup = new Intl.DateTimeFormat("ko-KR", {
 export type ReservationView = {
   id: string;
   name: string;
+  photo: string | null;
   status: string;
   explanation: string;
   quantity: number;
@@ -48,6 +49,7 @@ export function toReservationView(reservation: Reservation): ReservationView {
   return {
     id: reservation.id,
     name: reservation.productName,
+    photo: reservation.imageUrl,
     status: STATUS_LABELS[reservation.status],
     explanation: cancelledBySeller ? "판매자가 예약을 취소했어요." : EXPLANATIONS[reservation.status],
     quantity: reservation.quantity,

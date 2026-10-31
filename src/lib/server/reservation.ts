@@ -7,7 +7,7 @@ import { createAdminClient } from "../supabase/admin";
 import type { createClient } from "../supabase/server";
 import type { ApiErrorCode, Page, Reservation, ReservationStatus, SaleStatus, UserRole } from "../../types/api";
 import { ApiError } from "./api";
-import { cursorFilter, encodeCursor, findPublicProduct } from "./product";
+import { cursorFilter, encodeCursor, findPublicProduct, imagePublicUrl } from "./product";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -18,7 +18,7 @@ export const SELLER_ACTIONS = {
 } as const;
 
 const RESERVATION_COLUMNS =
-  "id, product_id, quantity, confirmed_unit_price, total_price, pickup_at, status, created_at, cancelled_by, products!inner(name, unit, store_id, stores!inner(id, name, address))";
+  "id, product_id, quantity, confirmed_unit_price, total_price, pickup_at, status, created_at, cancelled_by, products!inner(name, unit, store_id, stores!inner(id, name, address), product_images(storage_path))";
 
 const MESSAGES: Partial<Record<ApiErrorCode, string>> = {
   VALIDATION_ERROR: "픽업 시각을 다시 선택해 주세요.",
@@ -49,12 +49,13 @@ type ReservationRow = {
   status: ReservationStatus;
   created_at: string;
   cancelled_by: UserRole | null;
-  products: { name: string; unit: string; store_id: string; stores: { id: string; name: string; address: string } };
+  products: { name: string; unit: string; store_id: string; stores: { id: string; name: string; address: string }; product_images?: { storage_path: string }[] };
 };
 
 type ContactRow = { reservation_id: string; contact_name: string; contact_phone: string };
 
 function toReservation(row: ReservationRow): Reservation {
+  const image = row.products.product_images?.[0];
   return {
     id: row.id,
     productId: row.product_id,
@@ -69,6 +70,7 @@ function toReservation(row: ReservationRow): Reservation {
     cancelledBy: row.cancelled_by,
     contact: null,
     store: row.products.stores,
+    imageUrl: image ? imagePublicUrl(image.storage_path) : null,
   };
 }
 

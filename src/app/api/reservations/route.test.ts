@@ -27,7 +27,7 @@ const reservationRow = {
   status: "approved",
   created_at: "2099-01-01T00:00:00Z",
   cancelled_by: null,
-  products: { name: "사과", unit: "개", store_id: "store-1", stores: { id: "store-1", name: "마켓", address: "주소" } },
+  products: { name: "사과", unit: "개", store_id: "store-1", stores: { id: "store-1", name: "마켓", address: "주소" }, product_images: [{ storage_path: "store-1/a.jpg" }] },
 };
 
 function client() {
@@ -88,6 +88,8 @@ const reserve = (body: unknown = input) =>
 const rpcNames = () => db.rpcCalls.map(([name]) => name);
 
 beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://project.supabase.co");
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
   vi.useFakeTimers({ now: new Date("2026-11-01T03:00:00Z"), toFake: ["Date"] });
   db.user = { id: "consumer-1" };
   db.role = "consumer";
@@ -114,7 +116,9 @@ describe("POST /api/reservations", () => {
     expect(response.status).toBe(201);
     const [, args] = db.rpcCalls.find(([name]) => name === "create_reservation") as [string, Record<string, unknown>];
     expect(args).toMatchObject({ p_consumer_id: "consumer-1", p_unit_price: 8800, p_quantity: 1, p_contact_name: "홍길동", p_contact_phone: "01012345678" });
-    expect((await response.json()).data).toMatchObject({ productName: "사과", confirmedUnitPrice: 8800, status: "approved" });
+    const { data } = await response.json();
+    expect(data).toMatchObject({ productName: "사과", confirmedUnitPrice: 8800, status: "approved" });
+    expect(data.imageUrl).toContain("/storage/v1/object/public/product-images/store-1/a.jpg");
   });
 
   it("rejects a changed price before reserving", async () => {

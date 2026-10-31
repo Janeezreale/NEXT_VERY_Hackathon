@@ -14,7 +14,7 @@ export const FRESHNESS_LABELS: Record<Freshness, string> = {
   discard_tomorrow: "내일 폐기 예정",
 };
 
-export const RESERVATION_STATUSES = ["pending", "approved", "rejected", "cancelled", "completed"] as const;
+export const RESERVATION_STATUSES = ["pending", "approved", "rejected", "cancelled", "completed", "expired", "no_show"] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
 
 export type ApiErrorCode =
@@ -113,11 +113,15 @@ export type Analysis = {
 export type Reservation = {
   id: string;
   productId: string;
+  productName: string;
+  unit: string;
   quantity: number;
   confirmedUnitPrice: number;
   totalPrice: number;
   pickupAt: string;
   status: ReservationStatus;
   createdAt: string;
+  /** 취소한 쪽. 취소가 아니면 null이다. */
+  cancelledBy: UserRole | null;
   store: Pick<Store, "id" | "name" | "address">;
 };

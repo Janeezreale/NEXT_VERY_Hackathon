@@ -1,0 +1,170 @@
+@reference "tailwindcss";
+
+.page { @apply mx-auto min-h-screen w-full max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8; background: #f8faf8; color: #1f2937; font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; }
+.page *, .page *::before, .page *::after { box-sizing: border-box; }
+.page button, .page select { font: inherit; cursor: pointer; }
+.page button:focus-visible, .page select:focus-visible { outline: 2px solid #176b49; outline-offset: 3px; }
+.page h1, .page h2, .page h3, .page p { margin: 0; }
+.heading { @apply flex items-center justify-between gap-6 py-10 sm:py-12; }
+.eyebrow { @apply mb-3 flex items-center gap-2 text-sm font-semibold; color: #176b49; }
+.heading h1 { @apply text-2xl leading-8 font-bold sm:text-[32px] sm:leading-10; letter-spacing: -.02em; }
+.description { @apply mt-4 text-base leading-6; color: #626b77; }
+.headingIcon { @apply hidden h-32 w-32 shrink-0 items-center justify-center rounded-full sm:flex; color: #248a60; background: #eaf6ef; }
+.filters { @apply grid gap-6 rounded-xl border bg-white p-4 sm:p-6 md:grid-cols-2; border-color: #e2e8e3; }
+.region { @apply flex flex-col gap-2 md:col-span-2; }
+.region > span { @apply flex items-center gap-2 text-sm font-semibold; }
+.region select { @apply min-h-12 w-full rounded-lg border bg-white px-3 text-base sm:max-w-80; border-color: #64748b; color: #1f2937; }
+.label { @apply mb-2 block text-sm font-semibold; }
+.chips { @apply flex flex-wrap gap-2; }
+.chips button { @apply min-h-11 rounded-full border bg-white px-4 text-sm; border-color: #e2e8e3; color: #626b77; }
+.chips button[aria-pressed="true"] { background: #eaf6ef; border-color: #176b49; color: #176b49; font-weight: 600; }
+.chips button[aria-pressed="true"]::before { content: "✓ "; }
+.resultsHeading { @apply mt-8 mb-4 flex flex-wrap items-center justify-between gap-3 sm:mt-12; }
+.resultsHeading h2 { @apply text-xl leading-7 font-bold sm:text-2xl; }
+.resultsHeading p { @apply mt-1 text-sm leading-5; color: #626b77; }
+.reset { @apply flex min-h-11 items-center gap-2 border-0 bg-transparent px-2 text-sm; color: #176b49; }
+.card { @apply overflow-hidden rounded-xl border bg-white; border-color: #e2e8e3; box-shadow: 0 2px 8px rgb(31 41 55 / .04); }
+.cardBody { @apply p-4 sm:p-6; }
+.store { @apply mb-2 flex items-center gap-1 text-sm; color: #626b77; }
+.card h3 { @apply text-base leading-6 font-semibold; overflow-wrap: anywhere; }
+.price { @apply mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1; font-variant-numeric: tabular-nums; }
+.discount { @apply text-sm font-semibold; color: #176b49; }
+.price strong { @apply text-xl leading-7 font-bold; }
+.price del { @apply text-sm; color: #626b77; }
+.unit { @apply mt-1 text-xs leading-[18px]; color: #626b77; }
+.details { @apply my-4 grid gap-2 text-sm leading-5; }
+.details > div { @apply flex flex-wrap justify-between gap-x-3 gap-y-1; }
+.details dt { color: #626b77; }
+.details dd { @apply m-0; font-variant-numeric: tabular-nums; }
+.detailButton { @apply flex min-h-12 w-full items-center justify-between gap-2 rounded-lg border px-4 text-sm font-semibold; background: #eaf6ef; color: #176b49; border-color: #eaf6ef; }
+.detailButton:hover { background: #dfefe5; }
+.empty { @apply flex flex-col items-center gap-4 rounded-xl border bg-white px-4 py-12 text-center; border-color: #e2e8e3; }
+.empty h3 { @apply text-xl font-semibold; }
+.empty p { @apply text-sm leading-6; color: #626b77; }
+
+.primary:hover { background: #196545; }
+.skeleton { @apply min-h-96 rounded-xl; background: #f1f5f2; }
+.notice { @apply mt-4 text-sm leading-6; color: #176b49; }
+.footer { @apply mt-8 border-t pt-6 text-sm leading-6; border-color: #e2e8e3; color: #626b77; }
+.srOnly { @apply sr-only; }
+.page { line-height: 1.5; }
+.page a { text-decoration: none; }
+.page a:focus-visible, .page input:focus-visible, .page summary:focus-visible { outline: 2px solid #176b49; outline-offset: 3px; }
+.page h1 + p { margin-top: 16px; }
+.page .description { margin-top: 12px; }
+.page .eyebrow { margin-bottom: 12px; }
+.localNav { @apply flex flex-wrap items-center justify-between gap-3 border-b py-5; border-color: #e2e8e3; }
+.localNav > div { @apply flex flex-wrap gap-4; }
+.localNav a, .back { @apply inline-flex min-h-11 items-center gap-2 text-sm font-semibold; color: #176b49; }
+.localNav .wordmark { @apply text-base; }
+.back { @apply my-4; }
+.photo { @apply relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl; background: #f1f5f2; color: #626b77; }
+.photo img { @apply block h-full w-full object-cover; }
+.detailGrid { @apply my-6 grid items-start gap-6 md:grid-cols-2; }
+.panel { @apply my-4 min-w-0 rounded-xl border bg-white p-4 sm:p-6; border-color: #e2e8e3; }
+.detailGrid > .panel { @apply m-0; }
+.panel h2, .miniProduct h2 { @apply text-xl leading-7 font-semibold; }
+.productTitle { @apply text-2xl leading-8 font-bold sm:text-[32px] sm:leading-10; }
+.detailGrid .price strong { @apply text-[28px] leading-9; }
+.primary { @apply min-h-12 rounded-lg border-0 text-sm font-semibold inline-flex w-full items-center justify-center gap-2 px-4 py-3 text-center; background: #1f7a54; color: white; box-sizing: border-box; }
+.page button:disabled { cursor: not-allowed; background: #f1f5f2; color: #626b77; }
+.info { @apply my-4 rounded-lg p-4 text-sm leading-6; background: #eff6ff; color: #1d4ed8; }
+.address { @apply mt-4 flex items-start gap-2 text-base; }
+.address svg { flex-shrink: 0; }
+.badge { @apply my-3 inline-flex items-center gap-2 rounded-md px-2 py-1 text-xs font-semibold; background: #eaf6ef; color: #176b49; }
+.badge[data-status="승인 대기"] { background: #fffbeb; color: #b45309; }
+.badge[data-status="예약 거절"] { background: #fef2f2; color: #b91c1c; }
+.badge[data-status="예약 취소"] { background: #f1f5f2; color: #626b77; }
+.sectionHeading { @apply py-8; }
+.sectionHeading h1 { @apply text-2xl leading-8 font-bold sm:text-[32px]; }
+.formWidth { @apply mx-auto w-full max-w-[640px]; }
+.steps { @apply m-0 mb-6 grid list-none grid-cols-2 gap-2 p-0; }
+.steps li { @apply flex flex-col items-center gap-2 text-sm; color: #626b77; }
+.steps span { @apply flex h-8 w-8 items-center justify-center rounded-full; background: #f1f5f2; }
+.steps [aria-current="step"] { color: #176b49; font-weight: 600; }
+.steps [aria-current="step"] span { background: #eaf6ef; border: 1px solid #176b49; }
+.miniProduct { @apply my-4 grid min-w-0 grid-cols-[80px_1fr] items-start gap-4 sm:grid-cols-[120px_1fr]; }
+.miniProduct > div { min-width: 0; }
+.miniProduct .photo { aspect-ratio: 1; }
+.miniProduct .price strong { @apply text-xl; }
+.miniProduct h2 { @apply text-base leading-6; overflow-wrap: anywhere; }
+.quantity { @apply mt-6 flex items-center justify-between rounded-lg border p-2; border-color: #e2e8e3; }
+.quantity button { @apply flex h-12 w-12 items-center justify-center rounded-lg border bg-white; border-color: #64748b; }
+.quantity output { @apply flex items-baseline gap-2 text-2xl font-bold; font-variant-numeric: tabular-nums; }
+.quantity output span { @apply text-sm font-normal; }
+.panel legend { @apply px-2 text-xl font-semibold; }
+.slotGrid { @apply my-4 grid grid-cols-2 gap-3 sm:grid-cols-3; }
+.slot { @apply flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border px-3; border-color: #64748b; }
+.slot:has(input:checked) { background: #eaf6ef; color: #176b49; border-color: #176b49; font-weight: 600; }
+.slot input { accent-color: #176b49; width: 20px; height: 20px; }
+.error { @apply mt-3 text-sm; color: #b91c1c; }
+.total { @apply my-4 flex flex-wrap items-center justify-between gap-2 border-t pt-4; border-color: #e2e8e3; }
+.total span { @apply text-sm; }
+.total strong { @apply text-2xl; }
+.actions { @apply grid gap-3 sm:grid-cols-2; }
+.reservationList { @apply grid gap-4; margin-top: 24px; }
+.reservationList .panel { margin: 0; padding: 16px; }
+.reservationList .reservationTop { border-bottom: 0; padding-bottom: 0; }
+.reservationList .badge { margin: 0; }
+.reservationList .miniProduct { grid-template-columns: 72px minmax(0, 1fr); gap: 12px; margin: 12px 0; }
+.reservationList .miniProduct .photo { width: 72px; height: 80px; }
+.reservationList .miniProduct h2 { font-size: 16px; line-height: 24px; }
+.reservationList .miniProduct .description { margin-top: 4px; font-size: 14px; line-height: 20px; }
+.reservationList .reservedPrice { margin-top: 4px; }
+.reservationList .reservationDisclosure { margin-top: 12px; }
+.reservationTop { @apply flex flex-wrap items-center justify-between gap-2 border-b pb-2; border-color: #e2e8e3; }
+.reservedPrice { @apply mt-3 flex flex-wrap items-baseline gap-2 text-sm; color: #626b77; }
+.reservedPrice strong { @apply text-xl; color: #1f2937; }
+.details dd { text-align: right; overflow-wrap: anywhere; }
+.page .price { margin-top: 12px; }
+.page .unit { margin-top: 4px; }
+.page .store { margin-bottom: 8px; }
+.page .info { margin-top: 16px; margin-bottom: 16px; }
+.page .reservedPrice { margin-top: 12px; }
+.page .error { margin-top: 12px; }
+.slot:focus-within { outline: 2px solid #176b49; outline-offset: 3px; }
+.reservationPickup { @apply flex items-center gap-2 text-sm; color: #626b77; }
+.reservationDisclosure { @apply mt-4 border-t; border-color: #e2e8e3; }
+.reservationDisclosure > summary { @apply flex min-h-12 cursor-pointer items-center justify-between gap-2 text-sm font-semibold; color: #176b49; list-style: none; }
+.reservationDisclosure > summary::-webkit-details-marker { display: none; }
+.reservationDisclosure .openLabel { display: none; }
+.reservationDisclosure[open] .openLabel { display: inline; }
+.reservationDisclosure[open] .closedLabel { display: none; }
+.reservationDisclosure[open] .disclosureChevron { transform: rotate(180deg); }
+
+/* Reference-inspired horizontal browse list; other screens keep their layout. */
+.browseList { @apply grid grid-cols-1 gap-3; }
+.browseList .card { @apply grid items-start gap-3 p-3; grid-template-columns: 96px minmax(0, 1fr); box-shadow: none; }
+.browseList .card > .photo { width: 96px; height: 144px; max-height: none; aspect-ratio: 2 / 3; border-radius: 8px; }
+.browseList .card .cardBody { min-width: 0; padding: 0; }
+.browseList .card h3 { font-size: 16px; line-height: 24px; }
+.browseList .card .store { font-size: 12px; line-height: 18px; margin-bottom: 4px; }
+.browseList .card .price { margin-top: 8px; gap: 2px 6px; }
+.browseList .card .price strong { font-size: 20px; line-height: 28px; }
+.browseList .card .discount { font-size: 14px; }
+.browseList .card .unit { font-size: 12px; line-height: 18px; }
+.browseList .card .details { display: flex; flex-direction: column; gap: 4px; padding: 8px 0; margin: 8px 0 0; border-top: 1px solid #e2e8e3; border-radius: 0; background: transparent; }
+.browseList .card .details > div, .browseList .card .details > div:last-child { display: flex; flex-direction: row; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0 8px; padding: 0; border: 0; }
+.browseList .card .details dt, .browseList .card .details dd { font-size: 14px; line-height: 20px; }
+.browseList .card .details dd { font-weight: 500; }
+.browseList .card .detailButton { @apply min-h-11 w-auto justify-start border-0 bg-transparent p-0; margin-top: 4px; }
+.browseList .card .detailButton:hover { text-decoration: underline; }
+.browseList .skeleton { min-height: 220px; }
+@media (min-width: 640px) {
+  .browseList .card { grid-template-columns: 144px minmax(0, 1fr); gap: 20px; padding: 16px; }
+  .browseList .card > .photo { width: 144px; height: 192px; }
+  .browseList .card h3 { font-size: 18px; line-height: 26px; }
+}
+
+/* State feedback shares the existing consumer tokens. */
+.feedback { margin-top: 24px; }
+.feedback > p { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #626b77; }
+.loadingRows { display: grid; gap: 12px; margin-top: 16px; }
+.loadingRows > div { min-height: 160px; background: #f1f5f2; border-radius: 12px; }
+.empty h2 { font-size: 20px; line-height: 28px; }
+.empty .primary { max-width: 320px; }
+.page button { transition: background-color 150ms, color 150ms; }
+.page .info p { margin: 0; }
+.page h1, .page h2, .page h3, .page dd { overflow-wrap: anywhere; }
+.page svg { flex-shrink: 0; }
+@media (prefers-reduced-motion: reduce) { .page button { transition: none; } }

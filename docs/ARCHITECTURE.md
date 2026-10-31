@@ -14,7 +14,7 @@
 | AI | OpenAI Responses API | 이미지 분석과 구조화된 결과 제안 |
 | 가격 | TypeScript 규칙 엔진 | 조회 시 계산, 예약 시 확정 |
 | 리포트 | Recharts | 저장된 판매 데이터 시각화 |
-| 배포·협업 | Vercel / GitHub / Codex / Claude Code | 배포, PR, AI 보조 개발 |
+| 배포·협업 | Vercel(`dub1`) / GitHub / Codex / Claude Code | 배포, PR, AI 보조 개발. Supabase(eu-west-1)와 같은 지역 |
 
 npm과 Supabase Auth SSR 방식을 유지합니다. Node.js 24.14.1·npm 11.11.0 기준으로 패키지와 설정을 준비했습니다. 설치 버전·명령은 [개발 환경](SETUP.md)을 확인합니다. package-lock.json 한 개로 의존성을 관리합니다.
 

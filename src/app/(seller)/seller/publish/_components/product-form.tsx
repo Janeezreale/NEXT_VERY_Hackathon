@@ -10,7 +10,9 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
 import { productCreateSchema, productUpdateSchema, type ProductCreateInput, type ProductUpdateInput } from "@/src/lib/schemas/api";
-import { FRESHNESS_LABELS, FRESHNESS_LEVELS, type Freshness, type SellerProduct } from "@/src/types/api";
+import { FRESHNESS_LABELS, FRESHNESS_LEVELS, type Analysis, type Freshness, type SellerProduct } from "@/src/types/api";
+
+import { ImagePicker } from "./image-picker";
 
 type ProductErrors = Partial<Record<keyof ProductCreateInput | keyof ProductUpdateInput, string>>;
 
@@ -40,7 +42,7 @@ function toInput(values: typeof EMPTY) {
   };
 }
 
-export function ProductForm({ product }: { product?: SellerProduct }) {
+export function ProductForm({ product, storeId }: { product?: SellerProduct; storeId?: string }) {
   const router = useRouter();
   const [values, setValues] = React.useState(
     product
@@ -58,6 +60,9 @@ export function ProductForm({ product }: { product?: SellerProduct }) {
   );
   const [errors, setErrors] = React.useState<ProductErrors>({});
   const [formError, setFormError] = React.useState<string | null>(null);
+  const [imagePath, setImagePath] = React.useState<string>();
+  const [formKey, setFormKey] = React.useState(0);
+  const [aiNote, setAiNote] = React.useState<string | null>(null);
   const [notice, setNotice] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -65,6 +70,16 @@ export function ProductForm({ product }: { product?: SellerProduct }) {
     setValues((current) => ({ ...current, ...patch }));
     setErrors((current) => ({ ...current, ...Object.fromEntries(Object.keys(patch).map((key) => [key, undefined])) }));
     setNotice(null);
+  }
+
+  function applyAnalysis(analysis: Analysis) {
+    update({
+      name: analysis.name,
+      quantity: analysis.estimatedQuantity === null ? "" : String(analysis.estimatedQuantity),
+      unit: analysis.unit ?? "",
+      freshness: analysis.freshness,
+    });
+    setAiNote(analysis.needsConfirmation ? analysis.uncertaintyReason ?? "AI가 확신하지 못한 항목이 있어요." : null);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -75,7 +90,7 @@ export function ProductForm({ product }: { product?: SellerProduct }) {
 
     const parsed = product
       ? productUpdateSchema.safeParse({ ...toInput(values), expectedQuantity: product.availableQuantity })
-      : productCreateSchema.safeParse(toInput(values));
+      : productCreateSchema.safeParse({ ...toInput(values), imagePath });
     if (!parsed.success) {
       const issues: z.ZodError = parsed.error;
       setErrors(firstFieldErrors(z.flattenError(issues).fieldErrors));
@@ -95,6 +110,9 @@ export function ProductForm({ product }: { product?: SellerProduct }) {
         return;
       }
       setValues(EMPTY);
+      setImagePath(undefined);
+      setAiNote(null);
+      setFormKey((key) => key + 1);
       setNotice(`${saved.name} 상품을 게시했어요.`);
       router.refresh();
     } catch (error) {
@@ -111,6 +129,10 @@ export function ProductForm({ product }: { product?: SellerProduct }) {
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       {formError ? <FormAlert>{formError}</FormAlert> : null}
       {notice ? <FormAlert tone="info">{notice}</FormAlert> : null}
+
+      {storeId ? <ImagePicker key={formKey} storeId={storeId} onUploaded={setImagePath} onAnalyzed={applyAnalysis} /> : null}
+      {aiNote ? <FormAlert tone="info" title="확인이 필요해요">{aiNote}</FormAlert> : null}
+      {storeId ? <p className="text-sm leading-5 text-muted-foreground">AI 제안은 사진의 겉모습만 본 결과예요. 게시 전에 꼭 확인해 주세요.</p> : null}
 
       <FormField id="product-name" label="상품 이름" required error={errors.name}>
         {(control) => <Input {...control} name="name" value={values.name} onChange={(e) => update({ name: e.target.value })} />}

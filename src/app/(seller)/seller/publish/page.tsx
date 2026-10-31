@@ -32,7 +32,7 @@ export default async function PublishPage() {
             상품 게시
           </h1>
           <p className="mt-2 mb-6 text-sm leading-5 text-muted-foreground">{store.name}에 올릴 상품 정보를 입력해 주세요.</p>
-          <ProductForm />
+          <ProductForm storeId={store.id} />
         </section>
 
         <section aria-labelledby="published-title" className="flex flex-col gap-3">

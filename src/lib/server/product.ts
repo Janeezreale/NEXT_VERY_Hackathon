@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { calculatePrice, getSaleDeadline, isSaleOpen } from "../pricing/price";
 import { freshnessSchema } from "../schemas/api";
+import { getSupabaseEnv } from "../supabase/env";
 import type { createClient } from "../supabase/server";
 import type { ProductUpdateInput } from "../schemas/api";
 import type { ApiErrorCode, Page, Product, ProductListing, SellerProduct, Store } from "../../types/api";
@@ -14,7 +15,8 @@ import { STORE_COLUMNS, toStore, type StoreRow } from "./store";
 export const PRODUCT_COLUMNS =
   "id, store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at";
 
-const PUBLIC_PRODUCT_COLUMNS = `${PRODUCT_COLUMNS}, stores!inner(${STORE_COLUMNS})`;
+const PUBLIC_PRODUCT_COLUMNS = `${PRODUCT_COLUMNS}, stores!inner(${STORE_COLUMNS}), product_images(storage_path)`;
+const IMAGE_BUCKET = "product-images";
 
 const cursorSchema = z.tuple([z.iso.datetime({ offset: true }), z.uuid()]);
 
@@ -134,7 +136,16 @@ export async function deleteProduct(supabase: Supabase, id: string) {
   if (error) throw toProductError(error);
 }
 
-type PublicProductRow = ProductRow & { stores: StoreRow };
+type PublicProductRow = ProductRow & { stores: StoreRow; product_images?: { storage_path: string }[] };
+
+export function imagePublicUrl(path: string) {
+  return `${getSupabaseEnv().url}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
+}
+
+/** 경로만 바꿔 다른 매장의 파일을 쓰지 못하게 한다. */
+export function assertOwnImage(path: string, storeId: string) {
+  if (!path.startsWith(`${storeId}/`)) throw new ApiError("FORBIDDEN", "이 사진을 사용할 권한이 없어요.");
+}
 
 function toProduct(row: PublicProductRow, recentApprovedQuantity: number, now: Date): Product {
   const deadline = getSaleDeadline(new Date(row.sale_ends_at), toStore(row.stores).closingTime, now);
@@ -158,7 +169,7 @@ function toProduct(row: PublicProductRow, recentApprovedQuantity: number, now: D
       recentApprovedQuantity,
       now,
     }),
-    imageUrls: [],
+    imageUrls: (row.product_images ?? []).map((image) => imagePublicUrl(image.storage_path)),
     pricedAt: now.toISOString(),
     saleOpen: seller.availableQuantity > 0 && isSaleOpen(deadline, now),
   };

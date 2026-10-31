@@ -64,4 +64,9 @@ describe("toProductView", () => {
   it("does not invent a photo or description", () => {
     expect(view).toMatchObject({ photo: null, description: null });
   });
+
+  it("uses the uploaded photo", () => {
+    const withPhoto = toProductView({ ...product, imageUrls: ["https://image"] }, { name: "마켓", address: "주소" }, new Date());
+    expect(withPhoto.photo).toBe("https://image");
+  });
 });

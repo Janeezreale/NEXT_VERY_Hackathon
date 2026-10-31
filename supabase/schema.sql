@@ -431,6 +431,21 @@ $$;
 revoke all on function public.reservation_contacts(uuid[]) from public, anon;
 grant execute on function public.reservation_contacts(uuid[]) to authenticated;
 
+-- 상품 사진. 형식과 크기는 버킷이 제한하고, 파일은 본인 매장 폴더에만 올린다.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('product-images', 'product-images', true, 5242880, array['image/jpeg', 'image/png', 'image/webp']);
+
+create policy product_images_upload_owner on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'product-images'
+    and exists (
+      select 1 from public.stores
+      where stores.owner_id = (select auth.uid())
+        and stores.id::text = (storage.foldername(objects.name))[1]
+    )
+  );
+
 -- 권한: Supabase 기본 권한을 제거하고 필요한 컬럼만 허용한다.
 -- reservations·sales 쓰기와 products 수정은 허용하지 않는다(L05 함수, D08).
 

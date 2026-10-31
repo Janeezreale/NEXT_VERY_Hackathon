@@ -5,6 +5,7 @@ import { FRESHNESS_LEVELS, RESERVATION_STATUSES, USER_ROLES } from "../../types/
 const text = z.string("입력해 주세요.").trim().min(1, "입력해 주세요.");
 const won = z.number("금액을 입력해 주세요.").int("원 단위로 입력해 주세요.").positive("1원 이상 입력해 주세요.");
 const timestamp = z.iso.datetime({ offset: true, error: "시각을 입력해 주세요." });
+const imagePath = z.string().regex(/^[0-9a-f-]{36}\/[0-9a-f-]{36}\.(jpg|png|webp)$/, "사진을 다시 올려 주세요.");
 
 export const userRoleSchema = z.enum(USER_ROLES);
 export const freshnessSchema = z.enum(FRESHNESS_LEVELS);
@@ -28,6 +29,8 @@ const storeFields = z.object({
   longitude: z.number().min(-180).max(180).nullable().optional(),
 });
 
+export const analysisRequestSchema = z.object({ imagePath });
+
 export const productListQuerySchema = listQuerySchema.extend({ region: text });
 
 export const reservationListQuerySchema = listQuerySchema.extend({ status: reservationStatusSchema.optional() });
@@ -50,6 +53,7 @@ export const productCreateSchema = z
     minPrice: won,
     freshness: freshnessSchema,
     saleEndsAt: timestamp,
+    imagePath: imagePath.optional(),
     sellerConfirmed: z.literal(true, "내용을 확인했다고 표시해 주세요."),
   })
   .refine((value) => new Date(value.saleEndsAt) > new Date(), {

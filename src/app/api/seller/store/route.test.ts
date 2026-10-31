@@ -33,9 +33,9 @@ vi.mock("../../../../lib/supabase/server", () => ({
   }),
 }));
 
-const row = { id: "store-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", closing_time: "21:00:00", latitude: 37.5, longitude: 127 };
-const store = { id: "store-1", name: "초록가게", regionCode: "마포구", address: "서울 마포구", closingTime: "21:00", latitude: 37.5, longitude: 127 };
-const input = { name: "초록가게", regionCode: "마포구", address: "서울 마포구", closingTime: "21:00" };
+const row = { id: "store-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", opening_time: "06:00:00", closing_time: "21:00:00", latitude: 37.5, longitude: 127 };
+const store = { id: "store-1", name: "초록가게", regionCode: "마포구", address: "서울 마포구", openingTime: "06:00", closingTime: "21:00", latitude: 37.5, longitude: 127 };
+const input = { name: "초록가게", regionCode: "마포구", address: "서울 마포구", openingTime: "09:00", closingTime: "21:00" };
 const send = (method: string, body: unknown) =>
   new Request("http://test/api/seller/store", { method, body: JSON.stringify(body) });
 
@@ -64,6 +64,7 @@ describe("/api/seller/store", () => {
     expect(error.fieldErrors).toEqual({
       regionCode: ["입력해 주세요."],
       address: ["입력해 주세요."],
+      openingTime: ["오픈 시각을 입력해 주세요."],
       closingTime: ["마감 시각을 입력해 주세요."],
     });
   });
@@ -89,7 +90,7 @@ describe("/api/seller/store", () => {
     const response = await POST(send("POST", { ...input, owner_id: "someone-else" }), undefined);
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ data: store });
-    expect(db.written).toEqual({ owner_id: "seller-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", closing_time: "21:00", latitude: null, longitude: null });
+    expect(db.written).toEqual({ owner_id: "seller-1", name: "초록가게", region_code: "마포구", address: "서울 마포구", opening_time: "09:00", closing_time: "21:00", latitude: null, longitude: null });
   });
 
   it("returns a validation error in Korean for a blank address", async () => {
@@ -114,8 +115,8 @@ describe("/api/seller/store", () => {
   });
 
   it("keeps coordinates when the address does not change", async () => {
-    await PATCH(send("PATCH", { closingTime: "22:00" }), undefined);
-    expect(JSON.parse(JSON.stringify(db.written))).toEqual({ closing_time: "22:00" });
+    await PATCH(send("PATCH", { openingTime: "09:00", closingTime: "22:00" }), undefined);
+    expect(JSON.parse(JSON.stringify(db.written))).toEqual({ opening_time: "09:00", closing_time: "22:00" });
   });
 
   it("saves coordinates sent with a new address", async () => {

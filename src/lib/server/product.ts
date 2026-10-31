@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { calculatePrice, getSaleDeadline, isSaleOpen, saleEndError } from "../pricing/price";
+import { calculatePrice, getBusinessDayStart, getSaleDeadline, getSaleStatus, saleEndError } from "../pricing/price";
 import { freshnessSchema } from "../schemas/api";
 import { getSupabaseEnv } from "../supabase/env";
 import type { createClient } from "../supabase/server";
@@ -62,12 +62,6 @@ export function cursorFilter(cursor: string) {
   } catch {
     throw new ApiError("VALIDATION_ERROR", "목록 위치가 올바르지 않아요.");
   }
-}
-
-/** 기한이 지난 대기 예약을 만료해 재고를 돌려준다. 스케줄러가 없어 조회할 때 호출한다. */
-export async function expireOverdueReservations(supabase: Supabase) {
-  const { error } = await supabase.rpc("expire_overdue_reservations");
-  if (error) throw error;
 }
 
 export async function listSellerProducts(
@@ -153,8 +147,11 @@ export function assertOwnImage(path: string, storeId: string) {
 }
 
 function toProduct(row: PublicProductRow, recentApprovedQuantity: number, now: Date): Product {
-  const deadline = getSaleDeadline(new Date(row.sale_ends_at), toStore(row.stores).closingTime, now);
+  const { openingTime, closingTime } = toStore(row.stores);
+  const saleEndsAt = new Date(row.sale_ends_at);
+  const deadline = getSaleDeadline(saleEndsAt, closingTime, now);
   const seller = toSellerProduct(row);
+  const saleStatus = getSaleStatus({ availableQuantity: seller.availableQuantity, saleEndsAt, openingTime, closingTime }, now);
   return {
     id: seller.id,
     storeId: seller.storeId,
@@ -176,26 +173,23 @@ function toProduct(row: PublicProductRow, recentApprovedQuantity: number, now: D
     }),
     imageUrls: (row.product_images ?? []).map((image) => imagePublicUrl(image.storage_path)),
     pricedAt: now.toISOString(),
-    saleOpen: seller.availableQuantity > 0 && isSaleOpen(deadline, now),
+    saleStatus,
+    saleOpen: saleStatus === "on_sale",
   };
 }
 
-/**
- * 지역의 판매 중 상품. 매장 마감은 DB에서 거를 수 없어 페이지를 나눈 뒤 제외하므로
- * 한 페이지가 limit보다 적어도 nextCursor가 있을 수 있다.
- */
+/** 지역의 재고가 있는 오늘 상품. 마감했거나 오픈 전이어도 보여주고 saleStatus로 예약만 막는다. */
 export async function listPublicProducts(
   supabase: Supabase,
   { region, cursor, limit }: { region: string; cursor?: string; limit: number },
 ): Promise<Page<ProductListing>> {
-  await expireOverdueReservations(supabase);
   const now = new Date();
   let query = supabase
     .from("products")
     .select(PUBLIC_PRODUCT_COLUMNS)
     .eq("stores.region_code", region)
     .gt("available_quantity", 0)
-    .gt("sale_ends_at", now.toISOString())
+    .gte("sale_ends_at", getBusinessDayStart(now).toISOString())
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
     .limit(limit + 1);
@@ -209,19 +203,16 @@ export async function listPublicProducts(
   const page = rows.slice(0, limit);
   const quantities = await loadRecentApprovedQuantities(supabase, page.map((row) => row.id));
   return {
-    items: page
-      .map((row) => {
-        const { id, name, address } = toStore(row.stores);
-        return { ...toProduct(row, quantities.get(row.id) ?? 0, now), store: { id, name, address } };
-      })
-      .filter((product) => product.saleOpen),
+    items: page.map((row) => {
+      const { id, name, address, openingTime, closingTime } = toStore(row.stores);
+      return { ...toProduct(row, quantities.get(row.id) ?? 0, now), store: { id, name, address, openingTime, closingTime } };
+    }),
     nextCursor: rows.length > limit ? encodeCursor(page[page.length - 1]) : null,
   };
 }
 
 /** 상품 상세. 품절·판매 종료 상품도 saleOpen: false로 돌려준다. */
 export async function findPublicProduct(supabase: Supabase, id: string): Promise<{ product: Product; store: Store }> {
-  await expireOverdueReservations(supabase);
   const { data, error } = await supabase.from("products").select(PUBLIC_PRODUCT_COLUMNS).eq("id", id).maybeSingle();
   if (error) throw error;
   if (!data) throw new ApiError("NOT_FOUND", "상품을 찾을 수 없어요.");

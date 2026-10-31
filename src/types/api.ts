@@ -14,7 +14,8 @@ export const FRESHNESS_LABELS: Record<Freshness, string> = {
   discard_tomorrow: "내일 폐기 예정",
 };
 
-export const RESERVATION_STATUSES = ["pending", "approved", "rejected", "cancelled", "completed", "expired", "no_show"] as const;
+/** 예약은 생성 즉시 approved로 확정된다. rejected·expired는 승인 제도가 있던 때의 이력이다. */
+export const RESERVATION_STATUSES = ["approved", "rejected", "cancelled", "completed", "expired", "no_show"] as const;
 export type ReservationStatus = (typeof RESERVATION_STATUSES)[number];
 
 export type ApiErrorCode =
@@ -24,6 +25,7 @@ export type ApiErrorCode =
   | "NOT_FOUND"
   | "OUT_OF_STOCK"
   | "SALE_ENDED"
+  | "STORE_CLOSED"
   | "INVALID_TRANSITION"
   | "STORE_EXISTS"
   | "STOCK_CHANGED"
@@ -56,6 +58,8 @@ export type Store = {
   name: string;
   regionCode: string;
   address: string;
+  /** 매일 영업 시작 시각. "HH:mm", 06:00 이후 */
+  openingTime: string;
   /** 매일 마감 시각. "HH:mm" */
   closingTime: string;
   /** 주소 검색을 쓰지 못한 매장은 null이고 지도에 표시되지 않는다. */
@@ -73,6 +77,9 @@ export type AddressResult = {
   longitude: number;
 };
 
+/** 소비자에게 보여줄 판매 상태. on_sale일 때만 예약할 수 있다. */
+export type SaleStatus = "on_sale" | "sold_out" | "before_open" | "store_closed" | "sale_ended";
+
 export type Product = {
   id: string;
   storeId: string;
@@ -88,12 +95,13 @@ export type Product = {
   saleDeadline: string;
   imageUrls: string[];
   pricedAt: string;
-  /** 재고가 있고 판매 종료·매장 마감 전이면 true */
+  saleStatus: SaleStatus;
+  /** saleStatus가 on_sale이면 true */
   saleOpen: boolean;
 };
 
 /** 소비자 목록 항목. 카드에 매장 이름과 주소가 필요하다. */
-export type ProductListing = Product & { store: Pick<Store, "id" | "name" | "address"> };
+export type ProductListing = Product & { store: Pick<Store, "id" | "name" | "address" | "openingTime" | "closingTime"> };
 
 /** 판매자가 게시한 상품. 현재가는 가격 엔진이 계산하므로 여기에 넣지 않는다. */
 export type SellerProduct = Pick<
@@ -107,9 +115,7 @@ export type Report = {
   to: string;
   registeredProducts: number;
   requestedReservations: number;
-  /** 기간 내 승인된 예약 수. 이후 취소된 예약도 포함한다. */
-  approvedReservations: number;
-  /** 지금 승인 상태인 예약 수 */
+  /** 지금 픽업을 기다리는 예약 수 */
   currentApproved: number;
   completedSales: number;
   revenue: number;

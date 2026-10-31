@@ -22,9 +22,9 @@ describe("consumer browse URL", () => {
   });
 });
 describe("UI states", () => {
-  it.each(["승인 대기", "예약 승인"])("keeps %s in active reservations", status => {
-    expect(reservationMatches(status, "진행 중")).toBe(true);
-    expect(reservationMatches(status, "진행 완료")).toBe(false);
+  it("keeps a confirmed reservation in active reservations", () => {
+    expect(reservationMatches("예약 확정", "진행 중")).toBe(true);
+    expect(reservationMatches("예약 확정", "진행 완료")).toBe(false);
   });
   it.each(["예약 거절", "예약 취소", "판매 완료", "기한 만료", "미방문"])("keeps the terminal state %s visible without treating it as a completed sale", status => {
     expect(reservationMatches(status, "진행 완료")).toBe(true);

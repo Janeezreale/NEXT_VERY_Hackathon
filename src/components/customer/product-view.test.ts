@@ -21,6 +21,7 @@ const product: Product = {
   saleDeadline: "2026-11-01T11:00:00.000Z",
   imageUrls: [],
   pricedAt: "2026-11-01T08:10:00.000Z",
+  saleStatus: "on_sale",
   saleOpen: true,
 };
 
@@ -47,7 +48,8 @@ describe("pickupSlots", () => {
 });
 
 describe("toProductView", () => {
-  const view = toProductView(product, { name: "테스트 마켓", address: "서울 성북구" }, new Date("2026-11-01T08:10:00Z"));
+  const store = { name: "테스트 마켓", address: "서울 성북구", openingTime: "09:00", closingTime: "21:00" };
+  const view = toProductView(product, store, new Date("2026-11-01T08:10:00Z"));
 
   it("uses server prices without recalculating them", () => {
     expect(view).toMatchObject({ price: 8800, base: 10000, discount: 12, stock: 3 });
@@ -65,8 +67,17 @@ describe("toProductView", () => {
     expect(view).toMatchObject({ photo: null, description: null });
   });
 
+  it("has no notice while reservations are open", () => {
+    expect(view).toMatchObject({ notice: null, hours: "09:00–21:00" });
+  });
+
+  it("explains why a closed store cannot be reserved", () => {
+    expect(toProductView({ ...product, saleStatus: "store_closed" }, store, new Date()).notice).toBe("오늘 예약이 마감되었어요. 영업시간은 09:00–21:00이에요.");
+    expect(toProductView({ ...product, saleStatus: "before_open" }, store, new Date()).notice).toBe("아직 영업 전이에요. 09:00부터 예약할 수 있어요.");
+  });
+
   it("uses the uploaded photo", () => {
-    const withPhoto = toProductView({ ...product, imageUrls: ["https://image"] }, { name: "마켓", address: "주소" }, new Date());
+    const withPhoto = toProductView({ ...product, imageUrls: ["https://image"] }, store, new Date());
     expect(withPhoto.photo).toBe("https://image");
   });
 });

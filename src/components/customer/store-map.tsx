@@ -5,11 +5,14 @@ import * as React from "react";
 
 import { NaverMap } from "@/src/components/common/naver-map";
 import { apiFetch } from "@/src/lib/client/api";
+import { getStoreStatus } from "@/src/lib/pricing/price";
 import { SEOUL_DISTRICTS } from "@/src/lib/regions";
 import type { MappedStore } from "@/src/types/api";
 
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
 import styles from "../../app/(customer)/shop/shop.module.css";
+
+const STORE_STATUS_LABELS = { before_open: "영업 전", open: "영업 중", closed: "오늘 영업 마감" };
 
 /** 실제 등록된 매장 지도. 서울 밖 매장의 지역은 목록 뒤에 덧붙인다. */
 export default function StoreMap() {
@@ -94,7 +97,9 @@ export default function StoreMap() {
           </p>
           <h3>{selected.name}</h3>
           <p>{selected.address}</p>
-          <p>마감 {selected.closingTime}</p>
+          <p>
+            {STORE_STATUS_LABELS[getStoreStatus(selected.openingTime, selected.closingTime, new Date())]} · 영업시간 {selected.openingTime}–{selected.closingTime}
+          </p>
         </article>
       ) : (
         <p>지도의 표시를 누르면 매장 정보를 볼 수 있어요.</p>

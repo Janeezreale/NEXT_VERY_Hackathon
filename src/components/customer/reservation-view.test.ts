@@ -13,7 +13,7 @@ const reservation: Reservation = {
   confirmedUnitPrice: 8800,
   totalPrice: 17600,
   pickupAt: "2026-11-01T09:30:00Z",
-  status: "pending",
+  status: "approved",
   createdAt: "2026-11-01T08:00:00Z",
   cancelledBy: null,
   contact: null,
@@ -27,12 +27,11 @@ describe("toReservationView", () => {
 
   it("gives every status a label and explanation", () => {
     const views = RESERVATION_STATUSES.map((status) => toReservationView({ ...reservation, status }));
-    expect(new Set(views.map((view) => view.status)).size).toBe(7);
+    expect(new Set(views.map((view) => view.status)).size).toBe(6);
     for (const view of views) expect(view.explanation).not.toBe("");
   });
 
   it.each([
-    ["pending", true],
     ["approved", true],
     ["rejected", false],
     ["cancelled", false],

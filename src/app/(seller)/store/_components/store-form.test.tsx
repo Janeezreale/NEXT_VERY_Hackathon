@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn(), refres
 describe("StoreForm", () => {
   it("shows the fields needed to register a store, without a business type", () => {
     const html = renderToStaticMarkup(<StoreForm store={null} />);
-    for (const id of ["store-name", "store-address-search", "store-region", "store-address", "store-closing-time"]) {
+    for (const id of ["store-name", "store-address-search", "store-region", "store-address", "store-opening-time", "store-closing-time"]) {
       expect(html).toContain(`id="${id}"`);
     }
     expect(html).toContain("매장 등록하기");
@@ -23,9 +23,9 @@ describe("StoreForm", () => {
   });
 
   it("fills in the saved store when editing", () => {
-    const store = { id: "store-1", name: "초록가게", regionCode: "마포구", address: "서울 마포구", closingTime: "21:00", latitude: null, longitude: null };
+    const store = { id: "store-1", name: "초록가게", regionCode: "마포구", address: "서울 마포구", openingTime: "09:00", closingTime: "21:00", latitude: null, longitude: null };
     const html = renderToStaticMarkup(<StoreForm store={store} />);
-    for (const value of [store.name, store.regionCode, store.address, store.closingTime]) {
+    for (const value of [store.name, store.regionCode, store.address, store.openingTime, store.closingTime]) {
       expect(html).toContain(value === store.regionCode ? `<option selected="">${value}</option>` : `value="${value}"`);
     }
     expect(html).toContain("저장하기");

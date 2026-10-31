@@ -21,6 +21,7 @@ vi.mock("../../../lib/supabase/server", () => ({
       select: () => query,
       eq: (...args: unknown[]) => (db.filters.push(["eq", ...args]), query),
       gt: (...args: unknown[]) => (db.filters.push(["gt", args[0]]), query),
+      gte: (...args: unknown[]) => (db.filters.push(["gte", ...args]), query),
       order: () => query,
       limit: () => query,
       or: (value: string) => ((db.or = value), query),
@@ -48,7 +49,7 @@ const row = (change: Record<string, unknown> = {}) => ({
   freshness: "fresh",
   sale_ends_at: hours(1),
   created_at: hours(-0.25),
-  stores: { id: "store-1", name: "테스트 마켓", region_code: "성북구", address: "주소", closing_time: "23:59:59", latitude: 37.5, longitude: 127 },
+  stores: { id: "store-1", name: "테스트 마켓", region_code: "성북구", address: "주소", opening_time: "06:00:00", closing_time: "23:59:59", latitude: 37.5, longitude: 127 },
   ...change,
 });
 
@@ -73,19 +74,19 @@ describe("GET /api/products", () => {
   it("returns server-calculated prices to anonymous visitors", async () => {
     db.rows = [row()];
     const { data } = await (await list()).json();
-    expect(data.items[0]).toMatchObject({ currentPrice: 8800, discountRate: 12, saleOpen: true, imageUrls: [] });
+    expect(data.items[0]).toMatchObject({ currentPrice: 8800, discountRate: 12, saleStatus: "on_sale", saleOpen: true, imageUrls: [] });
     expect(data.items[0]).not.toHaveProperty("minPrice");
-    expect(data.items[0].store).toEqual({ id: "store-1", name: "테스트 마켓", address: "주소" });
+    expect(data.items[0].store).toEqual({ id: "store-1", name: "테스트 마켓", address: "주소", openingTime: "06:00", closingTime: "23:59" });
     expect(data.items[0].saleDeadline).toBe(new Date(row().sale_ends_at).toISOString());
     expect(data.nextCursor).toBeNull();
   });
 
-  it("filters by region, stock and sale end", async () => {
+  it("keeps today's products until the business day ends", async () => {
     await list();
     expect(db.filters).toEqual([
       ["eq", "stores.region_code", "성북구"],
       ["gt", "available_quantity"],
-      ["gt", "sale_ends_at"],
+      ["gte", "sale_ends_at", "2026-10-31T21:00:00.000Z"],
     ]);
   });
 
@@ -95,9 +96,14 @@ describe("GET /api/products", () => {
     expect((await (await list()).json()).data.items[0].currentPrice).toBe(8800);
   });
 
-  it("excludes products after today's store closing", async () => {
-    db.rows = [row({ sale_ends_at: hours(10), stores: { ...row().stores, closing_time: "10:00:00" } })];
-    expect((await (await list()).json()).data.items).toEqual([]);
+  it("keeps a closed store's products and blocks reservations", async () => {
+    db.rows = [row({ sale_ends_at: hours(-3), stores: { ...row().stores, closing_time: "10:00:00" } })];
+    expect((await (await list()).json()).data.items[0]).toMatchObject({ saleStatus: "store_closed", saleOpen: false });
+  });
+
+  it("marks products of a store that has not opened", async () => {
+    db.rows = [row({ stores: { ...row().stores, opening_time: "13:00:00" } })];
+    expect((await (await list()).json()).data.items[0]).toMatchObject({ saleStatus: "before_open", saleOpen: false });
   });
 
   it("fails instead of pricing without demand data", async () => {
@@ -123,7 +129,7 @@ describe("GET /api/products/:id", () => {
     const { data } = await (await detail()).json();
     expect(data.product).toMatchObject({ id: ID, currentPrice: 8800, saleOpen: true });
     expect(data.product).not.toHaveProperty("minPrice");
-    expect(data.store).toMatchObject({ name: "테스트 마켓", closingTime: "23:59" });
+    expect(data.store).toMatchObject({ name: "테스트 마켓", openingTime: "06:00", closingTime: "23:59" });
     expect(data.store).not.toHaveProperty("owner_id");
   });
 

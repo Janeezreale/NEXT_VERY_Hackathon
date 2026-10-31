@@ -41,9 +41,8 @@ export default async function SellerReportsPage({ searchParams }: { searchParams
         <div className={styles.featured}><dt>판매 매출</dt><dd>{money(report.revenue)}<p>판매 완료 기준</p></dd></div>
         <div><dt>판매 완료</dt><dd>{report.completedSales}건</dd></div>
         <div><dt>상품 등록</dt><dd>{report.registeredProducts}건</dd></div>
-        <div><dt>예약 요청</dt><dd>{report.requestedReservations}건</dd></div>
-        <div><dt>기간 내 승인</dt><dd>{report.approvedReservations}건<p>승인 후 취소 포함</p></dd></div>
-        <div><dt>현재 승인 상태</dt><dd>{report.currentApproved}건<p>픽업을 기다리는 예약</p></dd></div>
+        <div><dt>예약</dt><dd>{report.requestedReservations}건</dd></div>
+        <div><dt>픽업 대기</dt><dd>{report.currentApproved}건<p>지금 기다리는 예약</p></dd></div>
       </dl><p className={styles.note}>매출은 판매 완료 금액이며 순이익·정산액이 아닙니다.</p></section>
       <section className={styles.panel} aria-labelledby="sales-chart-title"><div className={styles.sectionHeading}><h2 id="sales-chart-title">일별 판매 매출</h2></div><p className={styles.subtle}>차트와 같은 값을 아래 표에서 확인할 수 있어요.</p><SalesChart rows={report.series} /><div className={styles.tableScroll} role="region" aria-label="일별 판매 데이터 표" tabIndex={0}><table><thead><tr><th scope="col">날짜</th><th scope="col">판매 완료 (건)</th><th scope="col">판매 매출 (원)</th></tr></thead><tbody>{report.series.map((row) => <tr key={row.date}><th scope="row">{row.date}</th><td>{row.completed}</td><td>{money(row.revenue)}</td></tr>)}</tbody></table></div></section>
       <section className={styles.panel} aria-labelledby="quantity-title"><h2 id="quantity-title">상품별 판매 수량과 잔여 재고</h2><p className={styles.subtle}>단위가 다른 수량은 합산하지 않습니다. 잔여 재고는 현재 값이며 확정 폐기량이 아닙니다.</p><ul className={styles.products}>{report.products.map((product) => <li key={product.id}><h3>{product.name}</h3><dl><div><dt>기간 내 판매 수량</dt><dd>{product.soldQuantity}{product.unit}</dd></div><div><dt>남은 재고</dt><dd>{product.remainingQuantity}{product.unit}</dd></div></dl></li>)}</ul></section>

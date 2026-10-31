@@ -1,4 +1,4 @@
-import type { Freshness } from "../../types/api";
+import type { Freshness, SaleStatus } from "../../types/api";
 import { PRICING_CONFIG as config } from "./config";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -11,7 +11,7 @@ export type PriceInput = {
   /** getSaleDeadline의 결과 */
   deadline: Date;
   createdAt: Date;
-  /** 최근 60분 승인 수량. 건수가 아니다. */
+  /** 최근 60분 확정 수량. 건수가 아니다. */
   recentApprovedQuantity: number;
   now: Date;
 };
@@ -21,15 +21,40 @@ export type PriceInput = {
  * 영업일은 오전 6시에 바뀌므로 00:10 마감은 다음 날 새벽 00:10이다.
  */
 export function getTodayClosing(closingTime: string, now: Date): Date {
-  const startHour = config.businessDayStartHour;
-  const businessDay = new Intl.DateTimeFormat("en-CA", { timeZone: config.timeZone }).format(now.getTime() - startHour * HOUR_MS);
-  const closing = new Date(`${businessDay}T${closingTime}:00${config.timeZoneOffset}`);
-  return Number(closingTime.slice(0, 2)) < startHour ? new Date(closing.getTime() + 24 * HOUR_MS) : closing;
+  const closing = atBusinessDay(closingTime, now);
+  return Number(closingTime.slice(0, 2)) < config.businessDayStartHour ? new Date(closing.getTime() + 24 * HOUR_MS) : closing;
+}
+
+function atBusinessDay(time: string, now: Date): Date {
+  const businessDay = new Intl.DateTimeFormat("en-CA", { timeZone: config.timeZone }).format(now.getTime() - config.businessDayStartHour * HOUR_MS);
+  return new Date(`${businessDay}T${time}:00${config.timeZoneOffset}`);
+}
+
+/** 현재 영업일이 시작된 시각. 이전 영업일의 상품은 이때 소비자 목록에서 내려간다. */
+export function getBusinessDayStart(now: Date): Date {
+  return atBusinessDay(`0${config.businessDayStartHour}:00`, now);
+}
+
+export function getStoreStatus(openingTime: string, closingTime: string, now: Date): "before_open" | "open" | "closed" {
+  if (now < atBusinessDay(openingTime, now)) return "before_open";
+  return now < getTodayClosing(closingTime, now) ? "open" : "closed";
+}
+
+function reservationCutoff(closingTime: string, now: Date): Date {
+  return new Date(getTodayClosing(closingTime, now).getTime() - config.reservationCutoffMinutes * MINUTE_MS);
+}
+
+/** 예약을 받을 수 있는지. DB 함수 create_reservation이 같은 시각을 다시 확인한다. */
+export function getSaleStatus(product: { availableQuantity: number; saleEndsAt: Date; openingTime: string; closingTime: string }, now: Date): SaleStatus {
+  if (product.availableQuantity === 0) return "sold_out";
+  if (getStoreStatus(product.openingTime, product.closingTime, now) === "before_open") return "before_open";
+  if (now >= reservationCutoff(product.closingTime, now)) return "store_closed";
+  return now < product.saleEndsAt ? "on_sale" : "sale_ended";
 }
 
 /** 상품 판매 종료와 오늘 가게 마감 30분 전 중 이른 시각. 가격과 예약 차단의 공통 기준이다. */
 export function getSaleDeadline(saleEndsAt: Date, closingTime: string, now: Date): Date {
-  const cutoff = new Date(getTodayClosing(closingTime, now).getTime() - config.reservationCutoffMinutes * MINUTE_MS);
+  const cutoff = reservationCutoff(closingTime, now);
   return saleEndsAt < cutoff ? saleEndsAt : cutoff;
 }
 

@@ -6,6 +6,7 @@
 
 create type public.user_role as enum ('consumer', 'seller');
 create type public.freshness_level as enum ('fresh', 'sell_today', 'discard_tomorrow');
+-- pending은 승인 제도를 없애며 쓰지 않는다. rejected·expired는 과거 예약 이력에만 남는다.
 create type public.reservation_status as enum ('pending', 'approved', 'rejected', 'cancelled', 'completed', 'expired', 'no_show');
 
 -- 테이블
@@ -22,12 +23,15 @@ create table public.stores (
   name text not null check (length(trim(name)) > 0),
   region_code text not null,
   address text not null,
+  opening_time time not null,
   closing_time time not null,
   latitude double precision,
   longitude double precision,
   constraint stores_latitude_range check (latitude between -90 and 90),
   constraint stores_longitude_range check (longitude between -180 and 180),
-  constraint stores_coordinates_pair check ((latitude is null) = (longitude is null))
+  constraint stores_coordinates_pair check ((latitude is null) = (longitude is null)),
+  -- 영업일은 오전 6시에 시작한다. 06:00 이전 마감은 다음 날 새벽이다.
+  constraint stores_business_hours check (opening_time >= time '06:00' and (closing_time < time '06:00' or closing_time > opening_time))
 );
 
 create table public.products (
@@ -58,7 +62,7 @@ create table public.reservations (
   confirmed_unit_price integer not null check (confirmed_unit_price > 0),
   total_price integer not null,
   pickup_at timestamptz not null,
-  status public.reservation_status not null default 'pending',
+  status public.reservation_status not null default 'approved',
   approved_at timestamptz,
   created_at timestamptz not null default now(),
   idempotency_key uuid not null,
@@ -119,8 +123,8 @@ insert into public.profiles (id)
 select id from auth.users
 on conflict (id) do nothing;
 
--- 가격 계산용 최근 60분 승인 수량. 소비자가 다른 사람의 예약을 읽지 않도록 합계만 돌려준다.
--- 승인 후 취소·거절된 수량은 제외한다(D02). 구간은 src/lib/pricing/config.ts와 같아야 한다.
+-- 가격 계산용 최근 60분 확정 수량. 예약은 생성 즉시 확정되므로 approved_at이 예약 시각이다. 소비자가 다른 사람의 예약을 읽지 않도록 합계만 돌려준다.
+-- 취소된 수량은 제외한다(D02). 구간은 src/lib/pricing/config.ts와 같아야 한다.
 create function public.recent_approved_quantities(product_ids uuid[])
 returns table (product_id uuid, quantity bigint)
 language sql
@@ -178,6 +182,7 @@ set search_path = ''
 as $$
 declare
   v_product public.products;
+  v_opening time;
   v_closing time;
   v_deadline timestamptz;
   v_reservation public.reservations;
@@ -197,7 +202,10 @@ begin
     raise exception 'NOT_FOUND';
   end if;
 
-  select closing_time into v_closing from public.stores where id = v_product.store_id;
+  select opening_time, closing_time into v_opening, v_closing from public.stores where id = v_product.store_id;
+  if now() < (((now() at time zone 'Asia/Seoul' - interval '6 hours')::date + v_opening) at time zone 'Asia/Seoul') then
+    raise exception 'STORE_CLOSED';
+  end if;
   v_deadline := public.reservation_deadline(v_product.sale_ends_at, v_closing);
   if now() >= v_deadline then
     raise exception 'SALE_ENDED';
@@ -214,9 +222,9 @@ begin
   where id = p_product_id;
 
   insert into public.reservations
-    (product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, idempotency_key, contact_name, contact_phone)
+    (product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, idempotency_key, contact_name, contact_phone)
   values
-    (p_product_id, p_consumer_id, p_quantity, p_unit_price, p_quantity * p_unit_price, p_pickup_at, p_idempotency_key, p_contact_name, p_contact_phone)
+    (p_product_id, p_consumer_id, p_quantity, p_unit_price, p_quantity * p_unit_price, p_pickup_at, 'approved', now(), p_idempotency_key, p_contact_name, p_contact_phone)
   returning * into v_reservation;
   return v_reservation;
 exception
@@ -260,25 +268,18 @@ begin
     if v_reservation.consumer_id <> v_uid then
       raise exception 'FORBIDDEN';
     end if;
-    if v_reservation.status not in ('pending', 'approved') then
+    if v_reservation.status <> 'approved' then
       raise exception 'INVALID_TRANSITION';
     end if;
     update public.reservations set status = 'cancelled', cancelled_by = 'consumer'
     where id = p_reservation_id returning * into v_reservation;
     v_return_stock := true;
-  elsif p_action in ('approve', 'reject', 'seller_cancel', 'no_show', 'complete') then
+  elsif p_action in ('seller_cancel', 'no_show', 'complete') then
     if not v_is_owner then
       raise exception 'FORBIDDEN';
     end if;
 
-    if p_action = 'approve' and v_reservation.status = 'pending' and v_reservation.pickup_at > now() then
-      update public.reservations set status = 'approved', approved_at = now()
-      where id = p_reservation_id returning * into v_reservation;
-    elsif p_action = 'reject' and v_reservation.status = 'pending' then
-      update public.reservations set status = 'rejected'
-      where id = p_reservation_id returning * into v_reservation;
-      v_return_stock := true;
-    elsif p_action = 'seller_cancel' and v_reservation.status in ('pending', 'approved') then
+    if p_action = 'seller_cancel' and v_reservation.status = 'approved' then
       update public.reservations set status = 'cancelled', cancelled_by = 'seller'
       where id = p_reservation_id returning * into v_reservation;
       v_return_stock := true;
@@ -307,45 +308,11 @@ begin
 end;
 $$;
 
--- 스케줄러 없이 조회·예약 시점에 호출한다. 여러 번 호출해도 재고는 한 번만 반환된다.
-create function public.expire_overdue_reservations()
-returns integer
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_due record;
-  v_quantity integer;
-  v_expired integer := 0;
-begin
-  for v_due in
-    select id, product_id from public.reservations
-    where status = 'pending' and pickup_at <= now()
-    order by product_id, id
-  loop
-    perform 1 from public.products where id = v_due.product_id for update;
-    update public.reservations set status = 'expired'
-    where id = v_due.id and status = 'pending'
-    returning quantity into v_quantity;
-    if found then
-      update public.products
-      set available_quantity = available_quantity + v_quantity
-      where id = v_due.product_id;
-      v_expired := v_expired + 1;
-    end if;
-  end loop;
-  return v_expired;
-end;
-$$;
-
 revoke all on function public.reservation_deadline(timestamptz, time) from public, anon, authenticated;
 revoke all on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer, text, text) from public, anon, authenticated;
 revoke all on function public.change_reservation_status(uuid, text) from public, anon;
-revoke all on function public.expire_overdue_reservations() from public;
 grant execute on function public.create_reservation(uuid, uuid, integer, timestamptz, uuid, integer, text, text) to service_role;
 grant execute on function public.change_reservation_status(uuid, text) to authenticated;
-grant execute on function public.expire_overdue_reservations() to anon, authenticated, service_role;
 
 -- 재고는 판매자가 화면에서 본 값과 같을 때만 바꾼다. 그 사이 들어온 예약의 확보 수량을 덮어쓰지 않기 위해서다.
 create function public.update_product(
@@ -430,7 +397,7 @@ as $$
   join public.products on products.id = reservations.product_id
   join public.stores on stores.id = products.store_id
   where reservations.id = any (p_reservation_ids)
-    and reservations.status in ('pending', 'approved')
+    and reservations.status = 'approved'
     and stores.owner_id = auth.uid();
 $$;
 
@@ -462,11 +429,11 @@ grant select on public.profiles, public.stores, public.products, public.product_
   to authenticated;
 grant select (id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at, idempotency_key, cancelled_by)
   on public.reservations to authenticated;
-grant select (id, name, region_code, address, closing_time, latitude, longitude) on public.stores to anon;
+grant select (id, name, region_code, address, opening_time, closing_time, latitude, longitude) on public.stores to anon;
 grant select on public.products, public.product_images to anon;
 grant update (region_code) on public.profiles to authenticated;
-grant insert (owner_id, name, region_code, address, closing_time, latitude, longitude) on public.stores to authenticated;
-grant update (name, region_code, address, closing_time, latitude, longitude) on public.stores to authenticated;
+grant insert (owner_id, name, region_code, address, opening_time, closing_time, latitude, longitude) on public.stores to authenticated;
+grant update (name, region_code, address, opening_time, closing_time, latitude, longitude) on public.stores to authenticated;
 grant insert (store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at)
   on public.products to authenticated;
 grant insert (product_id, storage_path), delete on public.product_images to authenticated;

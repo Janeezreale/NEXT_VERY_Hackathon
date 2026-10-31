@@ -9,9 +9,9 @@ const product = { id: "a", name: "사과", unit: "봉지", available_quantity: 2
 const rows: ReportRows = {
   products: [product, { ...product, id: "b", name: "오래된 상품", unit: "팩", created_at: "2026-10-01T00:00:00Z" }],
   reservations: [
-    { product_id: "a", status: "approved", approved_at: "2026-11-03T02:00:00Z", created_at: "2026-11-03T01:30:00Z" },
-    { product_id: "a", status: "completed", approved_at: "2026-11-02T02:00:00Z", created_at: "2026-11-02T01:30:00Z" },
-    { product_id: "a", status: "rejected", approved_at: null, created_at: "2026-10-20T01:30:00Z" },
+    { product_id: "a", status: "approved", created_at: "2026-11-03T01:30:00Z" },
+    { product_id: "a", status: "completed", created_at: "2026-11-02T01:30:00Z" },
+    { product_id: "a", status: "rejected", created_at: "2026-10-20T01:30:00Z" },
   ],
   sales: [
     { final_amount: 8000, completed_at: "2026-11-03T02:30:00Z", reservations: { product_id: "a", quantity: 2 } },
@@ -30,7 +30,6 @@ describe("summarizeReport", () => {
     expect(summarizeReport(rows, 7, now)).toMatchObject({
       registeredProducts: 1,
       requestedReservations: 2,
-      approvedReservations: 2,
       currentApproved: 1,
       completedSales: 2,
       revenue: 11000,

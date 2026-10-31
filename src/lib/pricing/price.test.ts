@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculatePrice, getSaleDeadline, getTodayClosing, isSaleOpen, saleEndError, type PriceInput } from "./price";
+import { calculatePrice, getBusinessDayStart, getSaleDeadline, getSaleStatus, getStoreStatus, getTodayClosing, isSaleOpen, saleEndError, type PriceInput } from "./price";
 
 const now = new Date("2026-11-01T06:00:00Z"); // 한국 시간 15:00
 const hours = (value: number) => new Date(now.getTime() + value * 60 * 60 * 1000);
@@ -175,5 +175,50 @@ describe("sale deadline", () => {
     expect(isSaleOpen(minutes(1), now)).toBe(true);
     expect(isSaleOpen(now, now)).toBe(false);
     expect(isSaleOpen(minutes(-1), now)).toBe(false);
+  });
+});
+
+describe("store hours", () => {
+  const kst = (value: string) => new Date(`${value}+09:00`);
+  const sale = { availableQuantity: 3, saleEndsAt: kst("2026-11-01T20:00:00"), openingTime: "09:00", closingTime: "21:00" };
+
+  it.each([
+    ["2026-11-01T08:59:00", "before_open"],
+    ["2026-11-01T09:00:00", "open"],
+    ["2026-11-01T20:59:00", "open"],
+    ["2026-11-01T21:00:00", "closed"],
+    ["2026-11-02T05:59:00", "closed"],
+    ["2026-11-02T06:00:00", "before_open"],
+  ])("reports the store at %s as %s", (at, status) => {
+    expect(getStoreStatus("09:00", "21:00", kst(at))).toBe(status);
+  });
+
+  it("keeps a store open past midnight within the business day", () => {
+    expect(getStoreStatus("18:00", "02:00", kst("2026-11-02T01:30:00"))).toBe("open");
+    expect(getStoreStatus("18:00", "02:00", kst("2026-11-02T02:00:00"))).toBe("closed");
+  });
+
+  it.each([
+    ["2026-11-01T08:59:00", "before_open"],
+    ["2026-11-01T19:59:00", "on_sale"],
+    ["2026-11-01T20:00:00", "sale_ended"],
+    ["2026-11-02T01:00:00", "store_closed"],
+  ])("reports a product at %s as %s", (at, status) => {
+    expect(getSaleStatus(sale, kst(at))).toBe(status);
+  });
+
+  it("closes reservations 30 minutes before closing", () => {
+    const later = { ...sale, saleEndsAt: kst("2026-11-01T20:30:00") };
+    expect(getSaleStatus(later, kst("2026-11-01T20:29:00"))).toBe("on_sale");
+    expect(getSaleStatus(later, kst("2026-11-01T20:30:00"))).toBe("store_closed");
+  });
+
+  it("reports sold out first", () => {
+    expect(getSaleStatus({ ...sale, availableQuantity: 0 }, kst("2026-11-01T08:00:00"))).toBe("sold_out");
+  });
+
+  it("starts the business day at 06:00", () => {
+    expect(getBusinessDayStart(kst("2026-11-02T05:59:00"))).toEqual(kst("2026-11-01T06:00:00"));
+    expect(getBusinessDayStart(kst("2026-11-02T06:00:00"))).toEqual(kst("2026-11-02T06:00:00"));
   });
 });

@@ -2,7 +2,7 @@
 
 판매자가 남은 상품을 사진으로 등록하고, 소비자가 지역별 할인 상품을 찾아 방문 수령을 예약하는 서비스입니다.
 
-**현재 상태: 개발 패키지 설치·기본 설정 완료. 기능 화면·DB·API는 아직 없습니다.** 이 폴더를 향후 단일 프로젝트의 루트로 사용합니다. 이 폴더를 팀 문서의 단일 기준으로 사용합니다.
+**현재 상태: 구현 진행 중.** 인증, 소비자 화면 개발용 미리보기, DB 스키마·RLS가 병합됐습니다. 판매자 화면, 서버 API, 가격·예약 로직, Storage는 아직 없습니다. 작업별 상태는 [팀 작업표](docs/TEAM_TASKS.md)를 확인합니다. 이 폴더를 단일 프로젝트의 루트로 사용합니다. 이 폴더를 팀 문서의 단일 기준으로 사용합니다.
 
 비교 결과는 [지시 파일 통합 기록](docs/DOCUMENT_MERGE.md), 환경 변수 이름은 [.env.example](.env.example)을 참고합니다.
 
@@ -34,7 +34,7 @@
 | [TEAM_TASKS.md](docs/TEAM_TASKS.md) | 담당자, 순서, 작업 경로, 완료 조건 |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | 작업 시작부터 PR까지 |
 | [DEMO_CHECKLIST.md](docs/DEMO_CHECKLIST.md) | 통합 검증·시연 체크리스트 |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 기술 스택, 데이터 흐름, 예정 폴더 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 기술 스택, 데이터 흐름, 폴더 지도 |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | 구현 전에 합의해야 할 사항 |
 | [docs/WORK_TEMPLATE.md](docs/WORK_TEMPLATE.md) | 작업 카드, 복사할 AI 프롬프트, 인수인계 |
 

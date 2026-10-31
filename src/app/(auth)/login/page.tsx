@@ -4,7 +4,18 @@ import { LoginForm } from "../_components/login-form";
 
 export const metadata: Metadata = { title: "로그인" };
 
-export default function LoginPage() {
+const ERROR_MESSAGES: Record<string, string> = {
+  confirm: "인증 링크가 만료됐거나 올바르지 않아요. 다시 가입하거나 로그인해 주세요.",
+};
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string | string[] }>;
+}) {
+  const { error } = await searchParams;
+  const initialError = typeof error === "string" ? (ERROR_MESSAGES[error] ?? null) : null;
+
   return (
     <section
       aria-labelledby="login-title"
@@ -19,7 +30,7 @@ export default function LoginPage() {
       <p className="mt-2 mb-6 text-sm leading-5 text-muted-foreground">
         가입한 이메일과 비밀번호로 로그인해 주세요.
       </p>
-      <LoginForm />
+      <LoginForm initialError={initialError} />
     </section>
   );
 }

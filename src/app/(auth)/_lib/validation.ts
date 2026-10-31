@@ -52,3 +52,8 @@ export function validateSignup(values: SignupValues): FieldErrors<SignupValues> 
   }
   return errors;
 }
+
+/** 역할별 첫 화면. 화면 경로가 바뀌면 여기만 수정한다. 권한 판단에는 쓰지 않는다. */
+export function homePathForRole(role: unknown): string {
+  return role === "seller" ? "/seller/dashboard" : "/shop";
+}

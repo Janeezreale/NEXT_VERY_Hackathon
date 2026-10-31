@@ -23,8 +23,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
 
   return (
     <main className="min-h-dvh bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">
+      <div className="mx-auto mb-6 max-w-[1200px]"><SellerNav current="/seller/products" /></div>
       <div className="mx-auto flex max-w-[480px] flex-col gap-6">
-        <SellerNav current="/seller/products" />
         <Link href="/seller/products" className={buttonVariants({ variant: "outline", size: "compact", className: "w-fit" })}><ArrowLeft aria-hidden="true" />상품 목록으로</Link>
         <section aria-labelledby="edit-title" className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-6">
           <h1 id="edit-title" className="text-2xl leading-8 font-bold tracking-[-0.02em] text-foreground">상품 수정</h1>

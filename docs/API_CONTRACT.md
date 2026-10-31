@@ -2,7 +2,7 @@
 
 [시작 안내](../README.md) · 근거: [기획 원문](../plan.md) §4–5, §7–8
 
-**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`, 예약 생성·조회·취소, 판매자 예약 조회·상태 변경입니다. Report는 D07 확정 후 공유 타입에 추가합니다.
+**상태: 공통 기반 구현, 개별 API는 대부분 미구현.** 공유 타입은 `src/types/api.ts`, 입력 검증은 `src/lib/schemas/api.ts`, 응답·오류 형식은 `src/lib/server/api.ts`, UI 호출은 `src/lib/client/api.ts`를 사용합니다. 구현된 API는 `GET /api/me`, `GET`·`POST`·`PATCH /api/seller/store`, `GET`·`POST /api/seller/products`, `GET /api/seller/geocode`, `GET /api/stores`, `GET /api/products`, `GET /api/products/:id`, 예약 생성·조회·취소, 판매자 예약 조회·상태 변경입니다. 
 
 ## 공통 형식 제안
 
@@ -23,7 +23,7 @@
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
 | SellerProduct | id, storeId, name, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
-| Reservation | id, productId, productName, unit, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, cancelledBy, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
+| Reservation | id, productId, productName, unit, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, cancelledBy, contact, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
 | Report | period, registeredProducts, requestedReservations, approvedReservations, completedSales, soldQuantity, revenue, remainingQuantity, series | 집계 기준·기간·단위는 D07에서 확정 |
 
 필수·선택·nullable 여부, 문자열 길이, 페이지 제한, 지역 코드 목록, 구체적인 중첩 구조는 L03에서 공유 타입과 함께 확정합니다. 이 표만으로 서로 다른 응답 타입을 독립 구현하지 않습니다.
@@ -40,16 +40,17 @@
 | 이미지 분석 | POST `/api/seller/analyses` | imagePath, closingAt | Analysis | 이미지 소유 판매자 |
 | 상품 게시 | POST `/api/seller/products` | name, quantity, unit, basePrice, minPrice, freshness, saleEndsAt, sellerConfirmed | SellerProduct | 본인 매장 판매자. 사진 없이 게시 가능, imagePaths는 업로드 구현 시 선택 필드로 추가 |
 | 판매자 상품 조회 | GET `/api/seller/products` | cursor, limit | SellerProduct 목록 | 본인 매장 |
-| 재고·상품 수정 | PATCH `/api/seller/products/:id` | 변경 필드, 동시 수정 검증 정보 | Product | 본인 매장, D08 확정 후 |
+| 재고·상품 수정 | PATCH `/api/seller/products/:id` | name, unit, quantity, expectedQuantity, basePrice, minPrice, freshness, saleEndsAt | SellerProduct | 본인 매장. 재고가 바뀌었으면 409 STOCK_CHANGED |
+| 상품 삭제 | DELETE `/api/seller/products/:id` | 경로 ID | null | 본인 매장. 예약 이력이 있으면 409 PRODUCT_HAS_RESERVATIONS |
 | 지역 상품 탐색 | GET `/api/products` | region(필수), cursor?, limit? | 재고가 있고 마감 전인 Product 목록, 항목마다 store(id, name, address) 포함. 매장 마감으로 제외된 상품 때문에 한 페이지가 limit보다 적어도 nextCursor가 있을 수 있음 | 비로그인 허용 |
 | 상품 상세 | GET `/api/products/:id` | 경로 ID | `{ product, store }`. 품절·판매 종료도 saleOpen false로 반환. 없는 상품·잘못된 ID는 404 | 비로그인 허용 |
-| 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice | Reservation | 소비자 본인 |
+| 예약 생성 | POST `/api/reservations` | productId, quantity, pickupAt, idempotencyKey, expectedUnitPrice, contactName, contactPhone | Reservation | 소비자 본인 |
 | 내 예약 | GET `/api/me/reservations` | status?, cursor?, limit? | Reservation 목록 | 소비자 본인 |
 | 내 예약 취소 | POST `/api/reservations/:id/cancel` | 경로 ID | Reservation | 소비자 본인, pending·approved만 |
 | 판매자 예약 조회 | GET `/api/seller/reservations` | status?, cursor?, limit? | Reservation 목록 | 본인 매장 |
 | 예약 승인·거절·취소·노쇼 | POST `/api/seller/reservations/:id/approve`, `/reject`, `/cancel`, `/no-show` | 경로 ID | Reservation | 본인 매장. 노쇼는 픽업 시각 이후 |
 | 판매 완료 | POST `/api/seller/reservations/:id/complete` | 경로 ID | Reservation | 본인 매장 |
-| 판매 리포트 | GET `/api/seller/reports` | from, to | Report | 본인 매장 |
+| 판매 리포트 | GET `/api/seller/reports` | days(1, 7, 30) | Report | 본인 매장 |
 
 회원가입·로그인·로그아웃은 Supabase Auth를 사용합니다. C는 UI를 맡고 총괄이 인증 호출·세션·역할 부여 방식을 확정합니다. 독자적인 비밀번호 저장 API는 만들지 않습니다.
 
@@ -63,6 +64,7 @@
 | 404 | NOT_FOUND | 상품·예약을 찾을 수 없음 |
 | 409 | OUT_OF_STOCK | 남은 수량을 다시 조회하고 선택 수정 |
 | 409 | STORE_EXISTS | 이미 등록한 매장 안내 |
+| 409 | STOCK_CHANGED / PRODUCT_HAS_RESERVATIONS | 최신 재고 확인, 삭제 불가 안내 |
 | 409 | SALE_ENDED / INVALID_TRANSITION | 종료 또는 상태 변경 안내·새로 조회 |
 | 409 | PRICE_CHANGED | 최신 가격을 보여주고 재확인 후 재요청 |
 | 413 / 415 | IMAGE_TOO_LARGE / UNSUPPORTED_IMAGE | 다른 이미지 선택 |

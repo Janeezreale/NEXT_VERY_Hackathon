@@ -1,0 +1,34 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+
+import { findSellerProduct } from "@/src/lib/server/product";
+import { loadSellerStore } from "@/src/lib/server/store";
+import { createClient } from "@/src/lib/supabase/server";
+
+import { ProductForm } from "../../publish/_components/product-form";
+import { DeleteProductButton } from "./_components/delete-product-button";
+
+export const metadata: Metadata = { title: "상품 수정" };
+
+export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+  const store = await loadSellerStore();
+  if (!store) redirect("/store");
+  const { id } = await params;
+  const product = await findSellerProduct(await createClient(), store.id, id);
+  if (!product) notFound();
+
+  return (
+    <main className="min-h-dvh bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">
+      <div className="mx-auto flex max-w-[480px] flex-col gap-6">
+        <Link href="/seller/products" className="text-sm leading-5 text-muted-foreground underline">상품 목록으로 돌아가기</Link>
+        <section aria-labelledby="edit-title" className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-6">
+          <h1 id="edit-title" className="text-2xl leading-8 font-bold tracking-[-0.02em] text-foreground">상품 수정</h1>
+          <p className="mt-2 mb-6 text-sm leading-5 text-muted-foreground">이미 받은 예약의 가격과 수량은 바뀌지 않아요.</p>
+          <ProductForm product={product} />
+        </section>
+        <DeleteProductButton id={product.id} name={product.name} />
+      </div>
+    </main>
+  );
+}

@@ -44,12 +44,13 @@ function client() {
     return chain;
   };
   return {
-    auth: { getUser: async () => ({ data: { user: db.user } }) },
+    auth: { getClaims: async () => ({ data: db.user ? { claims: { sub: db.user.id } } : null }) },
     from: query,
     rpc: async (name: string, args: unknown) => {
       db.rpcCalls.push([name, args]);
       if (name === "recent_approved_quantities") return { data: [], error: null };
       if (name === "expire_overdue_reservations") return { data: 0, error: null };
+      if (name === "reservation_contacts") return { data: [], error: null };
       return { data: { id: ID }, error: db.rpcError };
     },
   };
@@ -80,6 +81,8 @@ const input = {
   pickupAt: "2099-01-01T00:00:00Z",
   idempotencyKey: "00000000-0000-4000-8000-000000000002",
   expectedUnitPrice: 8800,
+  contactName: "홍길동",
+  contactPhone: "010-1234-5678",
 };
 const reserve = (body: unknown = input) =>
   POST(new Request("http://test/api/reservations", { method: "POST", body: JSON.stringify(body) }), undefined);
@@ -111,7 +114,7 @@ describe("POST /api/reservations", () => {
     const response = await reserve();
     expect(response.status).toBe(201);
     const [, args] = db.rpcCalls.find(([name]) => name === "create_reservation") as [string, Record<string, unknown>];
-    expect(args).toMatchObject({ p_consumer_id: "consumer-1", p_unit_price: 8800, p_quantity: 1 });
+    expect(args).toMatchObject({ p_consumer_id: "consumer-1", p_unit_price: 8800, p_quantity: 1, p_contact_name: "홍길동", p_contact_phone: "01012345678" });
     expect((await response.json()).data).toMatchObject({ productName: "사과", confirmedUnitPrice: 8800, status: "pending" });
   });
 
@@ -152,6 +155,12 @@ describe("POST /api/reservations", () => {
     const response = await reserve();
     expect(response.status).toBe(500);
     expect(JSON.stringify(await response.json())).not.toContain("secret");
+  });
+
+  it("rejects a bad phone number", async () => {
+    const response = await reserve({ ...input, contactPhone: "02-123-4567" });
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.fieldErrors.contactPhone).toEqual(["휴대폰 번호를 확인해 주세요."]);
   });
 
   it("requires an idempotency key", async () => {

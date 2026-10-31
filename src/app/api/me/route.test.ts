@@ -12,7 +12,7 @@ const auth = vi.hoisted(() => ({
 
 vi.mock("../../../lib/supabase/server", () => ({
   createClient: async () => ({
-    auth: { getUser: async () => ({ data: { user: auth.user } }) },
+    auth: { getClaims: async () => ({ data: auth.user ? { claims: { sub: auth.user.id } } : null }) },
     from: (table: string) => ({
       select: () => ({
         eq: () => ({

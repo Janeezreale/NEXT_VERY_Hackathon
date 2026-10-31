@@ -29,8 +29,8 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // getUser()가 토큰을 검증하고 필요하면 갱신한다. 이 호출을 지우면 세션이 만료된다.
-  await supabase.auth.getUser();
+  // getClaims()가 토큰을 로컬에서 검증하고 필요하면 갱신한다. 이 호출을 지우면 세션이 만료된다.
+  await supabase.auth.getClaims();
 
   return response;
 }

@@ -45,6 +45,8 @@ type ReservationRow = {
   products: { name: string; unit: string; store_id: string; stores: { id: string; name: string; address: string } };
 };
 
+type ContactRow = { reservation_id: string; contact_name: string; contact_phone: string };
+
 function toReservation(row: ReservationRow): Reservation {
   return {
     id: row.id,
@@ -58,8 +60,18 @@ function toReservation(row: ReservationRow): Reservation {
     status: row.status,
     createdAt: row.created_at,
     cancelledBy: row.cancelled_by,
+    contact: null,
     store: row.products.stores,
   };
+}
+
+/** 판매자에게만 연락처를 붙인다. DB 함수가 본인 매장의 진행 중 예약만 돌려준다. */
+async function withContacts(supabase: Supabase, reservations: Reservation[]) {
+  if (reservations.length === 0) return reservations;
+  const { data, error } = await supabase.rpc("reservation_contacts", { p_reservation_ids: reservations.map((item) => item.id) });
+  if (error) throw error;
+  const contacts = new Map((data as ContactRow[]).map((row) => [row.reservation_id, { name: row.contact_name, phone: row.contact_phone }]));
+  return reservations.map((item) => ({ ...item, contact: contacts.get(item.id) ?? null }));
 }
 
 /** DB 함수가 메시지에 담은 오류 코드를 API 오류로 바꾼다. */
@@ -103,6 +115,8 @@ export async function createReservation(supabase: Supabase, consumerId: string, 
     p_pickup_at: input.pickupAt,
     p_idempotency_key: input.idempotencyKey,
     p_unit_price: product.currentPrice,
+    p_contact_name: input.contactName,
+    p_contact_phone: input.contactPhone,
   });
   if (error) throw toApiError(error);
   return readReservation(admin, z.object({ id: z.uuid() }).parse(data).id);
@@ -111,7 +125,8 @@ export async function createReservation(supabase: Supabase, consumerId: string, 
 export async function changeReservationStatus(supabase: Supabase, id: string, action: string) {
   const { error } = await supabase.rpc("change_reservation_status", { p_reservation_id: id, p_action: action });
   if (error) throw toApiError(error);
-  return readReservation(supabase, id);
+  const [reservation] = await withContacts(supabase, [await readReservation(supabase, id)]);
+  return reservation;
 }
 
 export async function listReservations(
@@ -137,7 +152,7 @@ export async function listReservations(
   const rows = data as unknown as ReservationRow[];
   const page = rows.slice(0, limit);
   return {
-    items: page.map(toReservation),
+    items: "storeId" in owner ? await withContacts(supabase, page.map(toReservation)) : page.map(toReservation),
     nextCursor: rows.length > limit ? encodeCursor(page[page.length - 1]) : null,
   };
 }

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import type { MappedStore, Store } from "../../types/api";
 import { createClient } from "../supabase/server";
@@ -59,7 +60,7 @@ export async function requireSellerStore() {
 }
 
 /** 판매자 화면용. 판매자가 아니면 화면을 벗어나게 하고, 매장이 없으면 null을 반환한다. */
-export async function loadSellerStore(): Promise<Store | null> {
+export const loadSellerStore = cache(async (): Promise<Store | null> => {
   try {
     const { supabase, id } = await requireSeller();
     return await findStore(supabase, id);
@@ -68,4 +69,4 @@ export async function loadSellerStore(): Promise<Store | null> {
     if (error instanceof ApiError && error.code === "FORBIDDEN") redirect("/shop");
     throw error;
   }
-}
+});

@@ -12,7 +12,7 @@
 | stores | id, owner_id, name, region_code, address, closing_time, latitude, longitude | 실제 판매자 소유, 판매자당 1개. 좌표는 nullable이고 둘 다 있거나 둘 다 없음. 업종 컬럼 없음(D10). 운영 시간 모델은 D02 |
 | products | id, store_id, name, unit, available_quantity, base_price, min_price, freshness, sale_ends_at, created_at | 실제 매장 FK. 수량 음수 금지, 최저가 ≤ 기준가 |
 | product_images | id, product_id, storage_path | 실제 상품 연결. 파일 접근·소유권 검증 |
-| reservations | id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at | 수량 양수, 요청 시 가격 저장. approved_at은 최근 승인 수요 계산에 필요 |
+| reservations | id, product_id, consumer_id, quantity, confirmed_unit_price, total_price, pickup_at, status, approved_at, created_at, idempotency_key, cancelled_by, contact_name, contact_phone | 수량 양수, 요청 시 가격 저장. approved_at은 최근 승인 수요 계산에 필요 |
 | sales | id, reservation_id, final_amount, completed_at | 예약당 판매 기록 한 번. 리포트 기준 |
 
 수량은 양의 정수, 금액은 1원 이상입니다(D08). 단위별 집계 방식은 D07에서 확정합니다. 상품별 예약·판매 수량은 예약과 판매 기록으로 추적하고 기존 데이터 변경·삭제 정책도 총괄이 정합니다.
@@ -40,7 +40,7 @@
 | profiles | 본인 정보 | 본인 정보 | 역할을 임의 승격하지 못하게 제한 |
 | stores / products | 판매용 공개 정보 조회 | 본인 매장·상품 관리 | 비공개 컬럼·종료 상품 노출 범위 확정 |
 | product_images / Storage | 허용된 상품 이미지 읽기 | 본인 이미지 업로드·관리 | 경로만 바꿔 타인 파일 사용 불가 |
-| reservations | 본인 예약 조회·허용된 취소 | 본인 매장 예약 조회·상태 변경 | 다른 소비자·매장 접근 금지 |
+| reservations | 본인 예약 조회·허용된 취소 | 본인 매장 예약 조회·상태 변경 | 다른 소비자·매장 접근 금지. `contact_*`는 직접 조회 불가, 판매자는 함수로 진행 중 예약만 조회 |
 | sales | 소비자 직접 접근은 별도 요구 없음 | 본인 매장 리포트 조회 | 임의 매출 생성·수정 금지 |
 
 이 표는 권한 요구사항이며 직접 테이블 쓰기를 허용한다는 뜻이 아닙니다. 재고·예약·판매 변경은 정해진 서버 처리와 트랜잭션을 거칩니다. RLS뿐 아니라 서버 API에서도 사용자·역할·소유권을 확인하고 Storage 정책도 별도로 검증합니다.

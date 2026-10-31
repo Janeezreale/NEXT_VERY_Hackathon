@@ -26,6 +26,8 @@ export type ApiErrorCode =
   | "SALE_ENDED"
   | "INVALID_TRANSITION"
   | "STORE_EXISTS"
+  | "STOCK_CHANGED"
+  | "PRODUCT_HAS_RESERVATIONS"
   | "PRICE_CHANGED"
   | "IMAGE_TOO_LARGE"
   | "UNSUPPORTED_IMAGE"
@@ -100,6 +102,22 @@ export type SellerProduct = Pick<
   "id" | "storeId" | "name" | "unit" | "availableQuantity" | "basePrice" | "freshness" | "saleEndsAt"
 > & { minPrice: number; createdAt: string };
 
+export type Report = {
+  days: number;
+  from: string;
+  to: string;
+  registeredProducts: number;
+  requestedReservations: number;
+  /** 기간 내 승인된 예약 수. 이후 취소된 예약도 포함한다. */
+  approvedReservations: number;
+  /** 지금 승인 상태인 예약 수 */
+  currentApproved: number;
+  completedSales: number;
+  revenue: number;
+  series: { date: string; revenue: number; completed: number }[];
+  products: { id: string; name: string; unit: string; soldQuantity: number; remainingQuantity: number }[];
+};
+
 /** AI 제안. 불확실한 값은 null로 두고 판매자가 게시 전에 확인한다. */
 export type Analysis = {
   name: string;
@@ -123,5 +141,7 @@ export type Reservation = {
   createdAt: string;
   /** 취소한 쪽. 취소가 아니면 null이다. */
   cancelledBy: UserRole | null;
+  /** 판매자가 진행 중 예약을 볼 때만 값이 있다. */
+  contact: { name: string; phone: string } | null;
   store: Pick<Store, "id" | "name" | "address">;
 };

@@ -38,5 +38,5 @@ node 'src/app/(seller)/seller/reservations/preview.mjs' --build
 - `npm run lint`: 오류 0, 기존 `postcss.config.mjs` 경고 1건.
 - 격리 `preview.mjs --build`: 판매자 네 화면 컴파일·TypeScript·정적 페이지 생성 통과.
 - 예약·리포트 페이지 HTTP 200 및 주요 데모 내용 렌더링 확인.
-- 전체 `npm run typecheck`: 기존 빈 customer 페이지 관련 TS2306 / TS2344 오류. 전체 `npm run build`: 공통 루트 레이아웃 부재로 실패.
+- main 병합 후 전체 타입 검사: 기존 빈 customer 페이지의 TS2306 / TS2344 오류. 전체 `npm run build -- --webpack`도 컴파일 후 같은 타입 오류로 실패합니다. 기본 Turbopack 빌드는 실행 환경의 포트 생성 권한 오류로 중단됩니다.
 - 실제 브라우저 클릭·반응형·포커스·스크린리더 검증은 미실행입니다. API·DB 연동 테스트도 범위에 포함되지 않습니다.

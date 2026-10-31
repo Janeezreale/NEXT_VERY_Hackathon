@@ -70,7 +70,7 @@
 .skeleton div { aspect-ratio: 4 / 3; background: #e2e8e3; }
 .skeleton span { display: block; height: 20px; background: #f1f5f2; margin: 20px 16px 0; border-radius: 6px; }
 .skeleton span:last-child { width: 50%; }
-.dialog { color: var(--foreground); background: white; border: 1px solid #e2e8e3; border-radius: 16px; padding: 24px; width: calc(100% - 32px); max-width: 640px; max-height: calc(100dvh - 32px); overflow-y: auto; box-shadow: 0 12px 32px rgb(31 41 55 / .12); }
+.dialog { margin: auto; color: var(--foreground); background: white; border: 1px solid #e2e8e3; border-radius: 16px; padding: 24px; width: calc(100% - 32px); max-width: 640px; max-height: calc(100dvh - 32px); overflow-y: auto; box-shadow: 0 12px 32px rgb(31 41 55 / .12); }
 .dialog::backdrop { background: rgb(31 41 55 / .45); }
 .dialog h2 { margin-bottom: 8px; }
 .fields { display: grid; gap: 8px; margin: 24px 0; }

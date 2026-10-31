@@ -110,7 +110,7 @@ export async function submitSignup(values: SignupValues): Promise<AuthResult> {
 export async function signOut(): Promise<void> {
   if (hasSupabaseEnv()) {
     const supabase = await createClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
   }
   redirect("/login");
 }

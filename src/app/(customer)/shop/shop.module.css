@@ -52,10 +52,11 @@
 .page h1 + p { margin-top: 16px; }
 .page .description { margin-top: 12px; }
 .page .eyebrow { margin-bottom: 12px; }
-.localNav { @apply flex flex-wrap items-center justify-between gap-3 border-b py-5; border-color: #e2e8e3; }
-.localNav > div { @apply flex flex-wrap gap-4; }
-.localNav a, .back { @apply inline-flex min-h-11 items-center gap-2 text-sm font-semibold; color: #176b49; }
+.localNav { @apply flex min-h-[85px] flex-wrap items-center justify-between gap-3 border-b py-5; border-color: #e2e8e3; }
+.navLinks { @apply order-last flex w-full items-center gap-4 sm:order-none sm:ml-auto sm:w-auto; }
+.navLinks a, .localNav .wordmark, .back { @apply inline-flex min-h-11 items-center gap-2 text-sm font-semibold; color: #176b49; }
 .localNav .wordmark { @apply text-base; }
+.localNav button { @apply text-sm font-semibold; }
 .back { @apply my-4; }
 .photo { @apply relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden rounded-xl; background: #f1f5f2; color: #626b77; }
 .photo img { @apply block h-full w-full object-cover; }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { LogoutButton } from "@/src/components/common/logout-button";
 import { loadSellerStore } from "@/src/lib/server/store";
 
 import { StoreForm } from "./_components/store-form";
@@ -10,10 +11,13 @@ export default async function StorePage() {
   const store = await loadSellerStore();
 
   return (
-    <main className="flex min-h-dvh justify-center bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">
+    <main className="min-h-dvh bg-background px-4 pt-4 pb-12 sm:px-6">
+      <div className="mx-auto mb-4 flex max-w-[480px] justify-end">
+        <LogoutButton />
+      </div>
       <section
         aria-labelledby="store-title"
-        className="h-fit w-full max-w-[480px] rounded-lg border border-border bg-card p-4 shadow-card sm:p-6"
+        className="mx-auto h-fit w-full max-w-[480px] rounded-lg border border-border bg-card p-4 shadow-card sm:p-6"
       >
         <h1
           id="store-title"

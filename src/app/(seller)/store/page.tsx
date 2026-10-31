@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { LogoutButton } from "@/src/components/common/logout-button";
 import { loadSellerStore } from "@/src/lib/server/store";
 
+import { SellerNav } from "../seller/_components/seller-nav";
 import { StoreForm } from "./_components/store-form";
 
 export const metadata: Metadata = { title: "매장 정보" };
@@ -15,6 +16,7 @@ export default async function StorePage() {
       <div className="mx-auto mb-4 flex max-w-[480px] justify-end">
         <LogoutButton />
       </div>
+      {store ? <div className="mx-auto mb-6 max-w-[480px]"><SellerNav current="/store" /></div> : null}
       <section
         aria-labelledby="store-title"
         className="mx-auto h-fit w-full max-w-[480px] rounded-lg border border-border bg-card p-4 shadow-card sm:p-6"

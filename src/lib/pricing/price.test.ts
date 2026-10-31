@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculatePrice, getSaleDeadline, getTodayClosing, isSaleOpen, type PriceInput } from "./price";
+import { calculatePrice, getSaleDeadline, getTodayClosing, isSaleOpen, saleEndError, type PriceInput } from "./price";
 
 const now = new Date("2026-11-01T06:00:00Z"); // 한국 시간 15:00
 const hours = (value: number) => new Date(now.getTime() + value * 60 * 60 * 1000);
@@ -96,18 +96,79 @@ describe("invalid input", () => {
   });
 });
 
+describe("saleEndError", () => {
+  const kst = (value: string) => new Date(`${value}+09:00`);
+
+  it("allows a sale end up to 30 minutes before closing", () => {
+    expect(saleEndError(kst("2026-11-01T22:00:00"), "23:00")).toBeNull();
+    expect(saleEndError(kst("2026-11-01T22:30:00"), "23:00")).toBeNull();
+  });
+
+  it("rejects a sale end after the cutoff", () => {
+    expect(saleEndError(kst("2026-11-01T22:31:00"), "23:00")).toContain("22:30까지만");
+    expect(saleEndError(kst("2026-11-01T23:30:00"), "23:00")).toContain("22:30까지만");
+  });
+
+  it("uses the closing of the sale end's own day", () => {
+    expect(saleEndError(kst("2026-11-02T20:00:00"), "23:00")).toBeNull();
+    expect(saleEndError(kst("2026-11-02T22:50:00"), "23:00")).toContain("22:30까지만");
+  });
+
+  it("rejects the early morning after the business day ended", () => {
+    expect(saleEndError(kst("2026-11-02T03:00:00"), "23:00")).toContain("22:30까지만");
+  });
+
+  it("handles a closing after midnight", () => {
+    expect(saleEndError(kst("2026-11-01T23:40:00"), "00:10")).toBeNull();
+    expect(saleEndError(kst("2026-11-01T23:50:00"), "00:10")).toContain("23:40까지만");
+  });
+});
+
 describe("sale deadline", () => {
   it("reads closing time in Korean time", () => {
     expect(getTodayClosing("21:00", now).toISOString()).toBe("2026-11-01T12:00:00.000Z");
   });
 
   it("uses the Korean date around UTC midnight", () => {
-    expect(getTodayClosing("21:00", new Date("2026-11-01T16:00:00Z")).toISOString()).toBe("2026-11-02T12:00:00.000Z");
+    expect(getTodayClosing("21:00", new Date("2026-11-01T22:00:00Z")).toISOString()).toBe("2026-11-02T12:00:00.000Z");
   });
 
-  it("uses the earlier of sale end and store closing", () => {
+  it("treats a closing before 6am as the next morning", () => {
+    expect(getTodayClosing("00:10", now).toISOString()).toBe("2026-11-01T15:10:00.000Z");
+    expect(getTodayClosing("05:59", now).toISOString()).toBe("2026-11-01T20:59:00.000Z");
+  });
+
+  it("keeps the cutoff before midnight for a closing just after it", () => {
+    expect(getSaleDeadline(hours(100), "00:10", now).toISOString()).toBe("2026-11-01T14:40:00.000Z");
+  });
+
+  it("still belongs to the previous business day before 6am", () => {
+    const beforeSix = new Date("2026-11-01T20:00:00Z"); // 11월 2일 05:00
+    expect(getTodayClosing("21:00", beforeSix).toISOString()).toBe("2026-11-01T12:00:00.000Z");
+    expect(isSaleOpen(getSaleDeadline(new Date("2026-11-02T10:00:00Z"), "21:00", beforeSix), beforeSix)).toBe(false);
+  });
+
+  it("is open for a late-closing store just after midnight", () => {
+    const afterMidnight = new Date("2026-11-01T15:05:00Z"); // 11월 2일 00:05
+    expect(isSaleOpen(getSaleDeadline(new Date("2026-11-02T10:00:00Z"), "02:00", afterMidnight), afterMidnight)).toBe(true);
+    expect(isSaleOpen(getSaleDeadline(new Date("2026-11-02T10:00:00Z"), "00:10", afterMidnight), afterMidnight)).toBe(false);
+  });
+
+  it("opens the new business day at 6am", () => {
+    const six = new Date("2026-11-01T21:00:00Z"); // 11월 2일 06:00
+    expect(getTodayClosing("21:00", six).toISOString()).toBe("2026-11-02T12:00:00.000Z");
+  });
+
+  it("stops reservations 30 minutes before closing", () => {
+    expect(getSaleDeadline(hours(10), "21:00", now)).toEqual(new Date("2026-11-01T11:30:00Z"));
+  });
+
+  it("keeps an earlier sale end", () => {
     expect(getSaleDeadline(hours(1), "21:00", now)).toEqual(hours(1));
-    expect(getSaleDeadline(hours(10), "21:00", now)).toEqual(new Date("2026-11-01T12:00:00Z"));
+  });
+
+  it("uses the cutoff when the sale ends between the cutoff and closing", () => {
+    expect(getSaleDeadline(new Date("2026-11-01T11:45:00Z"), "21:00", now)).toEqual(new Date("2026-11-01T11:30:00Z"));
   });
 
   it("closes sales exactly at the deadline", () => {

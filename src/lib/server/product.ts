@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { calculatePrice, getSaleDeadline, isSaleOpen } from "../pricing/price";
+import { calculatePrice, getSaleDeadline, isSaleOpen, saleEndError } from "../pricing/price";
 import { freshnessSchema } from "../schemas/api";
 import { getSupabaseEnv } from "../supabase/env";
 import type { createClient } from "../supabase/server";
@@ -140,6 +140,11 @@ type PublicProductRow = ProductRow & { stores: StoreRow; product_images?: { stor
 
 export function imagePublicUrl(path: string) {
   return `${getSupabaseEnv().url}/storage/v1/object/public/${IMAGE_BUCKET}/${path}`;
+}
+
+export function assertSaleEnd(saleEndsAt: string, closingTime: string) {
+  const message = saleEndError(new Date(saleEndsAt), closingTime);
+  if (message) throw new ApiError("VALIDATION_ERROR", message, { saleEndsAt: [message] });
 }
 
 /** 경로만 바꿔 다른 매장의 파일을 쓰지 못하게 한다. */

@@ -9,6 +9,7 @@ import { FormField } from "@/src/components/common/form-field";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
+import { saleEndError } from "@/src/lib/pricing/price";
 import { productCreateSchema, productUpdateSchema, type ProductCreateInput, type ProductUpdateInput } from "@/src/lib/schemas/api";
 import { FRESHNESS_LABELS, FRESHNESS_LEVELS, type Analysis, type Freshness, type SellerProduct } from "@/src/types/api";
 
@@ -42,7 +43,7 @@ function toInput(values: typeof EMPTY) {
   };
 }
 
-export function ProductForm({ product, storeId }: { product?: SellerProduct; storeId?: string }) {
+export function ProductForm({ product, storeId, closingTime }: { product?: SellerProduct; storeId?: string; closingTime: string }) {
   const router = useRouter();
   const [values, setValues] = React.useState(
     product
@@ -87,6 +88,12 @@ export function ProductForm({ product, storeId }: { product?: SellerProduct; sto
     if (submitting) return;
     setFormError(null);
     setNotice(null);
+
+    const saleEnd = values.saleEndsAt ? saleEndError(new Date(values.saleEndsAt), closingTime) : null;
+    if (saleEnd) {
+      setErrors((current) => ({ ...current, saleEndsAt: saleEnd }));
+      return;
+    }
 
     const parsed = product
       ? productUpdateSchema.safeParse({ ...toInput(values), expectedQuantity: product.availableQuantity })
@@ -207,14 +214,18 @@ export function ProductForm({ product, storeId }: { product?: SellerProduct; sto
         )}
       </FormField>
 
-      <FormField id="product-sale-ends-at" label="판매 종료 시각" required hint="한국 시간 기준으로 입력해 주세요." error={errors.saleEndsAt}>
+      <FormField id="product-sale-ends-at" label="판매 종료 시각" required hint={`한국 시간 기준이에요. 가게 마감(${closingTime}) 30분 전까지 설정할 수 있어요.`} error={errors.saleEndsAt}>
         {(control) => (
           <Input
             {...control}
             type="datetime-local"
             name="saleEndsAt"
             value={values.saleEndsAt}
-            onChange={(e) => update({ saleEndsAt: e.target.value })}
+            onChange={(e) => {
+              update({ saleEndsAt: e.target.value });
+              const message = e.target.value ? saleEndError(new Date(e.target.value), closingTime) : null;
+              if (message) setErrors((current) => ({ ...current, saleEndsAt: message }));
+            }}
           />
         )}
       </FormField>

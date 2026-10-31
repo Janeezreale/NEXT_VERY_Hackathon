@@ -95,7 +95,7 @@ export function StoreForm({ store }: { store: Store | null }) {
         id="store-closing-time"
         label="마감 시각"
         required
-        hint="한국 시간 기준으로 입력해 주세요."
+        hint="한국 시간 기준이에요. 예약은 마감 30분 전까지 받아요. 자정을 넘기면 00:30처럼 입력해 주세요(06:00까지)."
         error={errors.closingTime}
       >
         {(control) => (

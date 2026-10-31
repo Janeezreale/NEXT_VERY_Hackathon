@@ -18,7 +18,14 @@ const row = { id: ID, store_id: "store-1", name: "사과", unit: "개", availabl
 vi.mock("../../../../../lib/supabase/server", () => ({
   createClient: async () => ({
     auth: { getClaims: async () => ({ data: db.user ? { claims: { sub: db.user } } : null }) },
-    from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: { role: db.role, region_code: null }, error: null }) }) }) }),
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          single: async () => ({ data: { role: db.role, region_code: null }, error: null }),
+          maybeSingle: async () => ({ data: { id: "store-1", name: "마켓", region_code: "성북구", address: "주소", closing_time: "23:00:00", latitude: null, longitude: null }, error: null }),
+        }),
+      }),
+    }),
     rpc: async (name: string, args: Record<string, unknown>) => {
       db.calls.push([name, args]);
       return { data: row, error: db.rpcError };
@@ -56,6 +63,17 @@ describe("PATCH /api/seller/products/:id", () => {
     arrange();
     expect((await patch()).status).toBe(status);
     expect(db.calls).toEqual([]);
+  });
+
+  it("rejects a sale end after the reservation cutoff", async () => {
+    const response = await patch({ ...input, saleEndsAt: "2099-01-01T22:31:00+09:00" });
+    expect(response.status).toBe(400);
+    expect((await response.json()).error.fieldErrors.saleEndsAt[0]).toContain("22:30까지만");
+    expect(db.calls).toEqual([]);
+  });
+
+  it("allows the exact cutoff", async () => {
+    expect((await patch({ ...input, saleEndsAt: "2099-01-01T22:30:00+09:00" })).status).toBe(200);
   });
 
   it("rejects a minimum price above the base price", async () => {

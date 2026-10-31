@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { buttonVariants } from "@/src/components/ui/button";
 import { findSellerProduct } from "@/src/lib/server/product";
 import { loadSellerStore } from "@/src/lib/server/store";
 import { createClient } from "@/src/lib/supabase/server";
 
+import { SellerNav } from "../../_components/seller-nav";
 import { ProductForm } from "../../publish/_components/product-form";
 import { DeleteProductButton } from "./_components/delete-product-button";
 
@@ -21,11 +24,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   return (
     <main className="min-h-dvh bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">
       <div className="mx-auto flex max-w-[480px] flex-col gap-6">
-        <Link href="/seller/products" className="text-sm leading-5 text-muted-foreground underline">상품 목록으로 돌아가기</Link>
+        <SellerNav current="/seller/products" />
+        <Link href="/seller/products" className={buttonVariants({ variant: "outline", size: "compact", className: "w-fit" })}><ArrowLeft aria-hidden="true" />상품 목록으로</Link>
         <section aria-labelledby="edit-title" className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-6">
           <h1 id="edit-title" className="text-2xl leading-8 font-bold tracking-[-0.02em] text-foreground">상품 수정</h1>
           <p className="mt-2 mb-6 text-sm leading-5 text-muted-foreground">이미 받은 예약의 가격과 수량은 바뀌지 않아요.</p>
-          <ProductForm product={product} />
+          <ProductForm product={product} closingTime={store.closingTime} />
         </section>
         <DeleteProductButton id={product.id} name={product.name} />
       </div>

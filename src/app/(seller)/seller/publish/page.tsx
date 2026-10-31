@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { listSellerProducts } from "@/src/lib/server/product";
@@ -7,6 +6,7 @@ import { loadSellerStore } from "@/src/lib/server/store";
 import { createClient } from "@/src/lib/supabase/server";
 import { FRESHNESS_LABELS } from "@/src/types/api";
 
+import { SellerNav } from "../_components/seller-nav";
 import { ProductForm } from "./_components/product-form";
 
 export const metadata: Metadata = { title: "상품 게시" };
@@ -23,16 +23,14 @@ export default async function PublishPage() {
   return (
     <main className="min-h-dvh bg-background px-4 pt-6 pb-12 sm:px-6 sm:pt-12">
       <div className="mx-auto flex max-w-[480px] flex-col gap-8 lg:gap-12">
-        <Link href="/seller/dashboard" className="text-sm leading-5 text-muted-foreground underline">
-          대시보드로 돌아가기
-        </Link>
+        <SellerNav current="/seller/publish" />
 
         <section aria-labelledby="publish-title" className="rounded-lg border border-border bg-card p-4 shadow-card sm:p-6">
           <h1 id="publish-title" className="text-2xl leading-8 font-bold tracking-[-0.02em] text-foreground">
             상품 게시
           </h1>
           <p className="mt-2 mb-6 text-sm leading-5 text-muted-foreground">{store.name}에 올릴 상품 정보를 입력해 주세요.</p>
-          <ProductForm storeId={store.id} />
+          <ProductForm storeId={store.id} closingTime={store.closingTime} />
         </section>
 
         <section aria-labelledby="published-title" className="flex flex-col gap-3">

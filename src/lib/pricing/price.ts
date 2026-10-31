@@ -16,16 +16,29 @@ export type PriceInput = {
   now: Date;
 };
 
-/** 오늘 매장 마감 시각. closingTime은 한국 시간 "HH:mm"이고 자정을 넘는 영업은 지원하지 않는다. */
+/**
+ * 현재 영업일의 가게 마감 시각. closingTime은 한국 시간 "HH:mm"이다.
+ * 영업일은 오전 6시에 바뀌므로 00:10 마감은 다음 날 새벽 00:10이다.
+ */
 export function getTodayClosing(closingTime: string, now: Date): Date {
-  const today = new Intl.DateTimeFormat("en-CA", { timeZone: config.timeZone }).format(now);
-  return new Date(`${today}T${closingTime}:00${config.timeZoneOffset}`);
+  const startHour = config.businessDayStartHour;
+  const businessDay = new Intl.DateTimeFormat("en-CA", { timeZone: config.timeZone }).format(now.getTime() - startHour * HOUR_MS);
+  const closing = new Date(`${businessDay}T${closingTime}:00${config.timeZoneOffset}`);
+  return Number(closingTime.slice(0, 2)) < startHour ? new Date(closing.getTime() + 24 * HOUR_MS) : closing;
 }
 
-/** 상품 판매 종료와 오늘 매장 마감 중 이른 시각. 가격과 예약 차단의 공통 기준이다. */
+/** 상품 판매 종료와 오늘 가게 마감 30분 전 중 이른 시각. 가격과 예약 차단의 공통 기준이다. */
 export function getSaleDeadline(saleEndsAt: Date, closingTime: string, now: Date): Date {
-  const closing = getTodayClosing(closingTime, now);
-  return saleEndsAt < closing ? saleEndsAt : closing;
+  const cutoff = new Date(getTodayClosing(closingTime, now).getTime() - config.reservationCutoffMinutes * MINUTE_MS);
+  return saleEndsAt < cutoff ? saleEndsAt : cutoff;
+}
+
+/** 판매 종료가 그날 예약 마감을 넘으면 입력 오류 문구를 돌려준다. 화면과 서버가 같은 규칙을 쓴다. */
+export function saleEndError(saleEndsAt: Date, closingTime: string): string | null {
+  const deadline = getSaleDeadline(saleEndsAt, closingTime, saleEndsAt);
+  if (deadline >= saleEndsAt) return null;
+  const latest = new Intl.DateTimeFormat("ko-KR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: config.timeZone }).format(deadline);
+  return `판매 종료는 가게 마감(${closingTime}) 30분 전인 ${latest}까지만 설정할 수 있어요.`;
 }
 
 export function isSaleOpen(deadline: Date, now: Date): boolean {

@@ -1,6 +1,6 @@
 import { listQuerySchema, productCreateSchema } from "../../../../lib/schemas/api";
 import { ok, parseInput, parseJson, route } from "../../../../lib/server/api";
-import { assertOwnImage, listSellerProducts, PRODUCT_COLUMNS, toSellerProduct, type ProductRow } from "../../../../lib/server/product";
+import { assertOwnImage, assertSaleEnd, listSellerProducts, PRODUCT_COLUMNS, toSellerProduct, type ProductRow } from "../../../../lib/server/product";
 import { requireSellerStore } from "../../../../lib/server/store";
 
 export const GET = route(async (request) => {
@@ -13,6 +13,7 @@ export const POST = route(async (request) => {
   const { supabase, store } = await requireSellerStore();
   const input = await parseJson(request, productCreateSchema);
   if (input.imagePath) assertOwnImage(input.imagePath, store.id);
+  assertSaleEnd(input.saleEndsAt, store.closingTime);
   const { data, error } = await supabase
     .from("products")
     .insert({

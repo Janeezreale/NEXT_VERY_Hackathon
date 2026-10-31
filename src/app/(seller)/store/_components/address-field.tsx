@@ -9,6 +9,7 @@ import { NaverMap } from "@/src/components/common/naver-map";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError } from "@/src/lib/client/api";
+import { SEOUL_DISTRICTS } from "@/src/lib/regions";
 import type { AddressResult } from "@/src/types/api";
 
 export type StoreLocation = {
@@ -133,19 +134,27 @@ export function AddressField({ value, errors, onChange }: AddressFieldProps) {
         id="store-region"
         label="지역"
         required
-        hint={located ? "검색한 주소에서 자동으로 정해져요." : "소비자가 매장을 찾을 때 쓰는 지역이에요. 예: 마포구"}
+        hint={located ? "검색한 주소에서 자동으로 정해져요." : "소비자가 매장을 찾을 때 쓰는 지역이에요."}
         error={errors.regionCode}
       >
-        {(control) => (
-          <Input
-            {...control}
-            name="regionCode"
-            autoComplete="address-level2"
-            readOnly={located}
-            value={value.regionCode}
-            onChange={(e) => onChange({ regionCode: e.target.value })}
-          />
-        )}
+        {(control) =>
+          located ? (
+            <Input {...control} name="regionCode" readOnly value={value.regionCode} />
+          ) : (
+            <select
+              {...control}
+              name="regionCode"
+              value={value.regionCode}
+              onChange={(e) => onChange({ regionCode: e.target.value })}
+              className="block h-12 w-full rounded-md border border-input bg-card px-3 text-base leading-6 text-foreground"
+            >
+              <option value="">지역을 선택해 주세요</option>
+              {[...new Set([...SEOUL_DISTRICTS, ...(value.regionCode ? [value.regionCode] : [])])].map((region) => (
+                <option key={region}>{region}</option>
+              ))}
+            </select>
+          )
+        }
       </FormField>
 
       {located ? (

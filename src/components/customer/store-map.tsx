@@ -5,12 +5,13 @@ import * as React from "react";
 
 import { NaverMap } from "@/src/components/common/naver-map";
 import { apiFetch } from "@/src/lib/client/api";
+import { SEOUL_DISTRICTS } from "@/src/lib/regions";
 import type { MappedStore } from "@/src/types/api";
 
 import { EmptyFeedback, LoadFeedback } from "./preview-feedback";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
-/** 실제 등록된 매장 지도. 지역 목록은 저장된 매장에서 만든다. */
+/** 실제 등록된 매장 지도. 서울 밖 매장의 지역은 목록 뒤에 덧붙인다. */
 export default function StoreMap() {
   const [stores, setStores] = React.useState<MappedStore[]>([]);
   const [state, setState] = React.useState<"loading" | "error" | "ready">("loading");
@@ -40,7 +41,10 @@ export default function StoreMap() {
     setAttempt((count) => count + 1);
   }
 
-  const regions = React.useMemo(() => [...new Set(stores.map((store) => store.regionCode))].sort(), [stores]);
+  const regions = React.useMemo(
+    () => [...new Set([...SEOUL_DISTRICTS, ...stores.map((store) => store.regionCode)])],
+    [stores],
+  );
   const visible = React.useMemo(
     () => stores.filter((store) => !region || store.regionCode === region),
     [stores, region],
@@ -77,8 +81,12 @@ export default function StoreMap() {
         </select>
       </label>
       <p role="status">매장 {visible.length}곳</p>
-      <NaverMap markers={markers} onSelect={setSelectedId} label="매장 위치 지도" className="h-80" />
-      {selected ? (
+      {markers.length === 0 ? (
+        <EmptyFeedback title={`${region}에 등록된 매장이 없어요`} description="다른 지역을 선택해 보세요." />
+      ) : (
+        <NaverMap markers={markers} onSelect={setSelectedId} label="매장 위치 지도" className="h-80" />
+      )}
+      {markers.length === 0 ? null : selected ? (
         <article className={styles.panel}>
           <p className={styles.store}>
             <StoreIcon size={14} aria-hidden="true" />

@@ -2,7 +2,7 @@
 -- 빈 Supabase 프로젝트에 한 번만 실행한다. 이미 적용된 프로젝트에 다시 실행하면 오류가 난다.
 -- 스키마를 변경할 때는 이 파일을 갱신하고, 이미 적용된 프로젝트에는 변경분 SQL을 따로 실행한다.
 -- 재고·예약·판매 변경 함수는 L05, Storage 버킷·정책은 D05 확정 후 추가한다.
--- 정책 근거: docs/DATA_MODEL.md. 미정 정책(D01~D08)은 가장 좁은 권한으로 두고 확정 시 넓힌다.
+-- 정책 근거: docs/DATA_MODEL.md, docs/DECISIONS.md. 미정 정책은 가장 좁은 권한으로 두고 확정 시 넓힌다.
 
 create type public.user_role as enum ('consumer', 'seller');
 create type public.freshness_level as enum ('fresh', 'sell_today', 'discard_tomorrow');
@@ -18,9 +18,8 @@ create table public.profiles (
 
 create table public.stores (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references public.profiles (id) on delete restrict,
+  owner_id uuid not null unique references public.profiles (id) on delete restrict,
   name text not null check (length(trim(name)) > 0),
-  business_type text not null,
   region_code text not null,
   address text not null,
   closing_time time not null
@@ -34,7 +33,7 @@ create table public.products (
   unit text not null,
   available_quantity integer not null check (available_quantity >= 0),
   base_price integer not null,
-  min_price integer not null check (min_price >= 0),
+  min_price integer not null check (min_price > 0),
   freshness public.freshness_level not null,
   sale_ends_at timestamptz not null,
   created_at timestamptz not null default now(),
@@ -52,12 +51,14 @@ create table public.reservations (
   product_id uuid not null references public.products (id) on delete restrict,
   consumer_id uuid not null references public.profiles (id) on delete restrict,
   quantity integer not null check (quantity > 0),
-  confirmed_unit_price integer not null check (confirmed_unit_price >= 0),
+  confirmed_unit_price integer not null check (confirmed_unit_price > 0),
   total_price integer not null,
   pickup_at timestamptz not null,
   status public.reservation_status not null default 'pending',
   approved_at timestamptz,
   created_at timestamptz not null default now(),
+  idempotency_key uuid not null,
+  constraint reservations_consumer_idempotency_key unique (consumer_id, idempotency_key),
   constraint reservations_total_price_matches check (total_price = quantity * confirmed_unit_price),
   constraint reservations_approved_at_required check (status not in ('approved', 'completed') or approved_at is not null)
 );
@@ -65,13 +66,12 @@ create table public.reservations (
 create table public.sales (
   id uuid primary key default gen_random_uuid(),
   reservation_id uuid not null unique references public.reservations (id) on delete restrict,
-  final_amount integer not null check (final_amount >= 0),
+  final_amount integer not null check (final_amount > 0),
   completed_at timestamptz not null default now()
 );
 
 -- 인덱스
 
-create index stores_owner_id_idx on public.stores (owner_id);
 create index stores_region_code_idx on public.stores (region_code);
 create index products_store_id_idx on public.products (store_id);
 create index products_sale_ends_at_idx on public.products (sale_ends_at);
@@ -120,9 +120,11 @@ revoke all on public.profiles, public.stores, public.products, public.product_im
 
 grant select on public.profiles, public.stores, public.products, public.product_images, public.reservations, public.sales
   to authenticated;
+grant select (id, name, region_code, address, closing_time) on public.stores to anon;
+grant select on public.products, public.product_images to anon;
 grant update (region_code) on public.profiles to authenticated;
-grant insert (owner_id, name, business_type, region_code, address, closing_time) on public.stores to authenticated;
-grant update (name, business_type, region_code, address, closing_time) on public.stores to authenticated;
+grant insert (owner_id, name, region_code, address, closing_time) on public.stores to authenticated;
+grant update (name, region_code, address, closing_time) on public.stores to authenticated;
 grant insert (store_id, name, category, unit, available_quantity, base_price, min_price, freshness, sale_ends_at)
   on public.products to authenticated;
 grant insert (product_id, storage_path), delete on public.product_images to authenticated;
@@ -143,8 +145,8 @@ create policy profiles_update_own on public.profiles
   using (id = (select auth.uid()))
   with check (id = (select auth.uid()));
 
-create policy stores_select_authenticated on public.stores
-  for select to authenticated
+create policy stores_select_public on public.stores
+  for select to anon, authenticated
   using (true);
 
 create policy stores_insert_seller on public.stores
@@ -162,8 +164,8 @@ create policy stores_update_owner on public.stores
   using (owner_id = (select auth.uid()))
   with check (owner_id = (select auth.uid()));
 
-create policy products_select_authenticated on public.products
-  for select to authenticated
+create policy products_select_public on public.products
+  for select to anon, authenticated
   using (true);
 
 create policy products_insert_owner on public.products
@@ -175,8 +177,8 @@ create policy products_insert_owner on public.products
     )
   );
 
-create policy product_images_select_authenticated on public.product_images
-  for select to authenticated
+create policy product_images_select_public on public.product_images
+  for select to anon, authenticated
   using (true);
 
 create policy product_images_insert_owner on public.product_images

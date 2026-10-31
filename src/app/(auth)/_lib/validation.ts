@@ -4,9 +4,11 @@
  * 비밀번호 최소 길이는 아직 확정되지 않은 정책이다(DECISIONS D01).
  * 총괄이 Supabase Auth 설정과 함께 확정하면 이 값만 바꾼다.
  */
+import type { UserRole } from "@/src/types/api";
+
 export const PASSWORD_MIN_LENGTH = 8;
 
-export type UserRole = "consumer" | "seller";
+export type { UserRole };
 
 export type LoginValues = { email: string; password: string };
 export type SignupValues = {

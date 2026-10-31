@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { ArrowLeft, Leaf, MapPin, ShoppingBasket, Ticket } from "lucide-react";
+import { SessionAuthAction } from "@/src/components/common/logout-button";
 import { money, type PreviewProduct } from "./preview-data";
 import styles from "../../app/(customer)/shop/shop.module.css";
 
 export function PreviewShell({ children, back }: { children: ReactNode; back?: string }) {
   return <main className={styles.page}>
     <p className={styles.panel} role="note">데모 상품입니다. 실제로 예약되지 않아요.</p>
-    <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div></nav>
+    <nav className={styles.localNav} aria-label="소비자 메뉴"><Link href="/shop" className={styles.wordmark}><Leaf size={20} aria-hidden="true" />[서비스명]</Link><div className={styles.navLinks}><Link href="/shop"><ShoppingBasket size={18} aria-hidden="true" />상품 탐색</Link><Link href="/shop/reservations"><Ticket size={18} aria-hidden="true" />예약 내역</Link></div><SessionAuthAction /></nav>
     {back && <Link href={back} className={styles.back}><ArrowLeft size={18} aria-hidden="true" />뒤로</Link>}
     {children}
     <footer className={styles.footer}>동네에서 발견하고, 매장에서 만나요.</footer>

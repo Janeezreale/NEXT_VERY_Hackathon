@@ -116,6 +116,26 @@ insert into public.profiles (id)
 select id from auth.users
 on conflict (id) do nothing;
 
+-- 가격 계산용 최근 60분 승인 수량. 소비자가 다른 사람의 예약을 읽지 않도록 합계만 돌려준다.
+-- 승인 후 취소·거절된 수량은 제외한다(D02). 구간은 src/lib/pricing/config.ts와 같아야 한다.
+create function public.recent_approved_quantities(product_ids uuid[])
+returns table (product_id uuid, quantity bigint)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select reservations.product_id, sum(reservations.quantity)
+  from public.reservations
+  where reservations.product_id = any (product_ids)
+    and reservations.status in ('approved', 'completed')
+    and reservations.approved_at >= now() - interval '60 minutes'
+  group by reservations.product_id;
+$$;
+
+revoke all on function public.recent_approved_quantities(uuid[]) from public, anon, authenticated;
+grant execute on function public.recent_approved_quantities(uuid[]) to anon, authenticated;
+
 -- 권한: Supabase 기본 권한을 제거하고 필요한 컬럼만 허용한다.
 -- reservations·sales 쓰기와 products 수정은 허용하지 않는다(L05 함수, D08).
 

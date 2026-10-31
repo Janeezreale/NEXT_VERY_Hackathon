@@ -23,7 +23,7 @@
 | AddressResult | roadAddress, jibunAddress, regionCode, latitude, longitude | 네이버 Geocoding 결과. 상호명 검색 아님 |
 | Analysis | name, estimatedQuantity, unit, freshness, needsConfirmation, uncertaintyReason | AI 제안. 게시 전 판매자 확인 필수 |
 | SellerProduct | id, storeId, name, unit, availableQuantity, basePrice, minPrice, freshness, saleEndsAt, createdAt | 판매자 본인 상품. 현재가 없음 |
-| Reservation | id, productId, productName, unit, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, cancelledBy, contact, store | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
+| Reservation | id, productId, productName, unit, quantity, confirmedUnitPrice, totalPrice, pickupAt, status, createdAt, cancelledBy, contact, store, imageUrl | 예약 요청 때 확정한 단가·총액. 이후 현재가와 독립 |
 | Report | period, registeredProducts, requestedReservations, approvedReservations, completedSales, soldQuantity, revenue, remainingQuantity, series | 집계 기준·기간·단위는 D07에서 확정 |
 
 필수·선택·nullable 여부, 문자열 길이, 페이지 제한, 지역 코드 목록, 구체적인 중첩 구조는 L03에서 공유 타입과 함께 확정합니다. 이 표만으로 서로 다른 응답 타입을 독립 구현하지 않습니다.

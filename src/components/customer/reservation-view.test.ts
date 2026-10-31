@@ -14,6 +14,7 @@ const reservation: Reservation = {
   totalPrice: 17600,
   pickupAt: "2026-11-01T09:30:00Z",
   status: "approved",
+  imageUrl: null,
   createdAt: "2026-11-01T08:00:00Z",
   cancelledBy: null,
   contact: null,
@@ -23,6 +24,11 @@ const reservation: Reservation = {
 describe("toReservationView", () => {
   it("keeps the confirmed price and shows pickup in Korean time", () => {
     expect(toReservationView(reservation)).toMatchObject({ unitPrice: 8800, total: 17600, pickup: expect.stringContaining("18:30") });
+  });
+
+  it("carries the product photo", () => {
+    expect(toReservationView({ ...reservation, imageUrl: "https://image/a.jpg" }).photo).toBe("https://image/a.jpg");
+    expect(toReservationView(reservation).photo).toBeNull();
   });
 
   it("gives every status a label and explanation", () => {

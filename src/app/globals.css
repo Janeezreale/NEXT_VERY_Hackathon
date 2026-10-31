@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/*
+ * DESIGN.md §2, §10.2 의미 토큰. 라이트 테마 기준이며 OS 다크 모드로 자동 반전하지 않는다.
+ * 브랜드 원색(#248A60)과 접근성용 primary(#1F7A54)를 구분한다.
+ */
+:root {
+  --brand-green: #248a60;
+  --brand-light-green: #eaf6ef;
+  --brand-orange: #f59e0b;
+  --font-family-sans: "Pretendard Variable", "Pretendard", -apple-system,
+    BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic",
+    "Segoe UI", sans-serif;
+
+  --background: #f8faf8;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: var(--foreground);
+  --popover: #ffffff;
+  --popover-foreground: var(--foreground);
+  --muted: #f1f5f2;
+  --muted-foreground: #626b77;
+  --border: #e2e8e3;
+  --input: #64748b;
+  --ring: #176b49;
+
+  --primary: #1f7a54;
+  --primary-foreground: #ffffff;
+  --primary-hover: #196545;
+  --primary-active: #145238;
+  --secondary: var(--brand-light-green);
+  --secondary-foreground: #176b49;
+  --accent: var(--brand-light-green);
+  --accent-foreground: #176b49;
+  --link: #176b49;
+  --highlight: var(--brand-orange);
+  --highlight-foreground: var(--foreground);
+
+  --success: #176b49;
+  --success-bg: var(--brand-light-green);
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --danger-bg: #fef2f2;
+  --info: #1d4ed8;
+  --info-bg: #eff6ff;
+
+  --radius: 0.75rem;
+  --radius-control: 0.5rem;
+  --radius-dialog: 1rem;
+  --shadow-card: 0 2px 8px rgb(31 41 55 / 0.04);
+
+  color-scheme: light;
+}
+
+@theme inline {
+  --font-sans: var(--font-family-sans);
+  --color-brand: var(--brand-green);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-link: var(--link);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-danger-bg: var(--danger-bg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --radius-sm: 0.375rem;
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius);
+  --radius-xl: var(--radius-dialog);
+  --shadow-card: var(--shadow-card);
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-family-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

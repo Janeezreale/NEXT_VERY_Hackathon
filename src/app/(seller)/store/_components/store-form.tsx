@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { FormAlert } from "@/src/components/common/form-alert";
 import { FormField } from "@/src/components/common/form-field";
+import { useNotify } from "@/src/components/common/notifications";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
@@ -18,6 +19,7 @@ type StoreErrors = Partial<Record<keyof StoreCreateInput, string>>;
 
 export function StoreForm({ store }: { store: Store | null }) {
   const router = useRouter();
+  const notify = useNotify();
   const [values, setValues] = React.useState<StoreCreateInput>({
     name: store?.name ?? "",
     regionCode: store?.regionCode ?? "",
@@ -56,11 +58,13 @@ export function StoreForm({ store }: { store: Store | null }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
       });
+      notify.status("매장 정보를 저장했어요.");
       router.replace("/seller/dashboard");
       router.refresh();
     } catch (error) {
       if (!(error instanceof ApiClientError)) throw error;
       setFormError(error.message);
+      notify.issue(error.message);
       if (error.fieldErrors) setErrors(firstFieldErrors(error.fieldErrors));
     } finally {
       setSubmitting(false);

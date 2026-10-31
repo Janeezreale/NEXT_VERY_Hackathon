@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { NotificationProvider } from "@/src/components/common/notifications";
+import { ReservationWatcher } from "@/src/components/common/reservation-watcher";
+
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body className="min-h-dvh bg-background font-sans text-foreground antialiased">
-        {children}
+        <NotificationProvider>
+          {children}
+          <ReservationWatcher />
+        </NotificationProvider>
       </body>
     </html>
   );

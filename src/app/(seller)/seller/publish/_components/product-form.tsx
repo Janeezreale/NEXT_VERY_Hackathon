@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import { FormAlert } from "@/src/components/common/form-alert";
 import { FormField } from "@/src/components/common/form-field";
+import { useNotify } from "@/src/components/common/notifications";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { apiFetch, ApiClientError, firstFieldErrors } from "@/src/lib/client/api";
@@ -45,6 +46,7 @@ function toInput(values: typeof EMPTY) {
 
 export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, storeId, closingTime }: { product?: SellerProduct; reservedQuantity?: number; imageUrl?: string | null; storeId?: string; closingTime: string }) {
   const router = useRouter();
+  const notify = useNotify();
   const [values, setValues] = React.useState(
     product
       ? {
@@ -65,13 +67,11 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
   const [imagePath, setImagePath] = React.useState<string | null>();
   const [formKey, setFormKey] = React.useState(0);
   const [aiNote, setAiNote] = React.useState<string | null>(null);
-  const [notice, setNotice] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
   function update(patch: Partial<typeof EMPTY>) {
     setValues((current) => ({ ...current, ...patch }));
     setErrors((current) => ({ ...current, ...Object.fromEntries(Object.keys(patch).map((key) => [key, undefined])) }));
-    setNotice(null);
   }
 
   function applyAnalysis(analysis: Analysis) {
@@ -88,7 +88,6 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
     event.preventDefault();
     if (submitting) return;
     setFormError(null);
-    setNotice(null);
 
     const saleEnd = values.saleEndsAt ? saleEndError(new Date(values.saleEndsAt), closingTime) : null;
     if (saleEnd) {
@@ -113,6 +112,7 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
         body: JSON.stringify(parsed.data),
       });
       if (product) {
+        notify.status("상품을 저장했어요.");
         router.replace("/seller/products");
         router.refresh();
         return;
@@ -121,11 +121,12 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
       setImagePath(undefined);
       setAiNote(null);
       setFormKey((key) => key + 1);
-      setNotice(`${saved.name} 상품을 게시했어요.`);
+      notify.status(`${saved.name} 상품을 게시했어요.`);
       router.refresh();
     } catch (error) {
       if (!(error instanceof ApiClientError)) throw error;
       setFormError(error.message);
+      notify.issue(error.message);
       if (error.fieldErrors) setErrors(firstFieldErrors(error.fieldErrors));
       if (error.code === "STOCK_CHANGED") router.refresh();
     } finally {
@@ -136,7 +137,6 @@ export function ProductForm({ product, reservedQuantity = 0, imageUrl = null, st
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       {formError ? <FormAlert>{formError}</FormAlert> : null}
-      {notice ? <FormAlert tone="info">{notice}</FormAlert> : null}
 
       {storeId ? <ImagePicker key={formKey} storeId={storeId} editing={Boolean(product)} currentUrl={imageUrl} onUploaded={setImagePath} onAnalyzed={applyAnalysis} /> : null}
       {aiNote ? <FormAlert tone="info" title="확인이 필요해요">{aiNote}</FormAlert> : null}

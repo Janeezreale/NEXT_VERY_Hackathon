@@ -34,11 +34,12 @@ export function RoleLabel({ role }: { role: UserRole }) {
 }
 
 /**
- * 현재 세션의 역할. 확인 전에는 null, 로그인하지 않았으면 anonymous다.
+ * 현재 세션의 사용자. 확인 전에는 undefined, 로그인하지 않았으면 null이다.
  * 다른 탭에서 계정을 바꾸면 이 탭의 화면은 그대로이므로 화면으로 돌아올 때 다시 확인한다.
+ * 페이지가 유지되는 영역은 recheckKey가 바뀔 때도 다시 확인한다.
  */
-export function useSessionRole() {
-  const [role, setRole] = React.useState<UserRole | "anonymous" | null>(null);
+export function useSessionUser(recheckKey?: string) {
+  const [me, setMe] = React.useState<Me | null>();
 
   React.useEffect(() => {
     let active = true;
@@ -46,10 +47,10 @@ export function useSessionRole() {
       if (document.visibilityState !== "visible") return;
       apiFetch<Me>("/api/me")
         .then((me) => {
-          if (active) setRole(me.role);
+          if (active) setMe(me);
         })
         .catch((error: unknown) => {
-          if (active && error instanceof ApiClientError && error.code === "UNAUTHENTICATED") setRole("anonymous");
+          if (active && error instanceof ApiClientError && error.code === "UNAUTHENTICATED") setMe(null);
         });
     };
     check();
@@ -60,9 +61,16 @@ export function useSessionRole() {
       window.removeEventListener("focus", check);
       document.removeEventListener("visibilitychange", check);
     };
-  }, []);
+  }, [recheckKey]);
 
-  return role;
+  return me;
+}
+
+/** 역할만 필요한 화면용. 확인 전에는 null, 로그인하지 않았으면 anonymous다. */
+export function useSessionRole(): UserRole | "anonymous" | null {
+  const me = useSessionUser();
+  if (me === undefined) return null;
+  return me?.role ?? "anonymous";
 }
 
 /** 비로그인도 보는 화면용. 세션을 확인한 뒤 계정 표시와 로그아웃 버튼이나 로그인 링크를 보여준다. */

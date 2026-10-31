@@ -4,11 +4,13 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { FormAlert } from "@/src/components/common/form-alert";
+import { useNotify } from "@/src/components/common/notifications";
 import { Button } from "@/src/components/ui/button";
 import { apiFetch, ApiClientError } from "@/src/lib/client/api";
 
 export function DeleteProductButton({ id, name }: { id: string; name: string }) {
   const router = useRouter();
+  const notify = useNotify();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -18,11 +20,13 @@ export function DeleteProductButton({ id, name }: { id: string; name: string }) 
     setError("");
     try {
       await apiFetch(`/api/seller/products/${id}`, { method: "DELETE" });
+      notify.status("상품을 삭제했어요.");
       router.replace("/seller/products");
       router.refresh();
     } catch (failure) {
       if (!(failure instanceof ApiClientError)) throw failure;
       setError(failure.message);
+      notify.issue(failure.message);
       setBusy(false);
     }
   }

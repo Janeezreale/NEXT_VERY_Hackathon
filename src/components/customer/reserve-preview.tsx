@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { LiveRefresh } from "@/src/components/common/live-refresh";
 import { useSessionRole } from "@/src/components/common/logout-button";
+import { useNotify } from "@/src/components/common/notifications";
 import { reservationCreateSchema } from "@/src/lib/schemas/api";
 import { apiFetch, ApiClientError } from "@/src/lib/client/api";
 import { money, normalizeQuantity, type PickupSlot, type ProductView } from "./product-view";
@@ -13,6 +14,7 @@ import styles from "../../app/(customer)/shop/shop.module.css";
 
 export default function ReservePreview({ product, back }: { product: ProductView; back: string }) {
   const router = useRouter();
+  const notify = useNotify();
   const [quantityText, setQuantityText] = useState("1");
   const quantity = Number(quantityText);
   const [slot, setSlot] = useState<PickupSlot | null>(null);
@@ -47,6 +49,7 @@ export default function ReservePreview({ product, back }: { product: ProductView
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ productId: product.id, contactName, contactPhone, quantity, pickupAt: slot.at, idempotencyKey: requestKey.current, expectedUnitPrice: product.price }),
       });
+      notify.status("예약이 확정됐어요.");
       router.push("/shop/reservations");
       router.refresh();
     } catch (failure) {
@@ -55,7 +58,9 @@ export default function ReservePreview({ product, back }: { product: ProductView
       if (!outcomeUnknown) requestKey.current = null;
       setLoginRequired(failure.code === "UNAUTHENTICATED");
       setForbidden(failure.code === "FORBIDDEN");
-      setRequestError(failure.code === "FORBIDDEN" ? "" : outcomeUnknown ? "결과를 확인하지 못했어요. 다시 눌러도 예약이 중복되지 않아요." : failure.message);
+      const message = failure.code === "FORBIDDEN" ? "" : outcomeUnknown ? "결과를 확인하지 못했어요. 다시 눌러도 예약이 중복되지 않아요." : failure.message;
+      setRequestError(message);
+      if (message) notify.issue(message);
       if (failure.code === "PRICE_CHANGED" || failure.code === "OUT_OF_STOCK" || failure.code === "STORE_CLOSED" || failure.code === "SALE_ENDED") router.refresh();
       setSubmitting(false);
       requestLock.current = false;
